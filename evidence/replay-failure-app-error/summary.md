@@ -5,8 +5,8 @@
 | Status | **failed** |
 | Run | `failure-app-error` |
 | Tenant | base (corebank-servicing) |
-| Started | 2026-08-23T14:07:02.395Z |
-| Duration | 2315 ms |
+| Started | 2026-08-23T19:36:07.801Z |
+| Duration | 2150 ms |
 | Overrides applied | 0 |
 | Drift signals | 0 |
 
@@ -26,9 +26,9 @@ The application returned its system error page. The on-screen error reference id
 
 | # | Step | Intent | Action | Status | ms | Locator |
 |---|---|---|---|---|---|---|
-| 1 | `s1` | Open the member search screen from the left-hand menu. | click | ok | 451 | 1 via `name:normalized` |
-| 2 | `s2` | Type the member identifier into the search field. | type | ok | 192 | 1 via `anchor:proximateLabel` |
-| 3 | `s3` | Submit the search and land on the member's detail screen. | click | failed | 234 | 1 via `name:normalized` |
+| 1 | `s1` | Open the member search screen from the left-hand menu. | click | ok | 427 | 1 via `name:normalized` |
+| 2 | `s2` | Type the member identifier into the search field. | type | ok | 164 | 1 via `anchor:proximateLabel` |
+| 3 | `s3` | Submit the search and land on the member's detail screen. | click | failed | 224 | 1 via `name:normalized` |
 
 ## Evidence
 

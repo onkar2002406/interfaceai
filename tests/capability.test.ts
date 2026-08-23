@@ -13,8 +13,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CapabilitySchema, interpolate, templateRefs, type Capability } from '../src/capability/schema.js';
 import { CapabilityStore, bumpVersion, compareSemver } from '../src/capability/store.js';
-import { getByPointer, OverrideError, resolveForTenant, setByPointer } from '../src/capability/overrides.js';
-import { applyTransform, TransformError } from '../src/surface/element.js';
+import { getByPointer, OverrideError, resolveForTenant, setByPointer } from '../src/capability/tenant-overrides.js';
+import { applyTransform, TransformError } from '../src/surface/element-values.js';
 import { cardOf, inputSchemaOf, toolDefinitionsOf } from '../src/capability/catalog.js';
 
 function fixture(): Capability {

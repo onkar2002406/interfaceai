@@ -13,8 +13,8 @@
  * (with OCR filling in `name`) a bare screenshot.
  */
 
-import type { ControlToken } from '../escalation/control.js';
-import type { ElementDescriptor } from './descriptor.js';
+import type { ControlToken } from '../escalation/control-authority.js';
+import type { ElementDescriptor } from './element-descriptor.js';
 
 export interface Rect {
   x: number;

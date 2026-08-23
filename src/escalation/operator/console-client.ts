@@ -13,8 +13,8 @@
  * executor changes.
  */
 
-import { InterventionBroker } from '../broker.js';
-import { startOperatorConsole, type OperatorConsole } from './server.js';
+import { InterventionBroker } from '../intervention-broker.js';
+import { startOperatorConsole, type OperatorConsole } from './console-server.js';
 
 export interface AttachedConsole {
   sink: InterventionBroker;

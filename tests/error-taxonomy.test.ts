@@ -8,8 +8,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { classify } from '../src/replay/outcomes.js';
-import { evaluateCheckpoint, evaluatePredicate } from '../src/replay/predicates.js';
+import { classify } from '../src/replay/replay-result.js';
+import { evaluateCheckpoint, evaluatePredicate } from '../src/replay/checkpoints.js';
 import type { Condition } from '../src/capability/schema.js';
 import type { Observation } from '../src/surface/types.js';
 

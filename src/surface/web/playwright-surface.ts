@@ -32,14 +32,14 @@ import type {
   Surface,
   SurfaceErrorCode,
 } from '../types.js';
-import { perceive, readSignals } from './perception.js';
-import { clickNode, NotActionableError, readNode, selectInNode, typeIntoNode } from './actuator.js';
-import { resolve as resolveDescriptor } from '../resolver.js';
-import { describeDescriptor } from '../descriptor.js';
-import type { ControlAuthority, ControlToken, Holder } from '../../escalation/control.js';
-import { ControlViolation } from '../../escalation/control.js';
-import type { Policy, PolicyMode } from '../../policy/policy.js';
-import { containsPii } from '../../policy/redact.js';
+import { perceive, readSignals } from './accessibility-tree.js';
+import { clickNode, NotActionableError, readNode, selectInNode, typeIntoNode } from './browser-input.js';
+import { resolve as resolveDescriptor } from '../element-resolver.js';
+import { describeDescriptor } from '../element-descriptor.js';
+import type { ControlAuthority, ControlToken, Holder } from '../../escalation/control-authority.js';
+import { ControlViolation } from '../../escalation/control-authority.js';
+import type { Policy, PolicyMode } from '../../policy/guardrails.js';
+import { containsPii } from '../../policy/redaction.js';
 
 export interface SurfaceEvent {
   at: string;

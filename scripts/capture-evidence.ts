@@ -16,21 +16,21 @@
 import 'dotenv/config';
 import { rmSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { startCoreBank, stopCoreBank, type RunningInstance } from '../apps/corebank/main.js';
-import { loadAppProfile, tenantOf } from '../src/capability/app-profile.js';
+import { startCoreBank, stopCoreBank, type RunningInstance } from '../apps/corebank/start-servers.js';
+import { loadAppProfile, tenantOf } from '../src/capability/application-profile.js';
 import { CapabilityStore } from '../src/capability/store.js';
-import { Policy } from '../src/policy/policy.js';
-import { RunRecorder } from '../src/observability/evidence.js';
+import { Policy } from '../src/policy/guardrails.js';
+import { RunRecorder } from '../src/observability/run-recorder.js';
 import { replay } from '../src/replay/executor.js';
-import { summarize, type ReplayResult } from '../src/replay/outcomes.js';
-import { renderDiscoverySummary, renderReplaySummary } from '../src/cli/report.js';
-import { discover } from '../src/agent/loop.js';
-import { compile } from '../src/agent/compile.js';
-import { ControlAuthority } from '../src/escalation/control.js';
+import { summarize, type ReplayResult } from '../src/replay/replay-result.js';
+import { renderDiscoverySummary, renderReplaySummary } from '../src/cli/run-reports.js';
+import { discover } from '../src/discovery/loop.js';
+import { compile } from '../src/discovery/trace-compiler.js';
+import { ControlAuthority } from '../src/escalation/control-authority.js';
 import { PlaywrightSurface } from '../src/surface/web/playwright-surface.js';
-import { MockProvider } from '../src/agent/provider/mock.js';
-import { OpenAiProvider } from '../src/agent/provider/openai.js';
-import type { LlmProvider } from '../src/agent/provider/types.js';
+import { ScriptedProvider } from '../src/discovery/llm/scripted-provider.js';
+import { OpenAiProvider } from '../src/discovery/llm/openai-provider.js';
+import type { LlmProvider } from '../src/discovery/llm/llm-provider.js';
 
 const EVIDENCE = 'evidence';
 const profile = loadAppProfile('config/apps/corebank-servicing.yaml');
@@ -40,7 +40,10 @@ const lookup = store.load('lookup_member_savings_balance');
 const subAccount = store.load('open_sub_account');
 
 const results: Array<{ dir: string; headline: string; note: string }> = [];
+/** True only when a live model actually completed the discovery goal. */
 let usedLiveModel = false;
+/** Why the live attempt did not produce the committed run, if it did not. */
+let liveFailureReason: string | undefined;
 
 async function armFault(baseUrl: string, mode: string, route?: string): Promise<void> {
   await fetch(`${baseUrl}/_admin/fault`, {
@@ -85,20 +88,15 @@ async function replayCase(opts: {
   if (opts.fault) await armFault(tenant.baseUrl, 'none');
 }
 
-async function discoveryCase(): Promise<void> {
-  const slug = 'lookup-savings-balance';
-  rmSync(join(EVIDENCE, `discovery-${slug}`), { recursive: true, force: true });
+const DISCOVERY_GOAL = 'look up member {{memberId}} and read their current savings balance';
+const DISCOVERY_PARAMS = { memberId: '10001' };
 
-  let provider: LlmProvider;
-  if (process.env.OPENAI_API_KEY) {
-    provider = new OpenAiProvider();
-    usedLiveModel = true;
-    console.log(`  using live model ${provider.model}`);
-  } else {
-    provider = new MockProvider({ memberId: '10001' });
-    console.log('  !! OPENAI_API_KEY not set — falling back to the scripted fixture.');
-    console.log('  !! The committed discovery evidence MUST come from a live model run.');
-  }
+/** One discovery attempt with a given provider. Leaves the surface closed. */
+async function runDiscovery(provider: LlmProvider, slug: string): Promise<{
+  trace: Awaited<ReturnType<typeof discover>>;
+  recorder: RunRecorder;
+}> {
+  rmSync(join(EVIDENCE, `discovery-${slug}`), { recursive: true, force: true });
 
   const recorder = new RunRecorder(slug, 'discovery', EVIDENCE, { consoleEcho: false });
   const tenant = tenantOf(profile, 'base');
@@ -112,8 +110,8 @@ async function discoveryCase(): Promise<void> {
 
   try {
     const trace = await discover({
-      goalTemplate: 'look up member {{memberId}} and read their current savings balance',
-      params: { memberId: '10001' },
+      goalTemplate: DISCOVERY_GOAL,
+      params: DISCOVERY_PARAMS,
       entryUrl: new URL('/', tenant.baseUrl).toString(),
       product: profile.product,
       tenant: tenant.id,
@@ -126,27 +124,71 @@ async function discoveryCase(): Promise<void> {
       allowedOrigins: policy.config.origins,
       maxSteps: 20,
     });
-
-    const traceRef = recorder.snapshot('trace', trace);
-    let compiledNote = 'did not complete';
-    if (trace.outcome.kind === 'success') {
-      const capability = compile({ trace, profile, traceRef, name: 'discovered_member_savings' });
-      store.save(capability);
-      recorder.finish(trace, renderDiscoverySummary(trace, capability));
-      compiledNote = `compiled ${capability.metadata.name}@${capability.metadata.version} (${capability.metadata.approval})`;
-    } else {
-      recorder.finish(trace, renderDiscoverySummary(trace, null));
-    }
-
-    results.push({
-      dir: recorder.dir,
-      headline: `${trace.outcome.kind} in ${trace.steps.length} steps via ${trace.provider}:${trace.model}`,
-      note: `The LLM-driven discovery run. ${compiledNote}.`,
-    });
-    console.log(`  ${'discovery'.padEnd(34)} ${trace.outcome.kind} in ${trace.steps.length} steps — ${compiledNote}`);
+    return { trace, recorder };
   } finally {
     await surface.close();
   }
+}
+
+/**
+ * Captures the discovery run.
+ *
+ * Prefers a live model, and falls back to the scripted fixture if the live
+ * attempt does not *succeed* — not merely if no key is configured. A key that is
+ * present but unfunded, or a model the account cannot reach, both produce a
+ * failed run, and committing that as the discovery evidence would be worse than
+ * committing an honest fixture run: the evidence set would be incomplete and
+ * nothing downstream would replay.
+ *
+ * Whichever produced it, the banner in evidence/README.md says so plainly.
+ */
+async function discoveryCase(): Promise<void> {
+  const slug = 'lookup-savings-balance';
+
+  if (process.env.OPENAI_API_KEY) {
+    const live = new OpenAiProvider();
+    console.log(`  attempting a live run with ${live.model}`);
+    const { trace, recorder } = await runDiscovery(live, slug);
+
+    if (trace.outcome.kind === 'success') {
+      usedLiveModel = true;
+      finishDiscovery(trace, recorder);
+      return;
+    }
+
+    // Every non-success arm of the outcome union carries a `why`.
+    const why = trace.outcome.why;
+    liveFailureReason = why;
+    console.log(`  !! the live run did not complete: ${why.split('\n')[0]}`);
+    console.log('  !! falling back to the scripted fixture so the evidence set stays complete.');
+  } else {
+    liveFailureReason = 'OPENAI_API_KEY was not set';
+    console.log('  !! OPENAI_API_KEY not set — using the scripted fixture.');
+  }
+
+  const { trace, recorder } = await runDiscovery(new ScriptedProvider(DISCOVERY_PARAMS), slug);
+  finishDiscovery(trace, recorder);
+}
+
+function finishDiscovery(trace: Awaited<ReturnType<typeof discover>>, recorder: RunRecorder): void {
+  const traceRef = recorder.snapshot('trace', trace);
+  let compiledNote = 'no capability was compiled — an artifact is a promise that a flow works';
+
+  if (trace.outcome.kind === 'success') {
+    const capability = compile({ trace, profile, traceRef, name: 'discovered_member_savings' });
+    store.save(capability);
+    recorder.finish(trace, renderDiscoverySummary(trace, capability));
+    compiledNote = `compiled ${capability.metadata.name}@${capability.metadata.version} (${capability.metadata.approval})`;
+  } else {
+    recorder.finish(trace, renderDiscoverySummary(trace, null));
+  }
+
+  results.push({
+    dir: recorder.dir,
+    headline: `${trace.outcome.kind} in ${trace.steps.length} steps via ${trace.provider}:${trace.model}`,
+    note: `The discovery run: a goal in plain words, driven to completion, then compiled. ${compiledNote}.`,
+  });
+  console.log(`  ${'discovery'.padEnd(34)} ${trace.outcome.kind} in ${trace.steps.length} steps — ${compiledNote}`);
 }
 
 /* ---------------------------------------------------------------- driver */
@@ -250,8 +292,9 @@ try {
   console.log('Run `npm run handoff` separately to capture the human-handoff run.');
   if (!usedLiveModel) {
     console.log(
-      '\n!! The discovery run used the offline fixture. Set OPENAI_API_KEY in .env and\n' +
-        '!! re-run `npm run evidence` before submitting — see the banner in evidence/README.md.',
+      `\n!! The committed discovery run came from the offline fixture.\n` +
+        `!! Reason: ${(liveFailureReason ?? 'no live attempt was made').split('\n')[0]}\n` +
+        '!! Fix that and re-run `npm run evidence` before submitting.',
     );
   }
 } finally {
@@ -266,12 +309,18 @@ function writeIndex(): void {
   if (!usedLiveModel) {
     lines.push('> [!IMPORTANT]');
     lines.push('> **The discovery run below was produced by the offline scripted fixture, not a live model.**');
-    lines.push('> `OPENAI_API_KEY` was not set when this evidence was captured.');
     lines.push('>');
-    lines.push('> Set the key in `.env` and re-run `npm run evidence` to replace it with a real');
-    lines.push('> LLM-driven run before this repository is submitted. The compiled capability');
-    lines.push('> `capabilities/discovered_member_savings@1.0.0.yaml` should be regenerated at the');
-    lines.push('> same time — its `provenance.model` field records which produced it.');
+    lines.push(`> Reason: ${liveFailureReason ?? 'no live attempt was made'}`);
+    lines.push('>');
+    lines.push('> Fix that, then re-run `npm run evidence` to replace this with a genuine');
+    lines.push('> LLM-driven run. The compiled capability');
+    lines.push('> `capabilities/discovered_member_savings@1.0.0.yaml` is regenerated at the same');
+    lines.push('> time, and its `metadata.provenance.model` field records which produced it.');
+    lines.push('');
+  } else {
+    lines.push('The discovery run below was produced by a **live language model** driving the');
+    lines.push('real application. See its `summary.md` for the model, the token count, and the');
+    lines.push('reasoning it gave for each step.');
     lines.push('');
   }
 

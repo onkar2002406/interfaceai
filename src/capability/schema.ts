@@ -39,9 +39,9 @@
  */
 
 import { z } from 'zod';
-import { ElementDescriptorSchema } from '../surface/descriptor.js';
-import { RiskClassSchema } from '../policy/policy.js';
-import { SensitivitySchema } from '../policy/redact.js';
+import { ElementDescriptorSchema } from '../surface/element-descriptor.js';
+import { RiskClassSchema } from '../policy/guardrails.js';
+import { SensitivitySchema } from '../policy/redaction.js';
 
 export const API_VERSION = 'capability.interface.ai/v1';
 

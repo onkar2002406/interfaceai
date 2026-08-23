@@ -22,7 +22,7 @@ import { WebSocketServer, type WebSocket } from 'ws';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { InterventionBroker } from '../broker.js';
+import type { InterventionBroker } from '../intervention-broker.js';
 import type { PlaywrightSurface } from '../../surface/web/playwright-surface.js';
 
 const here = dirname(fileURLToPath(import.meta.url));

@@ -13,9 +13,9 @@
 import express, { type Express, type Request, type Response, type NextFunction } from 'express';
 import { randomUUID } from 'node:crypto';
 import { getTenant, type TenantConfig } from './tenants.js';
-import { FaultController, FAULT_MODES, type FaultMode } from './faults.js';
-import { findMember, OPENED_SUBACCOUNTS, type Member } from './data.js';
-import * as V from './views.js';
+import { FaultController, FAULT_MODES, type FaultMode } from './fault-injection.js';
+import { findMember, OPENED_SUBACCOUNTS, type Member } from './seed-data.js';
+import * as V from './pages.js';
 
 const VALID_OPERATOR = 'svc.demo';
 const VALID_PASSWORD = 'demo1234';

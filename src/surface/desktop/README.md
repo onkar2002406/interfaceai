@@ -56,14 +56,14 @@ an unlabelled Win32 edit control.
 
 The web surface clicks by moving the mouse to a coordinate, because that is the
 mechanism that survives having no clean DOM. On desktop it is the *only*
-mechanism, so the actuator port is:
+mechanism, so the port of [`browser-input.ts`](../web/browser-input.ts) is:
 
 - `click` → `Input.dispatchMouseEvent` becomes `SendInput` / `CGEvent`
 - `type` → focus by click, then synthesise key events — identical shape
 - `select` → the one action the web surface performs semantically rather than by
-  pixels (see [`actuator.ts`](../web/actuator.ts)); on desktop this is UIA's
-  `SelectionItemPattern` or `ValuePattern`, which is the same idea: ask the
-  platform to perform the control's semantic action
+  pixels; on desktop this is UIA's `SelectionItemPattern` or `ValuePattern`,
+  which is the same idea: ask the platform to perform the control's semantic
+  action
 
 ## What would need writing
 

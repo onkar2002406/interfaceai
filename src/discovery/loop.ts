@@ -23,17 +23,17 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { LlmProvider, ModelTurn } from './provider/types.js';
-import { AGENT_TOOLS, renderObservation, systemPrompt } from './prompt.js';
+import type { LlmProvider, ModelTurn } from './llm/llm-provider.js';
+import { AGENT_TOOLS, renderObservation, systemPrompt } from './model-prompt.js';
 import type { Action, ElementNode, Observation } from '../surface/types.js';
 import type { PlaywrightSurface } from '../surface/web/playwright-surface.js';
-import { captureDescriptor, type ElementDescriptor } from '../surface/descriptor.js';
-import type { RunRecorder } from '../observability/evidence.js';
-import type { ControlAuthority } from '../escalation/control.js';
-import type { EscalationSink } from '../escalation/broker.js';
-import { newInterventionId } from '../escalation/broker.js';
+import { captureDescriptor, type ElementDescriptor } from '../surface/element-descriptor.js';
+import type { RunRecorder } from '../observability/run-recorder.js';
+import type { ControlAuthority } from '../escalation/control-authority.js';
+import type { EscalationSink } from '../escalation/intervention-broker.js';
+import { newInterventionId } from '../escalation/intervention-broker.js';
 import { ensureAuthenticated } from '../replay/recovery.js';
-import type { AppProfile, TenantProfile } from '../capability/app-profile.js';
+import type { AppProfile, TenantProfile } from '../capability/application-profile.js';
 
 export interface TraceStep {
   index: number;

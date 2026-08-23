@@ -28,7 +28,7 @@
 
 import { createHash } from 'node:crypto';
 import type { DiscoveryTrace, TraceStep } from './loop.js';
-import type { AppProfile } from '../capability/app-profile.js';
+import type { AppProfile } from '../capability/application-profile.js';
 import {
   API_VERSION,
   type BusinessOutcome,
@@ -40,8 +40,8 @@ import {
   type Step,
   type StepAction,
 } from '../capability/schema.js';
-import type { ElementDescriptor } from '../surface/descriptor.js';
-import type { RiskClass } from '../policy/policy.js';
+import type { ElementDescriptor } from '../surface/element-descriptor.js';
+import type { RiskClass } from '../policy/guardrails.js';
 
 export interface CompileOptions {
   trace: DiscoveryTrace;

@@ -24,7 +24,7 @@
  */
 
 import type { TenantConfig } from './tenants.js';
-import { formatMoney, type Member } from './data.js';
+import { formatMoney, type Member } from './seed-data.js';
 
 const esc = (s: unknown): string =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);

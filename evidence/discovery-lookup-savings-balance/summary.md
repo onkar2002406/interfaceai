@@ -4,7 +4,7 @@
 |---|---|
 | Outcome | **success** |
 | Run | `lookup-savings-balance` |
-| Model | mock:scripted-fixture |
+| Model | scripted:scripted-fixture |
 | Tenant | base (corebank-servicing) |
 | Model calls | 4 |
 | Tokens | 0 prompt / 0 completion |

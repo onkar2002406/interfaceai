@@ -25,7 +25,7 @@
  * which a desktop surface produces just as well as a web one.
  */
 
-import { normalizeName, type Anchor, type ElementDescriptor } from './descriptor.js';
+import { normalizeName, type Anchor, type ElementDescriptor } from './element-descriptor.js';
 import type { ElementNode, ResolutionInfo, Rect } from './types.js';
 
 /** Best candidate must reach this to be actionable at all. */

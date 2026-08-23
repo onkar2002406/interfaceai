@@ -25,7 +25,7 @@
 import { readFileSync } from 'node:fs';
 import { parse as parseYaml } from 'yaml';
 import { z } from 'zod';
-import { ElementDescriptorSchema } from '../surface/descriptor.js';
+import { ElementDescriptorSchema } from '../surface/element-descriptor.js';
 import { CheckpointSchema, ConditionSchema } from './schema.js';
 
 export const TenantSchema = z.object({

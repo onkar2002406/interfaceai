@@ -27,7 +27,7 @@
 
 import { randomUUID } from 'node:crypto';
 import type { Checkpoint } from '../capability/schema.js';
-import type { ControlAuthority, ControlToken } from './control.js';
+import type { ControlAuthority, ControlToken } from './control-authority.js';
 import type { Surface } from '../surface/types.js';
 
 export type InterventionReasonClass =

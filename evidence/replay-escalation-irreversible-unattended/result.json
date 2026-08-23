@@ -1,6 +1,6 @@
 {
   "status": "escalated",
-  "interventionId": "int_97ee2902",
+  "interventionId": "int_93c2ea26",
   "reason": "irreversible step requires an approved artifact and explicit invocation authorisation (IRREVERSIBLE_SUBMIT)",
   "atStep": "s9",
   "resolution": "unattended",
@@ -9,16 +9,16 @@
   "capabilityVersion": "1.0.0",
   "tenant": "base",
   "product": "corebank-servicing",
-  "startedAt": "2026-08-23T14:07:26.321Z",
-  "durationMs": 3422,
+  "startedAt": "2026-08-23T19:36:28.562Z",
+  "durationMs": 3719,
   "steps": [
     {
       "stepId": "s1",
       "intent": "Open the member search screen from the left-hand menu.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-08-23T14:07:27.565Z",
-      "durationMs": 461,
+      "startedAt": "2026-08-23T19:36:29.832Z",
+      "durationMs": 453,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -37,8 +37,8 @@
       "intent": "Type the member identifier into the search field.",
       "actionType": "type",
       "status": "ok",
-      "startedAt": "2026-08-23T14:07:28.026Z",
-      "durationMs": 164,
+      "startedAt": "2026-08-23T19:36:30.286Z",
+      "durationMs": 209,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -52,8 +52,8 @@
       "intent": "Submit the search and land on the member's detail screen.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-08-23T14:07:28.191Z",
-      "durationMs": 246,
+      "startedAt": "2026-08-23T19:36:30.496Z",
+      "durationMs": 372,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -72,8 +72,8 @@
       "intent": "Open the new sub-account form for this member.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-08-23T14:07:28.438Z",
-      "durationMs": 258,
+      "startedAt": "2026-08-23T19:36:30.869Z",
+      "durationMs": 352,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -92,8 +92,8 @@
       "intent": "Choose the share account product to open.",
       "actionType": "select",
       "status": "ok",
-      "startedAt": "2026-08-23T14:07:28.697Z",
-      "durationMs": 89,
+      "startedAt": "2026-08-23T19:36:31.222Z",
+      "durationMs": 150,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -107,8 +107,8 @@
       "intent": "Enter the opening deposit amount.",
       "actionType": "type",
       "status": "ok",
-      "startedAt": "2026-08-23T14:07:28.787Z",
-      "durationMs": 199,
+      "startedAt": "2026-08-23T19:36:31.373Z",
+      "durationMs": 235,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -122,8 +122,8 @@
       "intent": "Enter the member-facing nickname for the account.",
       "actionType": "type",
       "status": "ok",
-      "startedAt": "2026-08-23T14:07:28.987Z",
-      "durationMs": 456,
+      "startedAt": "2026-08-23T19:36:31.609Z",
+      "durationMs": 323,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -137,8 +137,8 @@
       "intent": "Submit the form for review, without committing anything yet.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-08-23T14:07:29.443Z",
-      "durationMs": 117,
+      "startedAt": "2026-08-23T19:36:31.932Z",
+      "durationMs": 135,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -157,8 +157,8 @@
       "intent": "Commit the application and open the account.",
       "actionType": "click",
       "status": "escalated",
-      "startedAt": "2026-08-23T14:07:29.561Z",
-      "durationMs": 182,
+      "startedAt": "2026-08-23T19:36:32.068Z",
+      "durationMs": 213,
       "recoveries": [],
       "note": "irreversible step requires an approved artifact and explicit invocation authorisation (IRREVERSIBLE_SUBMIT)"
     }

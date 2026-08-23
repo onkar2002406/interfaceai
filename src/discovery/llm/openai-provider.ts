@@ -13,7 +13,7 @@
  */
 
 import OpenAI from 'openai';
-import type { DecideRequest, LlmProvider, ModelTurn } from './types.js';
+import type { DecideRequest, LlmProvider, ModelTurn } from './llm-provider.js';
 
 export class OpenAiProvider implements LlmProvider {
   readonly name = 'openai';
@@ -28,7 +28,7 @@ export class OpenAiProvider implements LlmProvider {
     if (!apiKey) {
       throw new Error(
         'OPENAI_API_KEY is not set. Add it to .env to run discovery against a live model, ' +
-          'or use `--provider mock` to exercise the pipeline offline.',
+          'or use `--provider scripted` to exercise the pipeline offline.',
       );
     }
     this.client = new OpenAI({ apiKey });
@@ -59,7 +59,7 @@ export class OpenAiProvider implements LlmProvider {
     }
     messages.push({ role: 'user', content });
 
-    const res = await this.client.chat.completions.create({
+    const res = await this.completeWithRetry({
       model: this.model,
       messages,
       tools: req.tools.map((t) => ({
@@ -92,6 +92,67 @@ export class OpenAiProvider implements LlmProvider {
       toolName: call.function.name,
       arguments: args,
     };
+  }
+
+  /**
+   * Wraps the API call so the loop sees an actionable error rather than a raw
+   * HTTP status.
+   *
+   * The distinction that matters most in practice is between the two 429s.
+   * `rate_limit_exceeded` means "you are going too fast" and is worth retrying
+   * with backoff — a discovery run makes a burst of calls and will hit it.
+   * `insufficient_quota` is the *same status code* but means "this account has
+   * no credit", which no amount of retrying will fix; retrying it just turns a
+   * clear billing problem into a slow, confusing one.
+   *
+   * A 401 gets its own message too, because "your key is wrong" and "your
+   * account is unfunded" are the two things people actually hit, and telling
+   * them apart is the difference between a five-second fix and an afternoon.
+   */
+  private async completeWithRetry(
+    body: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming,
+  ): Promise<OpenAI.Chat.ChatCompletion> {
+    const MAX_ATTEMPTS = 4;
+
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await this.client.chat.completions.create(body);
+      } catch (err) {
+        const e = err as { status?: number; code?: string; message?: string };
+
+        if (e.status === 401) {
+          throw new Error(
+            'OpenAI rejected the API key (401). Check OPENAI_API_KEY in .env — it may be mistyped, revoked, ' +
+              'or belong to a different organisation than the one you expect.',
+          );
+        }
+
+        if (e.code === 'insufficient_quota') {
+          throw new Error(
+            'The OpenAI API key is valid but the account has no available quota (429 insufficient_quota). ' +
+              'This is a billing state, not a rate limit, so retrying will not help: add a payment method or ' +
+              'credits at https://platform.openai.com/settings/organization/billing. A discovery run costs a ' +
+              'few cents. To exercise the pipeline meanwhile, run discovery with `--provider scripted`.',
+          );
+        }
+
+        if (e.status === 404) {
+          throw new Error(
+            `The model "${this.model}" is not available to this account (404). Set OPENAI_MODEL in .env to a ` +
+              'model your organisation can access.',
+          );
+        }
+
+        const transient = e.status === 429 || (e.status !== undefined && e.status >= 500);
+        if (!transient || attempt >= MAX_ATTEMPTS) {
+          throw new Error(`OpenAI request failed (${e.status ?? 'no status'}): ${e.message ?? String(err)}`);
+        }
+
+        // Exponential backoff with jitter: 1s, 2s, 4s.
+        const waitMs = 2 ** (attempt - 1) * 1000 + Math.random() * 250;
+        await new Promise((r) => setTimeout(r, waitMs));
+      }
+    }
   }
 
   usage(): { promptTokens: number; completionTokens: number; calls: number } {

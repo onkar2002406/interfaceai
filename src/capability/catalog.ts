@@ -27,12 +27,12 @@
 import { z } from 'zod';
 import type { Capability } from './schema.js';
 import type { CapabilityStore } from './store.js';
-import type { AppProfile } from './app-profile.js';
-import type { Policy } from '../policy/policy.js';
-import { RunRecorder } from '../observability/evidence.js';
+import type { AppProfile } from './application-profile.js';
+import type { Policy } from '../policy/guardrails.js';
+import { RunRecorder } from '../observability/run-recorder.js';
 import { replay, validateInputs, CapabilityInputError } from '../replay/executor.js';
-import type { ReplayResult } from '../replay/outcomes.js';
-import type { EscalationSink } from '../escalation/broker.js';
+import type { ReplayResult } from '../replay/replay-result.js';
+import type { EscalationSink } from '../escalation/intervention-broker.js';
 
 export interface JsonSchema {
   type: 'object';

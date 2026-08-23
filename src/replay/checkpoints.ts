@@ -13,8 +13,8 @@
  */
 
 import type { Predicate, Checkpoint } from '../capability/schema.js';
-import { resolve } from '../surface/resolver.js';
-import { describeDescriptor } from '../surface/descriptor.js';
+import { resolve } from '../surface/element-resolver.js';
+import { describeDescriptor } from '../surface/element-descriptor.js';
 import type { Observation } from '../surface/types.js';
 
 export interface PredicateResult {

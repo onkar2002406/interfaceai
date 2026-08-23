@@ -22,16 +22,16 @@
 
 import 'dotenv/config';
 import WebSocket from 'ws';
-import { loadAppProfile } from '../src/capability/app-profile.js';
+import { loadAppProfile } from '../src/capability/application-profile.js';
 import { CapabilityStore } from '../src/capability/store.js';
-import { Policy } from '../src/policy/policy.js';
-import { RunRecorder } from '../src/observability/evidence.js';
+import { Policy } from '../src/policy/guardrails.js';
+import { RunRecorder } from '../src/observability/run-recorder.js';
 import { replay } from '../src/replay/executor.js';
-import { summarize, type ReplayResult } from '../src/replay/outcomes.js';
-import { connectToOperatorConsole } from '../src/escalation/operator/client.js';
-import { renderReplaySummary } from '../src/cli/report.js';
+import { summarize, type ReplayResult } from '../src/replay/replay-result.js';
+import { connectToOperatorConsole } from '../src/escalation/operator/console-client.js';
+import { renderReplaySummary } from '../src/cli/run-reports.js';
 import type { PlaywrightSurface } from '../src/surface/web/playwright-surface.js';
-import { resolve as resolveDescriptor } from '../src/surface/resolver.js';
+import { resolve as resolveDescriptor } from '../src/surface/element-resolver.js';
 
 const OPERATOR = 'j.okafor';
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));

@@ -7,9 +7,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { containsPii, hashPii, maskValue, redactDeep, redactParams, redactText } from '../src/policy/redact.js';
-import { Policy, globToRegExp, type PolicyConfig } from '../src/policy/policy.js';
-import { ControlAuthority, ControlViolation } from '../src/escalation/control.js';
+import { containsPii, hashPii, maskValue, redactDeep, redactParams, redactText } from '../src/policy/redaction.js';
+import { Policy, globToRegExp, type PolicyConfig } from '../src/policy/guardrails.js';
+import { ControlAuthority, ControlViolation } from '../src/escalation/control-authority.js';
 
 /* ------------------------------------------------------------- redaction */
 

@@ -20,13 +20,13 @@
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { randomUUID } from 'node:crypto';
-import { startCoreBank, stopCoreBank, type RunningInstance } from '../apps/corebank/main.js';
-import { loadAppProfile, tenantOf } from '../src/capability/app-profile.js';
+import { startCoreBank, stopCoreBank, type RunningInstance } from '../apps/corebank/start-servers.js';
+import { loadAppProfile, tenantOf } from '../src/capability/application-profile.js';
 import { CapabilityStore } from '../src/capability/store.js';
-import { Policy } from '../src/policy/policy.js';
-import { RunRecorder } from '../src/observability/evidence.js';
+import { Policy } from '../src/policy/guardrails.js';
+import { RunRecorder } from '../src/observability/run-recorder.js';
 import { replay, validateInputs, CapabilityInputError } from '../src/replay/executor.js';
-import type { ReplayResult } from '../src/replay/outcomes.js';
+import type { ReplayResult } from '../src/replay/replay-result.js';
 
 const CASE_TIMEOUT = 90_000;
 

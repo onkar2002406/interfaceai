@@ -19,10 +19,10 @@
  */
 
 import type { RecoveryAction } from '../capability/schema.js';
-import type { AppProfile, TenantProfile } from '../capability/app-profile.js';
+import type { AppProfile, TenantProfile } from '../capability/application-profile.js';
 import type { Surface } from '../surface/types.js';
-import type { ControlToken } from '../escalation/control.js';
-import { evaluateCheckpoint } from './predicates.js';
+import type { ControlToken } from '../escalation/control-authority.js';
+import { evaluateCheckpoint } from './checkpoints.js';
 
 export interface RecoveryContext {
   surface: Surface;

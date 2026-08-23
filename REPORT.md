@@ -48,7 +48,7 @@ replay cannot drift apart in what they are permitted to do, because there is onl
 one place that decides.
 
 **The model's blast radius is deliberately small.** It produces a *trace*, never
-an artifact. A deterministic compiler ([`src/agent/compile.ts`](src/agent/compile.ts))
+an artifact. A deterministic compiler ([`src/discovery/trace-compiler.ts`](src/discovery/trace-compiler.ts))
 turns the trace into the capability, and it takes only three things from the
 model: the order of actions, which element each touched, and a one-sentence
 `why` that becomes human-readable prose. Locators are built from what perception
@@ -125,7 +125,7 @@ with several independent signals:
 | `hints.domHint`, `hints.boundsAtRecord` | **no** | no |
 
 Resolution is **scored candidate matching**, not lookup
-([`src/surface/resolver.ts`](src/surface/resolver.ts)). The `domHint` field is
+([`src/surface/element-resolver.ts`](src/surface/element-resolver.ts)). The `domHint` field is
 named a hint rather than a selector on purpose: it contributes 5 points out of
 ~100 and can break a tie but never make a match, so a changed selector cannot
 break replay and a matching one cannot rescue a mismatched name.
@@ -338,7 +338,7 @@ This is the design decision I care most about here. A boolean "human is driving"
 flag that the executor is trusted to check is how you get a race where automation
 clicks Submit while an operator is mid-keystroke on the same page.
 
-So control is a **token** ([`src/escalation/control.ts`](src/escalation/control.ts)).
+So control is a **token** ([`src/escalation/control-authority.ts`](src/escalation/control-authority.ts)).
 `act()` demands one and compares it to the authority's current holder; the token
 is *rotated* on every transition, so an executor holding a stale copy cannot act
 even if it never consults the state machine. It is the same chokepoint the
@@ -360,7 +360,7 @@ through CDP input. It is the same browser session the executor was driving — n
 a fresh one, not a replay. Viewing needs no token, deliberately: an operator
 should be able to understand a stuck run before deciding to take it on. Input
 requires the claimed token, and is refused without it —
-[`scripts/demo-handoff.ts`](scripts/demo-handoff.ts) asserts that refusal as part
+[`scripts/demo-human-handoff.ts`](scripts/demo-human-handoff.ts) asserts that refusal as part
 of the demonstration.
 
 Human actions are recorded as run evidence. Typed *characters* are not: an
@@ -421,7 +421,7 @@ it, which is worth surfacing even though the action was handled correctly.
 
 **Redaction happens at the write boundary**, not at call sites, because relying
 on each caller to remember is how leaks happen. Everything bound for disk goes
-through [`src/policy/redact.ts`](src/policy/redact.ts). Secrets are never written
+through [`src/policy/redaction.ts`](src/policy/redaction.ts). Secrets are never written
 in any form; PII is written as a per-run salted hash plus a four-character suffix,
 so you can tell "the same account appeared at step 3 and step 9" while debugging
 without the value existing in the log. Screenshots have sensitive elements
@@ -497,6 +497,6 @@ live in environment variables the app profile *names* rather than contains.
   everything is `pii`) and expects a human to tighten them during review. That is
   the right default direction, but it does mean a freshly compiled artifact needs
   editing before it is pleasant to call.
-- The scripted `MockProvider` covers only the lookup flow. It refuses to guess on
+- The scripted `ScriptedProvider` covers only the lookup flow. It refuses to guess on
   a screen it has not been taught, which is correct behaviour for a fixture, but
-  it means `--provider mock` is not a general offline mode.
+  it means `--provider scripted` is not a general offline mode.

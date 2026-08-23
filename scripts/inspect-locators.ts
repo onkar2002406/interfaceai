@@ -10,10 +10,10 @@
 
 import 'dotenv/config';
 import { chromium } from 'playwright';
-import { perceive } from '../src/surface/web/perception.js';
-import { resolve, scoreCandidate } from '../src/surface/resolver.js';
+import { perceive } from '../src/surface/web/accessibility-tree.js';
+import { resolve, scoreCandidate } from '../src/surface/element-resolver.js';
 import { CapabilityStore } from '../src/capability/store.js';
-import { describeDescriptor } from '../src/surface/descriptor.js';
+import { describeDescriptor } from '../src/surface/element-descriptor.js';
 
 const store = new CapabilityStore('capabilities');
 const cap = store.load('lookup_member_savings_balance');

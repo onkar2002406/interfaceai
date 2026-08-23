@@ -23,7 +23,7 @@
 
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { redactDeep, redactText } from '../policy/redact.js';
+import { redactDeep, redactText } from '../policy/redaction.js';
 
 export type RunKind = 'discovery' | 'replay';
 

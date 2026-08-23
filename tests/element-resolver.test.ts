@@ -11,8 +11,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { resolve, MIN_SCORE, DRIFT_SCORE } from '../src/surface/resolver.js';
-import { captureDescriptor, normalizeName, type ElementDescriptor } from '../src/surface/descriptor.js';
+import { resolve, MIN_SCORE, DRIFT_SCORE } from '../src/surface/element-resolver.js';
+import { captureDescriptor, normalizeName, type ElementDescriptor } from '../src/surface/element-descriptor.js';
 import type { ElementNode } from '../src/surface/types.js';
 
 function node(partial: Partial<ElementNode> & { id: string; role: string }): ElementNode {

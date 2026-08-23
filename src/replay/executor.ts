@@ -31,9 +31,9 @@
 import { randomUUID } from 'node:crypto';
 import type { Capability, Checkpoint, Condition, ErrorClass, Step } from '../capability/schema.js';
 import { interpolate } from '../capability/schema.js';
-import { conditionsFor, tenantOf, type AppProfile } from '../capability/app-profile.js';
-import { resolveForTenant } from '../capability/overrides.js';
-import { ControlAuthority, type ControlToken } from '../escalation/control.js';
+import { conditionsFor, tenantOf, type AppProfile } from '../capability/application-profile.js';
+import { resolveForTenant } from '../capability/tenant-overrides.js';
+import { ControlAuthority, type ControlToken } from '../escalation/control-authority.js';
 import {
   newInterventionId,
   UnattendedSink,
@@ -41,24 +41,24 @@ import {
   type HumanAction,
   type InterventionReasonClass,
   type InterventionRequest,
-} from '../escalation/broker.js';
-import type { Policy } from '../policy/policy.js';
-import { redactParams } from '../policy/redact.js';
+} from '../escalation/intervention-broker.js';
+import type { Policy } from '../policy/guardrails.js';
+import { redactParams } from '../policy/redaction.js';
 import { PlaywrightSurface } from '../surface/web/playwright-surface.js';
-import { resolve as resolveDescriptor } from '../surface/resolver.js';
-import { describeDescriptor } from '../surface/descriptor.js';
-import { applyTransform, elementText, TransformError } from '../surface/element.js';
+import { resolve as resolveDescriptor } from '../surface/element-resolver.js';
+import { describeDescriptor } from '../surface/element-descriptor.js';
+import { applyTransform, elementText, TransformError } from '../surface/element-values.js';
 import type { Action, Observation } from '../surface/types.js';
-import type { RunRecorder } from '../observability/evidence.js';
-import { evaluateCheckpoint, evaluatePredicate, type CheckpointResult } from './predicates.js';
-import { classify } from './outcomes.js';
+import type { RunRecorder } from '../observability/run-recorder.js';
+import { evaluateCheckpoint, evaluatePredicate, type CheckpointResult } from './checkpoints.js';
+import { classify } from './replay-result.js';
 import type {
   DriftSignal,
   RecoveryAttemptReport,
   ReplayEnvelope,
   ReplayResult,
   StepReport,
-} from './outcomes.js';
+} from './replay-result.js';
 import { ensureAuthenticated, runRecovery } from './recovery.js';
 
 export class CapabilityInputError extends Error {

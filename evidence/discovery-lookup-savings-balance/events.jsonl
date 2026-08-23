@@ -1,23 +1,23 @@
-{"at":"2026-08-23T14:06:51.418Z","seq":1,"kind":"discovery_start","detail":{"goal":"look up member 10001 and read their current savings balance","entryUrl":"http://localhost:4000/","product":"corebank-servicing","tenant":"base","provider":"mock","model":"scripted-fixture","maxSteps":20}}
-{"at":"2026-08-23T14:06:51.493Z","seq":2,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-23T14:06:51.823Z","seq":3,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-23T14:06:52.015Z","seq":4,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-23T14:06:52.185Z","seq":5,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-23T14:06:52.233Z","seq":6,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-23T14:06:52.563Z","seq":7,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-23T14:06:52.565Z","seq":8,"kind":"auth_precondition","detail":{"ok":true,"note":"signed on and returned to the entry point"}}
-{"at":"2026-08-23T14:06:52.917Z","seq":9,"kind":"screenshot","detail":{"file":"evidence\\discovery-lookup-savings-balance\\step-01.png"}}
-{"at":"2026-08-23T14:06:52.924Z","seq":10,"kind":"model_decision","detail":{"step":1,"tool":"click","reasoning":"The left-hand menu offers member search, which is where a lookup flow has to start.","args":{"elementId":"e3","why":"Open the member search screen from the left-hand menu."}}}
-{"at":"2026-08-23T14:06:52.940Z","seq":11,"kind":"surface_action","detail":{"action":"click","target":"Member Search","risk":"safe"}}
-{"at":"2026-08-23T14:06:53.275Z","seq":12,"kind":"discovery_step","detail":{"step":1,"tool":"click","target":"Member Search","url":"http://localhost:4000/"}}
-{"at":"2026-08-23T14:06:53.406Z","seq":13,"kind":"screenshot","detail":{"file":"evidence\\discovery-lookup-savings-balance\\step-02.png"}}
-{"at":"2026-08-23T14:06:53.410Z","seq":14,"kind":"model_decision","detail":{"step":2,"tool":"type","reasoning":"The search form has one identifier field. It has no accessible name; the caption beside it reads \"Member ID\", which is how a human would identify it.","args":{"elementId":"e16","text":"{{memberId}}","why":"Type the member identifier into the search field."}}}
-{"at":"2026-08-23T14:06:53.545Z","seq":15,"kind":"surface_action","detail":{"action":"type","target":"Member ID","risk":"mutating"}}
-{"at":"2026-08-23T14:06:53.618Z","seq":16,"kind":"discovery_step","detail":{"step":2,"tool":"type","target":"Member ID","url":"http://localhost:4000/"}}
-{"at":"2026-08-23T14:06:53.761Z","seq":17,"kind":"screenshot","detail":{"file":"evidence\\discovery-lookup-savings-balance\\step-03.png"}}
-{"at":"2026-08-23T14:06:53.764Z","seq":18,"kind":"model_decision","detail":{"step":3,"tool":"click","reasoning":"The identifier is entered; submitting the form should take us to the member record.","args":{"elementId":"e17","why":"Submit the search and land on the member's detail screen."}}}
-{"at":"2026-08-23T14:06:53.783Z","seq":19,"kind":"surface_action","detail":{"action":"click","target":"Search","risk":"safe"}}
-{"at":"2026-08-23T14:06:54.102Z","seq":20,"kind":"discovery_step","detail":{"step":3,"tool":"click","target":"Search","url":"http://localhost:4000/"}}
-{"at":"2026-08-23T14:06:54.512Z","seq":21,"kind":"screenshot","detail":{"file":"evidence\\discovery-lookup-savings-balance\\step-04.png"}}
-{"at":"2026-08-23T14:06:54.516Z","seq":22,"kind":"model_decision","detail":{"step":4,"tool":"finish","reasoning":"The member detail screen is showing the accounts table. The savings balance is the cell in the \"Current Balance\" column of the row whose account type is Savings.","args":{"why":"Reached the member detail screen and located the savings balance.","summary":"look up a member and read their savings share account balance","outputs":[{"name":"savingsBalance","elementId":"e27","description":"Current balance of the member's savings share account, in USD."}]}}}
-{"at":"2026-08-23T14:06:54.518Z","seq":23,"kind":"discovery_success","detail":{"summary":"look up a member and read their savings share account balance","outputs":["savingsBalance"],"steps":3}}
+{"at":"2026-08-23T19:35:57.930Z","seq":1,"kind":"discovery_start","detail":{"goal":"look up member 10001 and read their current savings balance","entryUrl":"http://localhost:4000/","product":"corebank-servicing","tenant":"base","provider":"scripted","model":"scripted-fixture","maxSteps":20}}
+{"at":"2026-08-23T19:35:57.960Z","seq":2,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-08-23T19:35:58.239Z","seq":3,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-08-23T19:35:58.427Z","seq":4,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-08-23T19:35:58.595Z","seq":5,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-08-23T19:35:58.642Z","seq":6,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-08-23T19:35:58.938Z","seq":7,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-08-23T19:35:58.940Z","seq":8,"kind":"auth_precondition","detail":{"ok":true,"note":"signed on and returned to the entry point"}}
+{"at":"2026-08-23T19:35:59.175Z","seq":9,"kind":"screenshot","detail":{"file":"evidence\\discovery-lookup-savings-balance\\step-01.png"}}
+{"at":"2026-08-23T19:35:59.177Z","seq":10,"kind":"model_decision","detail":{"step":1,"tool":"click","reasoning":"The left-hand menu offers member search, which is where a lookup flow has to start.","args":{"elementId":"e3","why":"Open the member search screen from the left-hand menu."}}}
+{"at":"2026-08-23T19:35:59.199Z","seq":11,"kind":"surface_action","detail":{"action":"click","target":"Member Search","risk":"safe"}}
+{"at":"2026-08-23T19:35:59.433Z","seq":12,"kind":"discovery_step","detail":{"step":1,"tool":"click","target":"Member Search","url":"http://localhost:4000/"}}
+{"at":"2026-08-23T19:35:59.545Z","seq":13,"kind":"screenshot","detail":{"file":"evidence\\discovery-lookup-savings-balance\\step-02.png"}}
+{"at":"2026-08-23T19:35:59.548Z","seq":14,"kind":"model_decision","detail":{"step":2,"tool":"type","reasoning":"The search form has one identifier field. It has no accessible name; the caption beside it reads \"Member ID\", which is how a human would identify it.","args":{"elementId":"e16","text":"{{memberId}}","why":"Type the member identifier into the search field."}}}
+{"at":"2026-08-23T19:35:59.776Z","seq":15,"kind":"surface_action","detail":{"action":"type","target":"Member ID","risk":"mutating"}}
+{"at":"2026-08-23T19:35:59.840Z","seq":16,"kind":"discovery_step","detail":{"step":2,"tool":"type","target":"Member ID","url":"http://localhost:4000/"}}
+{"at":"2026-08-23T19:35:59.961Z","seq":17,"kind":"screenshot","detail":{"file":"evidence\\discovery-lookup-savings-balance\\step-03.png"}}
+{"at":"2026-08-23T19:35:59.963Z","seq":18,"kind":"model_decision","detail":{"step":3,"tool":"click","reasoning":"The identifier is entered; submitting the form should take us to the member record.","args":{"elementId":"e17","why":"Submit the search and land on the member's detail screen."}}}
+{"at":"2026-08-23T19:35:59.976Z","seq":19,"kind":"surface_action","detail":{"action":"click","target":"Search","risk":"safe"}}
+{"at":"2026-08-23T19:36:00.236Z","seq":20,"kind":"discovery_step","detail":{"step":3,"tool":"click","target":"Search","url":"http://localhost:4000/"}}
+{"at":"2026-08-23T19:36:00.462Z","seq":21,"kind":"screenshot","detail":{"file":"evidence\\discovery-lookup-savings-balance\\step-04.png"}}
+{"at":"2026-08-23T19:36:00.465Z","seq":22,"kind":"model_decision","detail":{"step":4,"tool":"finish","reasoning":"The member detail screen is showing the accounts table. The savings balance is the cell in the \"Current Balance\" column of the row whose account type is Savings.","args":{"why":"Reached the member detail screen and located the savings balance.","summary":"look up a member and read their savings share account balance","outputs":[{"name":"savingsBalance","elementId":"e27","description":"Current balance of the member's savings share account, in USD."}]}}}
+{"at":"2026-08-23T19:36:00.467Z","seq":23,"kind":"discovery_success","detail":{"summary":"look up a member and read their savings share account balance","outputs":["savingsBalance"],"steps":3}}

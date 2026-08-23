@@ -26,7 +26,7 @@
 
 import type { Condition, ErrorClass } from '../capability/schema.js';
 import type { Observation } from '../surface/types.js';
-import { evaluatePredicate, type PredicateResult } from './predicates.js';
+import { evaluatePredicate, type PredicateResult } from './checkpoints.js';
 
 /* ------------------------------------------------------------ classifier */
 

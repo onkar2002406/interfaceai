@@ -13,16 +13,16 @@ import 'dotenv/config';
 import { Command } from 'commander';
 import { randomUUID } from 'node:crypto';
 import { resolve as resolvePath } from 'node:path';
-import { startCoreBank } from '../../apps/corebank/main.js';
+import { startCoreBank } from '../../apps/corebank/start-servers.js';
 import { TENANTS } from '../../apps/corebank/tenants.js';
-import { loadAppProfile, tenantOf } from '../capability/app-profile.js';
+import { loadAppProfile, tenantOf } from '../capability/application-profile.js';
 import { CapabilityStore } from '../capability/store.js';
-import { Policy } from '../policy/policy.js';
-import { RunRecorder } from '../observability/evidence.js';
+import { Policy } from '../policy/guardrails.js';
+import { RunRecorder } from '../observability/run-recorder.js';
 import { replay, CapabilityInputError } from '../replay/executor.js';
-import type { ReplayResult } from '../replay/outcomes.js';
-import { summarize } from '../replay/outcomes.js';
-import { renderDiscoverySummary, renderReplaySummary } from './report.js';
+import type { ReplayResult } from '../replay/replay-result.js';
+import { summarize } from '../replay/replay-result.js';
+import { renderDiscoverySummary, renderReplaySummary } from './run-reports.js';
 
 const DEFAULT_PROFILE = 'config/apps/corebank-servicing.yaml';
 const DEFAULT_POLICY = 'config/policy.json';
@@ -73,15 +73,15 @@ program
     const store = new CapabilityStore(resolvePath(opts.capabilities));
     const tenant = tenantOf(profile, opts.tenant);
 
-    const { discover } = await import('../agent/loop.js');
-    const { compile } = await import('../agent/compile.js');
-    const { ControlAuthority } = await import('../escalation/control.js');
+    const { discover } = await import('../discovery/loop.js');
+    const { compile } = await import('../discovery/trace-compiler.js');
+    const { ControlAuthority } = await import('../escalation/control-authority.js');
     const { PlaywrightSurface } = await import('../surface/web/playwright-surface.js');
 
     const provider =
-      opts.provider === 'mock'
-        ? new (await import('../agent/provider/mock.js')).MockProvider(opts.param)
-        : new (await import('../agent/provider/openai.js')).OpenAiProvider(
+      opts.provider === 'scripted'
+        ? new (await import('../discovery/llm/scripted-provider.js')).ScriptedProvider(opts.param)
+        : new (await import('../discovery/llm/openai-provider.js')).OpenAiProvider(
             opts.model ? { model: opts.model } : {},
           );
 
@@ -90,7 +90,7 @@ program
 
     let attached;
     if (opts.operator) {
-      const { connectToOperatorConsole } = await import('../escalation/operator/client.js');
+      const { connectToOperatorConsole } = await import('../escalation/operator/console-client.js');
       attached = await connectToOperatorConsole();
       console.log(`Operator console: ${attached.console.url}\n`);
     }
@@ -189,9 +189,9 @@ program
         `(CoreBank v${tenant.productVersion})\n`,
     );
 
-    let attached: Awaited<ReturnType<typeof import('../escalation/operator/client.js').connectToOperatorConsole>> | undefined;
+    let attached: Awaited<ReturnType<typeof import('../escalation/operator/console-client.js').connectToOperatorConsole>> | undefined;
     if (opts.operator) {
-      const { connectToOperatorConsole } = await import('../escalation/operator/client.js');
+      const { connectToOperatorConsole } = await import('../escalation/operator/console-client.js');
       attached = await connectToOperatorConsole();
       console.log(`Operator console: ${attached.console.url}`);
       console.log('If this run needs a human, open that URL to take control of the live session.\n');

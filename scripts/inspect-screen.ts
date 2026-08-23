@@ -8,7 +8,7 @@
  */
 
 import { chromium } from 'playwright';
-import { perceive, readSignals, isInteractive } from '../src/surface/web/perception.js';
+import { perceive, readSignals, isInteractive } from '../src/surface/web/accessibility-tree.js';
 
 const url = process.argv[2] ?? 'http://localhost:4000/login';
 const loginFirst = process.argv.includes('--login');

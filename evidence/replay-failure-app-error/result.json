@@ -15,16 +15,16 @@
   "capabilityVersion": "1.0.0",
   "tenant": "base",
   "product": "corebank-servicing",
-  "startedAt": "2026-08-23T14:07:02.395Z",
-  "durationMs": 2315,
+  "startedAt": "2026-08-23T19:36:07.801Z",
+  "durationMs": 2150,
   "steps": [
     {
       "stepId": "s1",
       "intent": "Open the member search screen from the left-hand menu.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-08-23T14:07:03.772Z",
-      "durationMs": 451,
+      "startedAt": "2026-08-23T19:36:09.074Z",
+      "durationMs": 427,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -43,8 +43,8 @@
       "intent": "Type the member identifier into the search field.",
       "actionType": "type",
       "status": "ok",
-      "startedAt": "2026-08-23T14:07:04.224Z",
-      "durationMs": 192,
+      "startedAt": "2026-08-23T19:36:09.502Z",
+      "durationMs": 164,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -58,8 +58,8 @@
       "intent": "Submit the search and land on the member's detail screen.",
       "actionType": "click",
       "status": "failed",
-      "startedAt": "2026-08-23T14:07:04.417Z",
-      "durationMs": 234,
+      "startedAt": "2026-08-23T19:36:09.666Z",
+      "durationMs": 224,
       "recoveries": [],
       "resolution": {
         "score": 1,

@@ -17,8 +17,8 @@
  */
 
 import type { ElementNode, Observation } from '../surface/types.js';
-import { isInteractive } from '../surface/web/perception.js';
-import type { ToolDefinition } from './provider/types.js';
+import { isInteractive } from '../surface/web/accessibility-tree.js';
+import type { ToolDefinition } from './llm/llm-provider.js';
 
 export function systemPrompt(opts: { product: string; allowedOrigins: string[] }): string {
   return `You are operating a back-office banking application on behalf of a bank employee, in order to

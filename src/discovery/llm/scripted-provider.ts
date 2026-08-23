@@ -21,7 +21,7 @@
  * committed discovery evidence comes from a live model run.
  */
 
-import type { DecideRequest, LlmProvider, ModelTurn } from './types.js';
+import type { DecideRequest, LlmProvider, ModelTurn } from './llm-provider.js';
 
 type FindElement = (...needles: string[]) => string | undefined;
 
@@ -31,8 +31,8 @@ interface Rule {
   then: (screen: string, find: FindElement) => ModelTurn | undefined;
 }
 
-export class MockProvider implements LlmProvider {
-  readonly name = 'mock';
+export class ScriptedProvider implements LlmProvider {
+  readonly name = 'scripted';
   readonly model = 'scripted-fixture';
   private calls = 0;
 
@@ -149,7 +149,7 @@ export class MockProvider implements LlmProvider {
     const screen = req.userText;
     for (const rule of this.rules()) {
       if (!rule.when(screen)) continue;
-      const turn = rule.then(screen, (...needles) => MockProvider.find(screen, needles));
+      const turn = rule.then(screen, (...needles) => ScriptedProvider.find(screen, needles));
       if (turn) return turn;
       throw new Error(
         `the scripted provider matched its "${rule.name}" rule but could not find the element it expected ` +

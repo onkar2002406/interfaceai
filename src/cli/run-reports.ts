@@ -7,8 +7,8 @@
  * Restricted" — not like a stack trace.
  */
 
-import type { ReplayResult } from '../replay/outcomes.js';
-import type { DiscoveryTrace } from '../agent/loop.js';
+import type { ReplayResult } from '../replay/replay-result.js';
+import type { DiscoveryTrace } from '../discovery/loop.js';
 import type { Capability } from '../capability/schema.js';
 
 export function renderDiscoverySummary(trace: DiscoveryTrace, capability: Capability | null): string {

@@ -15,7 +15,7 @@ metadata:
   version: 1.0.0
   title: Look up a member and read their savings share account balance
   summary: look up a member and read their savings share account balance
-  createdAt: 2026-08-23T14:06:54.527Z
+  createdAt: 2026-08-23T19:36:00.564Z
   app:
     product: corebank-servicing
     productVersion: "8.2"
@@ -24,10 +24,10 @@ metadata:
   approval: draft
   provenance:
     discoveryRunId: lookup-savings-balance
-    model: mock:scripted-fixture
+    model: scripted:scripted-fixture
     surfaceKind: web
     traceRef: evidence\discovery-lookup-savings-balance\trace.json
-    traceSha256: ae78288e8ebde1b1fe45a49bc7ec6f66f684b4a02ecc7226386ecd80253bf15e
+    traceSha256: 040fe85a90f865b31e99b600426fe5b44aeaa4ff61bc2a1db7ad7950c5fbfdfa
 spec:
   inputs:
     - name: memberId
