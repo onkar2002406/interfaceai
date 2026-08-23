@@ -1,0 +1,70 @@
+{
+  "status": "business_outcome",
+  "code": "PERMISSION_DENIED",
+  "message": "The member record is restricted and the signed-on operator lacks the entitlement to view it. A different operator identity may succeed.\n",
+  "conditionId": "permission_denied",
+  "atStep": "s3",
+  "runId": "business-outcome-permission-denied",
+  "capability": "lookup_member_savings_balance",
+  "capabilityVersion": "1.0.0",
+  "tenant": "base",
+  "product": "corebank-servicing",
+  "startedAt": "2026-08-23T07:38:18.007Z",
+  "durationMs": 1887,
+  "steps": [
+    {
+      "stepId": "s1",
+      "intent": "Open the member search screen from the left-hand menu.",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-08-23T07:38:19.232Z",
+      "durationMs": 417,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Member Search"
+      },
+      "checkpoint": {
+        "describe": "the member search screen is loaded in the content frame",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s2",
+      "intent": "Type the member identifier into the search field.",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-08-23T07:38:19.650Z",
+      "durationMs": 164,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s3",
+      "intent": "Submit the search and land on the member's detail screen.",
+      "actionType": "click",
+      "status": "business",
+      "startedAt": "2026-08-23T07:38:19.814Z",
+      "durationMs": 79,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Search"
+      }
+    }
+  ],
+  "driftSignals": [],
+  "appliedOverrides": [],
+  "evidenceDir": "evidence\\replay-business-outcome-permission-denied",
+  "blockedNavigations": []
+}

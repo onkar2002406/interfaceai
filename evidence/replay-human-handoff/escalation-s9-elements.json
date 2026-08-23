@@ -1,0 +1,401 @@
+{
+  "url": "http://localhost:4000/",
+  "title": "CoreBank Reference Install - Servicing Console",
+  "frames": [
+    "main",
+    "main/navFrame",
+    "main/contentFrame"
+  ],
+  "elements": [
+    {
+      "role": "StaticText",
+      "name": "CoreBank Reference Install · Servicing Console",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "CoreBank v8.2",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Member Search",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Home",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Signed on as",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "svc.demo",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Sign Off",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Member Search",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Home",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Sign Off",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "CoreBank Reference Install · Servicing Console",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "CoreBank v8.2",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Review New Sub-Account",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Confirm the details below. This action cannot be undone.",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Change details",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "columnheader",
+      "name": "Field",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ],
+      "rowCells": [
+        "Field",
+        "Value"
+      ]
+    },
+    {
+      "role": "columnheader",
+      "name": "Value",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ],
+      "rowCells": [
+        "Field",
+        "Value"
+      ]
+    },
+    {
+      "role": "cell",
+      "name": "Member",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ],
+      "columnHeader": "Field",
+      "rowCells": [
+        "Member",
+        "10002 — Oyelaran, Marcus"
+      ]
+    },
+    {
+      "role": "cell",
+      "name": "10002 — Oyelaran, Marcus",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ],
+      "columnHeader": "Value",
+      "rowCells": [
+        "Member",
+        "10002 — Oyelaran, Marcus"
+      ]
+    },
+    {
+      "role": "cell",
+      "name": "Account Type",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ],
+      "columnHeader": "Field",
+      "rowCells": [
+        "Account Type",
+        "Checking"
+      ]
+    },
+    {
+      "role": "cell",
+      "name": "Checking",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ],
+      "columnHeader": "Value",
+      "rowCells": [
+        "Account Type",
+        "Checking"
+      ]
+    },
+    {
+      "role": "cell",
+      "name": "Initial Deposit",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ],
+      "columnHeader": "Field",
+      "rowCells": [
+        "Initial Deposit",
+        "250.00"
+      ]
+    },
+    {
+      "role": "cell",
+      "name": "250.00",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ],
+      "columnHeader": "Value",
+      "rowCells": [
+        "Initial Deposit",
+        "250.00"
+      ]
+    },
+    {
+      "role": "cell",
+      "name": "Nickname",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ],
+      "columnHeader": "Field",
+      "rowCells": [
+        "Nickname",
+        "Escrow"
+      ]
+    },
+    {
+      "role": "cell",
+      "name": "Escrow",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ],
+      "columnHeader": "Value",
+      "rowCells": [
+        "Nickname",
+        "Escrow"
+      ]
+    },
+    {
+      "role": "button",
+      "name": "Submit Application",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Change details",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Field",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Value",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Member",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "10002 — Oyelaran, Marcus",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Account Type",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Checking",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Initial Deposit",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "250.00",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Nickname",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Escrow",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Submit Application",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    }
+  ]
+}

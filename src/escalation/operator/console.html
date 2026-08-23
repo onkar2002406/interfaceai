@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Operator Console — Intervention Queue</title>
+<style>
+  :root { color-scheme: light dark; --bg:#f6f7f9; --fg:#14171a; --card:#fff; --line:#d8dce0;
+          --accent:#0b5c4a; --warn:#a1341f; --muted:#5c6670; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14171a; --fg:#e8eaed; --card:#1e2226; --line:#333a40; --muted:#98a2ac; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font:13px/1.5 ui-sans-serif,system-ui,Segoe UI,sans-serif; background:var(--bg); color:var(--fg); }
+  header { padding:10px 16px; border-bottom:1px solid var(--line); display:flex; align-items:baseline; gap:12px; }
+  header h1 { font-size:15px; margin:0; }
+  header .sub { color:var(--muted); font-size:12px; }
+  main { display:grid; grid-template-columns: 380px 1fr; gap:0; height:calc(100vh - 45px); }
+  #queue { border-right:1px solid var(--line); overflow:auto; padding:12px; }
+  #stage { overflow:auto; padding:12px; display:flex; flex-direction:column; gap:10px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin-bottom:10px; }
+  .card h3 { margin:0 0 4px; font-size:13px; }
+  .meta { color:var(--muted); font-size:12px; }
+  .reason { margin:8px 0; padding:8px; background:rgba(161,52,31,.09); border-left:3px solid var(--warn); border-radius:3px; }
+  .contract { margin:8px 0; padding:8px; background:rgba(11,92,74,.09); border-left:3px solid var(--accent); border-radius:3px; }
+  dl { display:grid; grid-template-columns:auto 1fr; gap:2px 10px; margin:6px 0 0; }
+  dt { color:var(--muted); }
+  dd { margin:0; }
+  button { font:inherit; padding:5px 11px; border-radius:4px; border:1px solid var(--line);
+           background:var(--card); color:var(--fg); cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  button.danger  { background:transparent; border-color:var(--warn); color:var(--warn); }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+  input[type=text] { font:inherit; padding:5px 8px; border:1px solid var(--line); border-radius:4px;
+                     background:var(--card); color:var(--fg); flex:1; min-width:160px; }
+  #screen { border:1px solid var(--line); border-radius:6px; background:#000; max-width:100%; display:block;
+            cursor:not-allowed; }
+  #screen.live { cursor:crosshair; box-shadow:0 0 0 2px var(--accent); }
+  .state { display:inline-block; padding:1px 7px; border-radius:10px; font-size:11px; border:1px solid var(--line); }
+  .state.HUMAN { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .empty { color:var(--muted); padding:20px 4px; }
+  pre { margin:6px 0 0; padding:8px; background:var(--bg); border:1px solid var(--line); border-radius:4px;
+        max-height:150px; overflow:auto; font-size:11px; white-space:pre-wrap; }
+  .log { font-size:11px; color:var(--muted); max-height:120px; overflow:auto; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Operator Console</h1>
+  <span class="sub">Interventions raised by automation that could not safely continue.</span>
+</header>
+
+<main>
+  <section id="queue"><div class="empty">Waiting for an intervention…</div></section>
+  <section id="stage">
+    <div class="empty" id="stageEmpty">Select an intervention to view the live session.</div>
+    <div id="live" hidden>
+      <div class="row">
+        <strong id="liveTitle"></strong>
+        <span class="state" id="liveState">—</span>
+      </div>
+      <div class="row">
+        <input type="text" id="operatorName" placeholder="your name" value="operator">
+        <button class="primary" id="btnClaim">Take control of live session</button>
+        <button id="btnHandBack" disabled>Hand control back</button>
+        <button class="danger" id="btnAbandon" disabled>Cannot resolve</button>
+      </div>
+      <div class="row">
+        <input type="text" id="note" placeholder="what did you do? (recorded as evidence)">
+      </div>
+      <canvas id="screen" width="1280" height="900"></canvas>
+      <div class="log" id="log"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let current = null;      // intervention id
+let ws = null;
+let claimed = false;
+const canvas = $('screen');
+const ctx = canvas.getContext('2d');
+
+function log(msg) {
+  const el = $('log');
+  el.textContent = `${new Date().toLocaleTimeString()}  ${msg}\n` + el.textContent;
+}
+
+/* --------------------------------------------------------------- queue */
+
+async function refresh() {
+  const r = await fetch('/api/interventions').then((r) => r.json());
+  const q = $('queue');
+  if (!r.open.length) {
+    q.innerHTML = '<div class="empty">No open interventions.<br><br>Run a capability that needs a human, e.g.<br>'
+      + '<code>npm run replay -- --capability open_sub_account --input memberId=10001 --operator</code></div>';
+    if (current && !r.open.find((i) => i.id === current)) teardown();
+    return;
+  }
+  q.innerHTML = r.open.map(renderCard).join('');
+  for (const el of q.querySelectorAll('[data-open]')) {
+    el.addEventListener('click', () => select(el.getAttribute('data-open')));
+  }
+  if (!current) select(r.open[0].id);
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+}
+
+function renderCard(i) {
+  return `<div class="card">
+    <h3>${esc(i.capability.title)}</h3>
+    <div class="meta">${esc(i.capability.name)}@${esc(i.capability.version)} · tenant <b>${esc(i.tenant)}</b> · run <code>${esc(i.runId)}</code></div>
+    <div class="reason"><b>Stopped at step ${i.atStep.index}/${i.atStep.total}:</b> ${esc(i.atStep.intent)}<br><br>${esc(i.reason)}</div>
+    <div class="contract"><b>To resume, this must be true:</b><br>${esc(i.resumeContract.describe)}</div>
+    <dl>
+      <dt>Reason</dt><dd><code>${esc(i.reasonClass)}</code></dd>
+      <dt>Inputs</dt><dd><code>${esc(JSON.stringify(i.params))}</code></dd>
+      <dt>Raised</dt><dd>${esc(new Date(i.createdAt).toLocaleTimeString())}</dd>
+    </dl>
+    <details><summary class="meta">What is on screen now</summary><pre>${esc(i.observedText.slice(0, 900))}</pre></details>
+    <div class="row"><button data-open="${esc(i.id)}">Open live session</button></div>
+  </div>`;
+}
+
+/* ------------------------------------------------------- live session */
+
+function select(id) {
+  if (current === id) return;
+  teardown();
+  current = id;
+  claimed = false;
+  $('stageEmpty').hidden = true;
+  $('live').hidden = false;
+  $('btnClaim').disabled = false;
+  $('btnHandBack').disabled = true;
+  $('btnAbandon').disabled = true;
+  canvas.classList.remove('live');
+  fetch(`/api/interventions/${id}`).then((r) => r.json()).then((d) => {
+    $('liveTitle').textContent = `${d.request.capability.title} — step ${d.request.atStep.index}/${d.request.atStep.total}`;
+    $('liveState').textContent = d.state;
+    $('liveState').className = 'state ' + d.state;
+  });
+
+  ws = new WebSocket(`ws://${location.host}/ws?id=${encodeURIComponent(id)}`);
+  ws.onmessage = (e) => {
+    const m = JSON.parse(e.data);
+    if (m.type === 'frame') {
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = img.width; canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+      };
+      img.src = 'data:image/jpeg;base64,' + m.data;
+    } else if (m.type === 'denied') {
+      log('REFUSED: ' + m.message);
+    } else if (m.type === 'error') {
+      log('ERROR: ' + m.message);
+    }
+  };
+  ws.onclose = () => log('stream closed');
+  log('viewing live session (read-only until you take control)');
+}
+
+function teardown() {
+  if (ws) { try { ws.close(); } catch {} ws = null; }
+  current = null;
+  claimed = false;
+  $('live').hidden = true;
+  $('stageEmpty').hidden = false;
+}
+
+/* Coordinates must be in the page's space, not the canvas element's. */
+function pt(e) {
+  const r = canvas.getBoundingClientRect();
+  return {
+    x: Math.round((e.clientX - r.left) * (canvas.width / r.width)),
+    y: Math.round((e.clientY - r.top) * (canvas.height / r.height)),
+  };
+}
+
+function send(event) {
+  if (!claimed || !ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ type: 'input', event }));
+}
+
+canvas.addEventListener('mousedown', (e) => {
+  const p = pt(e);
+  send({ kind: 'mouse', type: 'mousePressed', x: p.x, y: p.y, clickCount: 1 });
+});
+canvas.addEventListener('mouseup', (e) => {
+  const p = pt(e);
+  send({ kind: 'mouse', type: 'mouseReleased', x: p.x, y: p.y, clickCount: 1 });
+});
+canvas.addEventListener('mousemove', (e) => {
+  const p = pt(e);
+  send({ kind: 'mouse', type: 'mouseMoved', x: p.x, y: p.y });
+});
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const p = pt(e);
+  send({ kind: 'scroll', x: p.x, y: p.y, deltaY: e.deltaY });
+}, { passive: false });
+
+window.addEventListener('keydown', (e) => {
+  if (!claimed) return;
+  if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+  e.preventDefault();
+  send({ kind: 'key', type: 'keyDown', key: e.key, code: e.code, windowsVirtualKeyCode: e.keyCode });
+  if (e.key.length === 1) send({ kind: 'key', type: 'char', text: e.key });
+});
+window.addEventListener('keyup', (e) => {
+  if (!claimed) return;
+  if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+  send({ kind: 'key', type: 'keyUp', key: e.key, code: e.code, windowsVirtualKeyCode: e.keyCode });
+});
+
+/* ------------------------------------------------------------ actions */
+
+$('btnClaim').onclick = async () => {
+  const operator = $('operatorName').value || 'operator';
+  const r = await fetch(`/api/interventions/${current}/claim`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ operator }),
+  });
+  if (!r.ok) { log('claim refused: ' + (await r.json()).error); return; }
+  claimed = true;
+  canvas.classList.add('live');
+  $('btnClaim').disabled = true;
+  $('btnHandBack').disabled = false;
+  $('btnAbandon').disabled = false;
+  $('liveState').textContent = 'HUMAN';
+  $('liveState').className = 'state HUMAN';
+  log(`you now hold control as "${operator}". Click and type on the screen below — it is the same live session.`);
+};
+
+$('btnHandBack').onclick = async () => {
+  const note = $('note').value || 'completed manually';
+  const r = await fetch(`/api/interventions/${current}/handback`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ note }),
+  });
+  if (!r.ok) { log('hand back refused: ' + (await r.json()).error); return; }
+  log('control handed back — automation will re-check its resume contract before continuing');
+  claimed = false;
+  canvas.classList.remove('live');
+  $('btnHandBack').disabled = true;
+  $('btnAbandon').disabled = true;
+  setTimeout(refresh, 400);
+};
+
+$('btnAbandon').onclick = async () => {
+  const reason = $('note').value || 'operator could not resolve';
+  await fetch(`/api/interventions/${current}/abandon`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ reason }),
+  });
+  log('abandoned — the run will report an escalated/abandoned result');
+  claimed = false;
+  setTimeout(refresh, 400);
+};
+
+refresh();
+setInterval(refresh, 1500);
+</script>
+</body>
+</html>

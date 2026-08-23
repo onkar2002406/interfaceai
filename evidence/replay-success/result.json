@@ -1,0 +1,75 @@
+{
+  "status": "success",
+  "outputs": {
+    "savingsBalance": 8412.55,
+    "savingsAccountNumber": "[pii:57efb147…7735]"
+  },
+  "runId": "success",
+  "capability": "lookup_member_savings_balance",
+  "capabilityVersion": "1.0.0",
+  "tenant": "base",
+  "product": "corebank-servicing",
+  "startedAt": "2026-08-23T07:38:13.279Z",
+  "durationMs": 2440,
+  "steps": [
+    {
+      "stepId": "s1",
+      "intent": "Open the member search screen from the left-hand menu.",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-08-23T07:38:14.702Z",
+      "durationMs": 502,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Member Search"
+      },
+      "checkpoint": {
+        "describe": "the member search screen is loaded in the content frame",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s2",
+      "intent": "Type the member identifier into the search field.",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-08-23T07:38:15.204Z",
+      "durationMs": 178,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s3",
+      "intent": "Submit the search and land on the member's detail screen.",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-08-23T07:38:15.383Z",
+      "durationMs": 287,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Search"
+      },
+      "checkpoint": {
+        "describe": "the member detail screen for the requested member is displayed",
+        "ok": true,
+        "failed": []
+      }
+    }
+  ],
+  "driftSignals": [],
+  "appliedOverrides": [],
+  "evidenceDir": "evidence\\replay-success",
+  "blockedNavigations": []
+}

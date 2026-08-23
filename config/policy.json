@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "description": "Guardrails for the CoreBank servicing console. Origins are the three tenant instances of the same vendor product.",
+
+  "origins": ["http://localhost:4000", "http://localhost:4001", "http://localhost:4002"],
+
+  "routes": {
+    "allow": [
+      "/",
+      "/login",
+      "/logout",
+      "/nav",
+      "/content",
+      "/search",
+      "/ack-privacy",
+      "/member/*",
+      "/member/*/subaccount",
+      "/member/*/subaccount/commit",
+      "/member/*/transfer"
+    ],
+    "deny": [
+      "/_admin/**"
+    ]
+  },
+
+  "actions": ["click", "type", "select", "press", "navigate", "read", "scroll"],
+
+  "limits": {
+    "maxSteps": 40,
+    "maxRuntimeMs": 300000,
+    "maxRecoveries": 4
+  },
+
+  "risk": {
+    "irreversible": [
+      {
+        "code": "FUNDS_TRANSFER",
+        "description": "Posts a funds transfer. Money moves and staff cannot reverse it.",
+        "when": { "actionType": "click", "routePattern": "^/member/[^/]+/transfer" }
+      },
+      {
+        "code": "IRREVERSIBLE_SUBMIT",
+        "description": "Commits a new record (account opening, application submission).",
+        "when": { "actionType": "click", "namePattern": "^(submit|post|commit|approve|delete|remove|close account)\\b" }
+      }
+    ],
+    "mutating": [
+      {
+        "code": "FORM_INPUT",
+        "description": "Types into a field. Changes client state only until submitted.",
+        "when": { "actionType": "type" }
+      },
+      {
+        "code": "FORM_SELECT",
+        "description": "Chooses a dropdown value. Changes client state only until submitted.",
+        "when": { "actionType": "select" }
+      }
+    ]
+  }
+}

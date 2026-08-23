@@ -1,0 +1,4 @@
+{
+  "url": "http://localhost:4000/",
+  "rendered": "GOAL: look up member 10001 and read their current savings balance\nSTEP: 2 of at most 20\n\nLOCATION: http://localhost:4000/\nFRAMES:   http://localhost:4000/  |  http://localhost:4000/nav  |  http://localhost:4000/search\nTITLE:    CoreBank Reference Install - Servicing Console\n\nCONTROLS YOU CAN ACT ON (5):\n  [e3] link        name=\"Member Search\" frame=main/navFrame\n  [e4] link        name=\"Home\" frame=main/navFrame\n  [e7] link        name=\"Sign Off\" frame=main/navFrame\n  [e16] textbox     name=\"\" labels=[\"Member ID\"] frame=main/contentFrame\n  [e17] button      name=\"Search\" frame=main/contentFrame\n\nPAGE TEXT:\nCoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Search\nHome\n\nSigned on as\nsvc.demo\nSign Off\nCoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Search\nMember ID: \nEnter a numeric member identifier."
+}

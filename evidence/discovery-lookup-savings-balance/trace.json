@@ -1,0 +1,273 @@
+{
+  "runId": "lookup-savings-balance",
+  "goal": "look up member 10001 and read their current savings balance",
+  "goalTemplate": "look up member {{memberId}} and read their current savings balance",
+  "params": {
+    "memberId": "10001"
+  },
+  "product": "corebank-servicing",
+  "tenant": "base",
+  "entryPoint": "/",
+  "model": "scripted-fixture",
+  "provider": "mock",
+  "startedAt": "2026-08-23T07:38:06.314Z",
+  "finishedAt": "2026-08-23T07:38:11.727Z",
+  "steps": [
+    {
+      "index": 1,
+      "intent": "Open the member search screen from the left-hand menu.",
+      "toolName": "click",
+      "arguments": {
+        "elementId": "e3",
+        "why": "Open the member search screen from the left-hand menu."
+      },
+      "descriptor": {
+        "description": "Open the member search screen from the left-hand menu.",
+        "role": "link",
+        "nameMatch": "normalized",
+        "scope": {
+          "framePath": [
+            "main",
+            "navFrame"
+          ]
+        },
+        "anchors": [],
+        "hints": {
+          "domHint": "a",
+          "boundsAtRecord": {
+            "x": 4,
+            "y": 61,
+            "width": 102.296875,
+            "height": 16
+          }
+        },
+        "name": "Member Search"
+      },
+      "actedOn": {
+        "role": "link",
+        "name": "Member Search",
+        "framePath": [
+          "main",
+          "navFrame"
+        ],
+        "proximateLabels": []
+      },
+      "after": {
+        "url": "http://localhost:4000/",
+        "frameUrls": [
+          "http://localhost:4000/",
+          "http://localhost:4000/nav",
+          "http://localhost:4000/search"
+        ],
+        "title": "CoreBank Reference Install - Servicing Console",
+        "textSample": "CoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Search\nHome\n\nSigned on as\nsvc.demo\nSign Off\nCoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Search\nMember ID: \nEnter a numeric member identifier."
+      },
+      "ok": true,
+      "at": "2026-08-23T07:38:09.527Z"
+    },
+    {
+      "index": 2,
+      "intent": "Type the member identifier into the search field.",
+      "toolName": "type",
+      "arguments": {
+        "elementId": "e16",
+        "text": "10001",
+        "why": "Type the member identifier into the search field."
+      },
+      "descriptor": {
+        "description": "Type the member identifier into the search field.",
+        "role": "textbox",
+        "nameMatch": "normalized",
+        "scope": {
+          "framePath": [
+            "main",
+            "contentFrame"
+          ]
+        },
+        "anchors": [
+          {
+            "relation": "proximateLabel",
+            "text": "Member ID"
+          }
+        ],
+        "hints": {
+          "domHint": "input#ctl00_ContentPlaceHolder1_txtMbrId",
+          "boundsAtRecord": {
+            "x": 258.59375,
+            "y": 65,
+            "width": 128,
+            "height": 13
+          },
+          "proximateLabels": [
+            "Member ID"
+          ]
+        }
+      },
+      "actedOn": {
+        "role": "textbox",
+        "name": "",
+        "framePath": [
+          "main",
+          "contentFrame"
+        ],
+        "proximateLabels": [
+          "Member ID"
+        ]
+      },
+      "after": {
+        "url": "http://localhost:4000/",
+        "frameUrls": [
+          "http://localhost:4000/",
+          "http://localhost:4000/nav",
+          "http://localhost:4000/search"
+        ],
+        "title": "CoreBank Reference Install - Servicing Console",
+        "textSample": "CoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Search\nHome\n\nSigned on as\nsvc.demo\nSign Off\nCoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Search\nMember ID: \nEnter a numeric member identifier."
+      },
+      "ok": true,
+      "at": "2026-08-23T07:38:10.142Z"
+    },
+    {
+      "index": 3,
+      "intent": "Submit the search and land on the member's detail screen.",
+      "toolName": "click",
+      "arguments": {
+        "elementId": "e17",
+        "why": "Submit the search and land on the member's detail screen."
+      },
+      "descriptor": {
+        "description": "Submit the search and land on the member's detail screen.",
+        "role": "button",
+        "nameMatch": "normalized",
+        "scope": {
+          "framePath": [
+            "main",
+            "contentFrame"
+          ]
+        },
+        "anchors": [],
+        "hints": {
+          "domHint": "input",
+          "boundsAtRecord": {
+            "x": 409.59375,
+            "y": 65,
+            "width": 38.078125,
+            "height": 13
+          }
+        },
+        "name": "Search"
+      },
+      "actedOn": {
+        "role": "button",
+        "name": "Search",
+        "framePath": [
+          "main",
+          "contentFrame"
+        ],
+        "proximateLabels": []
+      },
+      "after": {
+        "url": "http://localhost:4000/",
+        "frameUrls": [
+          "http://localhost:4000/",
+          "http://localhost:4000/nav",
+          "http://localhost:4000/search"
+        ],
+        "title": "CoreBank Reference Install - Servicing Console",
+        "textSample": "CoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Search\nHome\n\nSigned on as\nsvc.demo\nSign Off\nCoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Search\nMember ID: \nEnter a numeric member identifier."
+      },
+      "ok": true,
+      "at": "2026-08-23T07:38:10.332Z"
+    },
+    {
+      "index": 4,
+      "intent": "Submit the search and land on the member's detail screen.",
+      "toolName": "click",
+      "arguments": {
+        "elementId": "e17",
+        "why": "Submit the search and land on the member's detail screen."
+      },
+      "descriptor": {
+        "description": "Submit the search and land on the member's detail screen.",
+        "role": "button",
+        "nameMatch": "normalized",
+        "scope": {
+          "framePath": [
+            "main",
+            "contentFrame"
+          ]
+        },
+        "anchors": [],
+        "hints": {
+          "domHint": "input",
+          "boundsAtRecord": {
+            "x": 409.59375,
+            "y": 65,
+            "width": 38.078125,
+            "height": 13
+          }
+        },
+        "name": "Search"
+      },
+      "actedOn": {
+        "role": "button",
+        "name": "Search",
+        "framePath": [
+          "main",
+          "contentFrame"
+        ],
+        "proximateLabels": []
+      },
+      "after": {
+        "url": "http://localhost:4000/",
+        "frameUrls": [
+          "http://localhost:4000/",
+          "http://localhost:4000/nav",
+          "http://localhost:4000/member/10001"
+        ],
+        "title": "CoreBank Reference Install - Servicing Console",
+        "textSample": "CoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Search\nHome\n\nSigned on as\nsvc.demo\nSign Off\nCoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Detail\nMember ID: 10001   Name: Whitfield, Dana\nBranch: Riverside   Member Since: 2014-03-11\nSSN: [pii:01b9454b…9087]   E-mail: [pii:e6e9a2f8…alid]\nAccounts\nAccount No. Type Current Balance Status Opened\n[pii:57efb147…7735] Savings $8,412.55 Open 2014-03-11\n[pii:e32691bd…7736] Checking $1,290.04 Open 2014-03-11\nOpen Sub-Account  |  Funds Transfer  |  Member Search"
+      },
+      "ok": true,
+      "at": "2026-08-23T07:38:11.171Z"
+    }
+  ],
+  "outcome": {
+    "kind": "success",
+    "summary": "look up a member and read their savings share account balance",
+    "outputs": [
+      {
+        "name": "savingsBalance",
+        "description": "Current balance of the member's savings share account, in USD.",
+        "descriptor": {
+          "description": "the savingsBalance value on the final screen",
+          "role": "cell",
+          "nameMatch": "normalized",
+          "scope": {
+            "framePath": [
+              "main",
+              "contentFrame"
+            ]
+          },
+          "anchors": [
+            {
+              "relation": "underColumn",
+              "text": "Current Balance"
+            },
+            {
+              "relation": "inRowWith",
+              "text": "Savings"
+            }
+          ],
+          "hints": {}
+        },
+        "sampleText": "$8,412.55"
+      }
+    ]
+  },
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "calls": 5
+  }
+}

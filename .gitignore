@@ -1,0 +1,22 @@
+# secrets — never commit
+.env
+.env.*
+!.env.example
+
+# dependencies / build
+node_modules/
+dist/
+*.tsbuildinfo
+
+# runtime output that is NOT curated evidence
+evidence/_scratch/
+.playwright/
+test-results/
+playwright-report/
+
+# editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

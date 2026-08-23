@@ -1,0 +1,223 @@
+# Look up a member and read their savings share account balance
+#
+# look up a member and read their savings share account balance
+#
+# Reviewed by a human before `approval: approved` is set. Approval is what
+# permits unattended replay of any step marked risk: irreversible.
+#
+# Values below are parameter REFERENCES ({{name}}), never captured data.
+
+apiVersion: capability.interface.ai/v1
+kind: Capability
+metadata:
+  id: cap_discovered_member_savings
+  name: discovered_member_savings
+  version: 1.0.0
+  title: Look up a member and read their savings share account balance
+  summary: look up a member and read their savings share account balance
+  createdAt: 2026-08-23T07:38:11.730Z
+  app:
+    product: corebank-servicing
+    productVersion: "8.2"
+    tenant: base
+    entryPoint: /
+  approval: draft
+  provenance:
+    discoveryRunId: lookup-savings-balance
+    model: mock:scripted-fixture
+    surfaceKind: web
+    traceRef: evidence\discovery-lookup-savings-balance\trace.json
+    traceSha256: baaa3ca3af326cc62a03d8ea2cc4947885ba3210b618ad2f9eac85f4e9f6b221
+spec:
+  inputs:
+    - name: memberId
+      type: string
+      description: Supplied at discovery time as "10x01".
+      required: true
+      pattern: ^[0-9]{1,9}$
+      sensitivity: pii
+      example: 10x01
+  outputs:
+    - name: savingsBalance
+      type: money
+      description: Current balance of the member's savings share account, in USD.
+      sensitivity: pii
+      from:
+        afterStep: s4
+        target:
+          description: the savingsBalance value on the final screen
+          role: cell
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+              - contentFrame
+          anchors:
+            - relation: underColumn
+              text: Current Balance
+            - relation: inRowWith
+              text: Savings
+          hints: {}
+        transform: money
+  preconditions:
+    authState: authenticated
+    describe: An operator session must already exist. Sign-on is the runtime's responsibility, not part
+      of this flow.
+  steps:
+    - id: s1
+      intent: Open the member search screen from the left-hand menu.
+      action:
+        type: click
+        target:
+          description: Open the member search screen from the left-hand menu.
+          role: link
+          name: Member Search
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+              - navFrame
+          anchors: []
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 4
+              y: 61
+              width: 102.296875
+              height: 16
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /search$
+        all:
+          - kind: urlMatches
+            pattern: /search$
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s2
+      intent: Type the member identifier into the search field.
+      action:
+        type: type
+        target:
+          description: Type the member identifier into the search field.
+          role: textbox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+              - contentFrame
+          anchors:
+            - relation: proximateLabel
+              text: Member ID
+          hints:
+            domHint: input#ctl00_ContentPlaceHolder1_txtMbrId
+            boundsAtRecord:
+              x: 258.59375
+              y: 65
+              width: 128
+              height: 13
+            proximateLabels:
+              - Member ID
+        value: "{{memberId}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s3
+      intent: Submit the search and land on the member's detail screen.
+      action:
+        type: click
+        target:
+          description: Submit the search and land on the member's detail screen.
+          role: button
+          name: Search
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+              - contentFrame
+          anchors: []
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 409.59375
+              y: 65
+              width: 38.078125
+              height: 13
+      guard:
+        risk: safe
+      conditions: []
+      optional: false
+    - id: s4
+      intent: Submit the search and land on the member's detail screen.
+      action:
+        type: click
+        target:
+          description: Submit the search and land on the member's detail screen.
+          role: button
+          name: Search
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+              - contentFrame
+          anchors: []
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 409.59375
+              y: 65
+              width: 38.078125
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /member/[0-9]+$
+        all:
+          - kind: urlMatches
+            pattern: /member/[0-9]+$
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+  successCheckpoint:
+    describe: the flow reached the screen that answers the goal, with every declared value visible on it
+    all:
+      - kind: elementPresent
+        target:
+          description: the savingsBalance value on the final screen
+          role: cell
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+              - contentFrame
+          anchors:
+            - relation: underColumn
+              text: Current Balance
+            - relation: inRowWith
+              text: Savings
+          hints: {}
+    any: []
+    timeoutMs: 10000
+    pollMs: 250
+  outcomes:
+    business:
+      - code: PERMISSION_DENIED
+        meaning: The signed-on operator lacks entitlements for this member record.
+        outputsAvailable: false
+      - code: MEMBER_NOT_FOUND
+        meaning: No member matches the supplied identifier.
+        outputsAvailable: false
+      - code: VALIDATION_ERROR
+        meaning: The application rejected the submitted values.
+        outputsAvailable: false
+  escalation:
+    onUnrecovered: escalate
+    onAmbiguous: escalate
+    onIrreversible: require_approval
+overrides: {}

@@ -1,0 +1,182 @@
+product: corebank-servicing
+description: >
+  CoreBank Servicing Console — the back-office application staff use to look up
+  members, view share accounts, open sub-accounts and post transfers. Deployed
+  to many institutions from the same vendor build, configured and branded per
+  institution.
+
+# ---------------------------------------------------------------------------
+# Product-wide runtime conditions.
+#
+# Evaluated after EVERY step of EVERY capability recorded against this product,
+# in the order written here. The classifier takes the FIRST match, so the order
+# encodes the taxonomy:
+#
+#   business  -> a legitimate answer the caller asked for
+#   recover   -> something we know how to fix, bounded
+#   fail      -> something we know is fatal, diagnosed rather than timed out
+#
+# Authoring these once per product (rather than per capability) is the whole
+# point: fixing how we handle a session timeout fixes it for every flow.
+# ---------------------------------------------------------------------------
+conditions:
+  # ---- business outcomes: real answers, not failures ----------------------
+  - id: permission_denied
+    description: >
+      The member record is restricted to higher-privilege staff. Nothing is
+      broken — the caller needs to know it cannot see this record.
+    when:
+      kind: textPresent
+      text: You are not authorized to view this record
+    then:
+      kind: business
+      code: PERMISSION_DENIED
+      message: The signed-on operator lacks entitlements for this member record.
+
+  - id: member_not_found
+    description: >
+      No member matches the supplied identifier. The canonical example of an
+      outcome that must not be reported as an error.
+    when:
+      kind: textPresent
+      text: No records found
+    then:
+      kind: business
+      code: MEMBER_NOT_FOUND
+      message: No member matches the supplied identifier.
+
+  - id: validation_error
+    description: >
+      The application rejected the submitted form. The caller supplied data the
+      business rules refuse, which is information, not a malfunction.
+    when:
+      kind: textPresent
+      text: Please correct the following
+    then:
+      kind: business
+      code: VALIDATION_ERROR
+      message: The application rejected the submitted values.
+
+  # ---- recoverable conditions: bounded, then re-verified ------------------
+  - id: session_expired
+    description: >
+      The session timed out and the app bounced to sign-on. Recoverable exactly
+      once — a second expiry in one run means something is wrong with the
+      credentials or the session policy, and retrying would just loop.
+    when:
+      kind: textPresent
+      text: session has expired
+    then:
+      kind: recover
+      action:
+        handler: reauthenticate
+        maxAttempts: 1
+
+  - id: maintenance_interstitial
+    description: >
+      An unscheduled maintenance overlay appeared over the page. Note it carries
+      no role="dialog" and no aria-label — a legacy app would not bother — so it
+      is detected by the text a human would read, which is also the signal that
+      works on a screenshot-only or desktop surface.
+    when:
+      kind: textPresent
+      text: Scheduled Maintenance Notice
+    then:
+      kind: recover
+      action:
+        handler: dismiss_dialog
+        maxAttempts: 2
+        dismissTarget:
+          description: the Continue button on the maintenance overlay
+          role: button
+          name: Continue
+
+  # ---- hard failures: diagnosed, not merely timed out --------------------
+  - id: app_error
+    description: >
+      The application returned its error page. Retrying will not help; stop and
+      surface the reference so it can be traced in the app's own logs.
+    when:
+      kind: textPresent
+      text: Unexpected System Error
+    then:
+      kind: fail
+      errorClass: surface_error
+      message: >
+        The application returned its system error page. The on-screen error
+        reference identifies the failure in the vendor's logs.
+
+# ---------------------------------------------------------------------------
+# Re-authentication. Field targets only — credentials come from the environment
+# at run time and are never written to disk or into an artifact.
+# ---------------------------------------------------------------------------
+auth:
+  loginPath: /login
+  credentialEnv:
+    user: COREBANK_OPERATOR
+    password: COREBANK_PASSWORD
+
+  operatorField:
+    description: the Operator ID box on the sign-on screen
+    role: textbox
+    anchors:
+      - relation: proximateLabel
+        text: Operator ID
+
+  passwordField:
+    description: the Password box on the sign-on screen
+    role: textbox
+    anchors:
+      - relation: proximateLabel
+        text: Password
+
+  submitTarget:
+    description: the Sign On button
+    role: button
+    name: Sign On
+
+  successCheckpoint:
+    describe: the sign-on screen is no longer displayed
+    all:
+      - kind: textAbsent
+        text: Staff Sign On
+    timeoutMs: 8000
+
+# ---------------------------------------------------------------------------
+# Tenants. Same vendor product, different install. Adding an institution is a
+# config entry — not a re-recording, and not an engineering project.
+# ---------------------------------------------------------------------------
+tenants:
+  - id: base
+    label: CoreBank Reference Install
+    baseUrl: http://localhost:4000
+    productVersion: '8.2'
+
+  - id: firstvalley
+    label: First Valley Credit Union
+    baseUrl: http://localhost:4001
+    productVersion: '8.2'
+
+  - id: harborcu
+    label: Harbor Credit Union
+    baseUrl: http://localhost:4002
+    productVersion: '9.0'
+    extraConditions:
+      - id: privacy_acknowledgement
+        description: >
+          Harbor's compliance team added a mandatory privacy acknowledgement
+          before member detail. It is specific to this institution, so it lives
+          on the tenant rather than in the product profile — capabilities
+          recorded elsewhere inherit it automatically when replayed here.
+        when:
+          kind: textPresent
+          text: Privacy Acknowledgement Required
+        then:
+          kind: recover
+          action:
+            handler: dismiss_dialog
+            maxAttempts: 1
+            dismissTarget:
+              description: the Acknowledge and Continue button
+              role: button
+              name: Acknowledge and Continue

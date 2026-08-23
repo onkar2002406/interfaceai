@@ -1,0 +1,95 @@
+{
+  "status": "success",
+  "outputs": {
+    "savingsBalance": 8412.55,
+    "savingsAccountNumber": "[pii:57efb147…7735]"
+  },
+  "runId": "tenant-firstvalley",
+  "capability": "lookup_member_savings_balance",
+  "capabilityVersion": "1.0.0",
+  "tenant": "firstvalley",
+  "product": "corebank-servicing",
+  "startedAt": "2026-08-23T07:38:41.941Z",
+  "durationMs": 2025,
+  "steps": [
+    {
+      "stepId": "s1",
+      "intent": "Open the member search screen from the left-hand menu.",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-08-23T07:38:43.065Z",
+      "durationMs": 409,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Find Member"
+      },
+      "checkpoint": {
+        "describe": "the member search screen is loaded in the content frame",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s2",
+      "intent": "Type the member identifier into the search field.",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-08-23T07:38:43.475Z",
+      "durationMs": 161,
+      "recoveries": [],
+      "resolution": {
+        "score": 0.571,
+        "strategy": "frame",
+        "drift": true,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s3",
+      "intent": "Submit the search and land on the member's detail screen.",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-08-23T07:38:43.637Z",
+      "durationMs": 287,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Go"
+      },
+      "checkpoint": {
+        "describe": "the member detail screen for the requested member is displayed",
+        "ok": true,
+        "failed": []
+      }
+    }
+  ],
+  "driftSignals": [
+    {
+      "stepId": "s2",
+      "intent": "Type the member identifier into the search field.",
+      "expected": "unnamed textbox, labelled \"Member ID\", in frame main/contentFrame",
+      "matched": "",
+      "score": 0.571,
+      "strategy": "frame"
+    }
+  ],
+  "appliedOverrides": [
+    {
+      "tenant": "firstvalley",
+      "path": "/steps/0/action/target/name",
+      "why": "Their menu says \"Find Member\" where the reference install says \"Member Search\". A pure relabel with no behavioural difference.\n"
+    },
+    {
+      "tenant": "firstvalley",
+      "path": "/steps/2/action/target/name",
+      "why": "Their search button is captioned \"Go\". Nothing else about the search form differs.\n"
+    }
+  ],
+  "evidenceDir": "evidence\\replay-tenant-firstvalley",
+  "blockedNavigations": []
+}

@@ -1,0 +1,173 @@
+{
+  "url": "http://localhost:4000/",
+  "title": "CoreBank Reference Install - Servicing Console",
+  "frames": [
+    "main",
+    "main/navFrame",
+    "main/contentFrame"
+  ],
+  "elements": [
+    {
+      "role": "StaticText",
+      "name": "CoreBank Reference Install · Servicing Console",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "CoreBank v8.2",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Member Search",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Home",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Signed on as",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "svc.demo",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Sign Off",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Member Search",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Home",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Sign Off",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "navFrame"
+      ]
+    },
+    {
+      "role": "paragraph",
+      "name": "",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "paragraph",
+      "name": "",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "CoreBank Reference Install · Servicing Console",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "CoreBank v8.2",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Unexpected System Error",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "The application encountered an error and cannot complete your request.",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Error reference: SYS-MT5HWL82",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Please contact the service desk with this reference.",
+      "proximateLabels": [],
+      "framePath": [
+        "main",
+        "contentFrame"
+      ]
+    }
+  ]
+}

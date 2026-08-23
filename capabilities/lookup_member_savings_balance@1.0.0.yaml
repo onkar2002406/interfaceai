@@ -1,0 +1,239 @@
+# Look up a member's savings balance
+#
+# HAND-AUTHORED reference artifact.
+#
+# This one was written by a person, not compiled from a discovery run, on
+# purpose: it let the replay engine, the locator model and the error taxonomy be
+# built and proven before any LLM was involved. If replay only worked on output
+# the model happened to produce, we would not know whether the engine was
+# correct or merely lucky. It also demonstrates that the schema is genuinely
+# human-authorable, which it has to be — humans review and amend these.
+#
+# The machine-compiled equivalent produced by `npm run discover` lands beside it
+# with provenance pointing at the discovery transcript.
+
+apiVersion: capability.interface.ai/v1
+kind: Capability
+
+metadata:
+  id: cap_lookup_member_savings_balance
+  name: lookup_member_savings_balance
+  version: 1.0.0
+  title: Look up a member's savings balance
+  summary: >
+    Searches the servicing console for a member by identifier and reads the
+    current balance of their savings share account. Read-only: every step is
+    reversible and the capability never submits a form that changes state.
+  createdAt: '2026-08-23T00:00:00.000Z'
+
+  app:
+    product: corebank-servicing
+    productVersion: '8.2'
+    tenant: base
+    entryPoint: /
+
+  # Read-only and reviewed, so it is safe to run unattended. Approval would be
+  # doing more work here if the flow contained an irreversible step.
+  approval: approved
+  approvedBy: hand-authored reference artifact
+  approvedAt: '2026-08-23T00:00:00.000Z'
+
+  provenance:
+    discoveryRunId: hand-authored
+    model: none
+    surfaceKind: web
+    traceRef: '(none — written by hand)'
+    traceSha256: '0000000000000000000000000000000000000000000000000000000000000000'
+
+spec:
+  preconditions:
+    authState: authenticated
+    describe: >
+      An operator session must already exist. The capability contains no sign-on
+      steps and no credentials — the runtime establishes the session from the
+      product profile so the same flow works under any operator identity.
+
+  inputs:
+    - name: memberId
+      type: string
+      description: The member identifier to look up, as printed on the member's statement.
+      required: true
+      pattern: '^[0-9]{1,9}$'
+      sensitivity: pii
+      example: '10001'
+
+  outputs:
+    - name: savingsBalance
+      type: money
+      description: Current balance of the member's savings share account, in USD.
+      sensitivity: pii
+      from:
+        afterStep: s3
+        transform: money
+        # Identified by row + column header, never by cell index. This is what
+        # survives a tenant whose build reorders the columns of this table —
+        # see the harborcu install, which does exactly that and needs no override.
+        target:
+          description: the Current Balance cell of the Savings row in the accounts table
+          role: cell
+          anchors:
+            - relation: underColumn
+              text: Current Balance
+            - relation: inRowWith
+              text: Savings
+
+    - name: savingsAccountNumber
+      type: string
+      description: Account number of the savings share account.
+      sensitivity: pii
+      from:
+        afterStep: s3
+        transform: trim
+        target:
+          description: the Account No. cell of the Savings row in the accounts table
+          role: cell
+          anchors:
+            - relation: underColumn
+              text: Account No.
+            - relation: inRowWith
+              text: Savings
+
+  steps:
+    - id: s1
+      intent: Open the member search screen from the left-hand menu.
+      action:
+        type: click
+        target:
+          description: the member search link in the navigation frame
+          role: link
+          name: Member Search
+          nameMatch: normalized
+          scope:
+            framePath: [main, navFrame]
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the member search screen is loaded in the content frame
+        all:
+          - kind: urlMatches
+            pattern: /search$
+        timeoutMs: 8000
+
+    - id: s2
+      intent: Type the member identifier into the search field.
+      action:
+        type: type
+        # A parameter reference, never the recorded value. There is no member
+        # data in this file to leak.
+        value: '{{memberId}}'
+        target:
+          description: the member identifier box on the search form
+          role: textbox
+          # No `name`: this input has NO accessible name, because the legacy
+          # markup puts its caption in an adjacent table cell with no <label for>.
+          # Its identity is the caption a human reads next to it, recovered
+          # geometrically. This is the common case in these applications.
+          anchors:
+            - relation: proximateLabel
+              text: Member ID
+          scope:
+            framePath: [main, contentFrame]
+      guard:
+        risk: mutating
+        note: Client-side only until the form is submitted.
+
+    - id: s3
+      intent: Submit the search and land on the member's detail screen.
+      action:
+        type: click
+        target:
+          description: the search submit button
+          role: button
+          name: Search
+          nameMatch: normalized
+          scope:
+            framePath: [main, contentFrame]
+      guard:
+        risk: safe
+        note: >
+          A search is a read. It is classified safe rather than mutating because
+          nothing in the institution's records changes.
+      checkpoint:
+        describe: the member detail screen for the requested member is displayed
+        all:
+          - kind: urlMatches
+            pattern: '/member/[0-9]+$'
+          - kind: textPresent
+            text: Member Detail
+        timeoutMs: 12000
+        pollMs: 250
+
+  successCheckpoint:
+    describe: a member detail screen with an accounts table is on display
+    all:
+      - kind: textPresent
+        text: Member Detail
+      - kind: elementPresent
+        target:
+          description: any Current Balance column header in the accounts table
+          role: columnheader
+          name: Current Balance
+    timeoutMs: 8000
+
+  # The declared result contract. A caller can see every legitimate non-success
+  # answer before it invokes, and replay returns these as results rather than
+  # raising them as errors.
+  outcomes:
+    business:
+      - code: MEMBER_NOT_FOUND
+        meaning: >
+          No member matches the supplied identifier. This is a complete and
+          correct answer to the question asked — the identifier is wrong or the
+          member does not exist at this institution.
+        outputsAvailable: false
+      - code: PERMISSION_DENIED
+        meaning: >
+          The member record is restricted and the signed-on operator lacks the
+          entitlement to view it. A different operator identity may succeed.
+        outputsAvailable: false
+      - code: VALIDATION_ERROR
+        meaning: The application rejected the supplied identifier as malformed.
+        outputsAvailable: false
+
+  escalation:
+    onUnrecovered: escalate
+    onAmbiguous: escalate
+    onIrreversible: require_approval
+
+# ---------------------------------------------------------------------------
+# Per-tenant specialisation.
+#
+# Note what is NOT here. Harbor Credit Union runs a newer build that reorders
+# the accounts table columns AND injects a mandatory privacy acknowledgement
+# before member detail — and needs no patches at all. The column reorder is
+# absorbed because outputs are addressed by row and column header rather than by
+# index; the interstitial is handled by a condition on the tenant in the product
+# profile, so every capability inherits it.
+#
+# First Valley needs two patches, and only two: it relabelled two controls.
+# The unnamed member-ID field is NOT patched — it resolves structurally (it is
+# the only text box in the content frame) and reports a drift signal, which is
+# the system telling you this tenant has moved without breaking.
+# ---------------------------------------------------------------------------
+overrides:
+  firstvalley:
+    note: >
+      First Valley relabelled two controls in their configuration. Same product,
+      same version, same routes.
+    productVersion: '8.2'
+    patches:
+      - path: /steps/0/action/target/name
+        value: Find Member
+        why: >
+          Their menu says "Find Member" where the reference install says
+          "Member Search". A pure relabel with no behavioural difference.
+      - path: /steps/2/action/target/name
+        value: Go
+        why: >
+          Their search button is captioned "Go". Nothing else about the search
+          form differs.

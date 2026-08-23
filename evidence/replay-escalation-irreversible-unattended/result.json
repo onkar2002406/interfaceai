@@ -1,0 +1,170 @@
+{
+  "status": "escalated",
+  "interventionId": "int_21f222e5",
+  "reason": "irreversible step requires an approved artifact and explicit invocation authorisation (IRREVERSIBLE_SUBMIT)",
+  "atStep": "s9",
+  "resolution": "unattended",
+  "runId": "escalation-irreversible-unattended",
+  "capability": "open_sub_account",
+  "capabilityVersion": "1.0.0",
+  "tenant": "base",
+  "product": "corebank-servicing",
+  "startedAt": "2026-08-23T07:38:46.784Z",
+  "durationMs": 2973,
+  "steps": [
+    {
+      "stepId": "s1",
+      "intent": "Open the member search screen from the left-hand menu.",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-08-23T07:38:47.917Z",
+      "durationMs": 394,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Member Search"
+      },
+      "checkpoint": {
+        "describe": "the member search screen is loaded",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s2",
+      "intent": "Type the member identifier into the search field.",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-08-23T07:38:48.312Z",
+      "durationMs": 143,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s3",
+      "intent": "Submit the search and land on the member's detail screen.",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-08-23T07:38:48.456Z",
+      "durationMs": 244,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Search"
+      },
+      "checkpoint": {
+        "describe": "the member detail screen is displayed",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s4",
+      "intent": "Open the new sub-account form for this member.",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-08-23T07:38:48.700Z",
+      "durationMs": 264,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:contains",
+        "drift": false,
+        "matched": "Open Sub-Account"
+      },
+      "checkpoint": {
+        "describe": "the new sub-account form is displayed",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s5",
+      "intent": "Choose the share account product to open.",
+      "actionType": "select",
+      "status": "ok",
+      "startedAt": "2026-08-23T07:38:48.964Z",
+      "durationMs": 85,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s6",
+      "intent": "Enter the opening deposit amount.",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-08-23T07:38:49.050Z",
+      "durationMs": 177,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s7",
+      "intent": "Enter the member-facing nickname for the account.",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-08-23T07:38:49.228Z",
+      "durationMs": 296,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s8",
+      "intent": "Submit the form for review, without committing anything yet.",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-08-23T07:38:49.525Z",
+      "durationMs": 92,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Review"
+      },
+      "checkpoint": {
+        "describe": "the review screen shows the details to be committed",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s9",
+      "intent": "Commit the application and open the account.",
+      "actionType": "click",
+      "status": "escalated",
+      "startedAt": "2026-08-23T07:38:49.618Z",
+      "durationMs": 139,
+      "recoveries": [],
+      "note": "irreversible step requires an approved artifact and explicit invocation authorisation (IRREVERSIBLE_SUBMIT)"
+    }
+  ],
+  "driftSignals": [],
+  "appliedOverrides": [],
+  "evidenceDir": "evidence\\replay-escalation-irreversible-unattended",
+  "blockedNavigations": []
+}

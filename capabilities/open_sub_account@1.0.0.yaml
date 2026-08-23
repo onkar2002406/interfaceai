@@ -1,0 +1,280 @@
+# Open a sub-account for a member
+#
+# HAND-AUTHORED reference artifact.
+#
+# This is the flow that exercises the safety and escalation model, because its
+# final step actually changes the institution's records. Everything before that
+# step is reversible; step s9 is not.
+#
+# Two independent gates gard that step, and BOTH must be open for it to run
+# unattended: the artifact must be `approval: approved` (a human read this file
+# and agreed to the step list), and the invocation must pass explicit
+# authorisation (`--authorize-irreversible`). Either alone is too easy to set by
+# accident, and neither is a substitute for the other: approval says "this flow
+# is correct", authorisation says "yes, do it now, for real".
+#
+# With either gate closed, replay does not fail — it escalates to a human who
+# can complete the step on the live session and hand control back.
+
+apiVersion: capability.interface.ai/v1
+kind: Capability
+
+metadata:
+  id: cap_open_sub_account
+  name: open_sub_account
+  version: 1.0.0
+  title: Open a sub-account for an existing member
+  summary: >
+    Finds a member, opens the new sub-account form, fills it, reviews it, and
+    submits the application. The final submission is irreversible: it creates a
+    real account record that staff cannot withdraw.
+  createdAt: '2026-08-23T00:00:00.000Z'
+
+  app:
+    product: corebank-servicing
+    productVersion: '8.2'
+    tenant: base
+    entryPoint: /
+
+  approval: approved
+  approvedBy: hand-authored reference artifact
+  approvedAt: '2026-08-23T00:00:00.000Z'
+
+  provenance:
+    discoveryRunId: hand-authored
+    model: none
+    surfaceKind: web
+    traceRef: '(none — written by hand)'
+    traceSha256: '0000000000000000000000000000000000000000000000000000000000000000'
+
+spec:
+  preconditions:
+    authState: authenticated
+    describe: An operator session with entitlement to open share accounts.
+
+  inputs:
+    - name: memberId
+      type: string
+      description: The member for whom the sub-account is being opened.
+      required: true
+      pattern: '^[0-9]{1,9}$'
+      sensitivity: pii
+      example: '10001'
+    - name: accountType
+      type: string
+      description: Share account product to open.
+      required: true
+      pattern: '^(Savings|Checking|Certificate)$'
+      sensitivity: public
+      example: Savings
+    - name: initialDeposit
+      type: string
+      description: Opening deposit in dollars. The institution enforces a $25 minimum.
+      required: true
+      pattern: '^[0-9]+(\.[0-9]{1,2})?$'
+      sensitivity: public
+      example: '100.00'
+    - name: nickname
+      type: string
+      description: Member-facing label for the account, 20 characters or fewer.
+      required: true
+      pattern: '^.{1,20}$'
+      sensitivity: public
+      example: Holiday Fund
+
+  outputs:
+    - name: newAccountNumber
+      type: string
+      description: The account number assigned to the newly opened sub-account.
+      sensitivity: pii
+      from:
+        afterStep: s9
+        transform: trim
+        target:
+          description: the new account number on the confirmation screen
+          role: StaticText
+          name: '^48209[0-9]+$'
+          nameMatch: regex
+
+  steps:
+    - id: s1
+      intent: Open the member search screen from the left-hand menu.
+      action:
+        type: click
+        target:
+          description: the member search link in the navigation frame
+          role: link
+          name: Member Search
+          scope:
+            framePath: [main, navFrame]
+      guard: { risk: safe }
+      checkpoint:
+        describe: the member search screen is loaded
+        all: [{ kind: urlMatches, pattern: /search$ }]
+
+    - id: s2
+      intent: Type the member identifier into the search field.
+      action:
+        type: type
+        value: '{{memberId}}'
+        target:
+          description: the member identifier box on the search form
+          role: textbox
+          anchors: [{ relation: proximateLabel, text: Member ID }]
+          scope:
+            framePath: [main, contentFrame]
+      guard: { risk: mutating, note: Client-side only until submitted. }
+
+    - id: s3
+      intent: Submit the search and land on the member's detail screen.
+      action:
+        type: click
+        target:
+          description: the search submit button
+          role: button
+          name: Search
+          scope:
+            framePath: [main, contentFrame]
+      guard: { risk: safe }
+      checkpoint:
+        describe: the member detail screen is displayed
+        all:
+          - { kind: urlMatches, pattern: '/member/[0-9]+$' }
+          - { kind: textPresent, text: Member Detail }
+        timeoutMs: 12000
+
+    - id: s4
+      intent: Open the new sub-account form for this member.
+      action:
+        type: click
+        target:
+          description: the open sub-account link on the member detail screen
+          role: link
+          name: Sub-Account
+          nameMatch: contains
+          scope:
+            framePath: [main, contentFrame]
+      guard: { risk: safe }
+      checkpoint:
+        describe: the new sub-account form is displayed
+        all: [{ kind: urlMatches, pattern: '/member/[0-9]+/subaccount$' }]
+
+    - id: s5
+      intent: Choose the share account product to open.
+      action:
+        type: select
+        value: '{{accountType}}'
+        target:
+          description: the account type dropdown
+          role: combobox
+          anchors: [{ relation: proximateLabel, text: Account Type }]
+          scope:
+            framePath: [main, contentFrame]
+      guard: { risk: mutating }
+
+    - id: s6
+      intent: Enter the opening deposit amount.
+      action:
+        type: type
+        value: '{{initialDeposit}}'
+        target:
+          description: the initial deposit box
+          role: textbox
+          anchors: [{ relation: proximateLabel, text: Initial Deposit }]
+          scope:
+            framePath: [main, contentFrame]
+      guard: { risk: mutating }
+
+    - id: s7
+      intent: Enter the member-facing nickname for the account.
+      action:
+        type: type
+        value: '{{nickname}}'
+        target:
+          description: the nickname box
+          role: textbox
+          anchors: [{ relation: proximateLabel, text: Nickname }]
+          scope:
+            framePath: [main, contentFrame]
+      guard: { risk: mutating }
+
+    - id: s8
+      intent: Submit the form for review, without committing anything yet.
+      action:
+        type: click
+        target:
+          description: the Review button on the sub-account form
+          role: button
+          name: Review
+          scope:
+            framePath: [main, contentFrame]
+      guard:
+        risk: mutating
+        note: >
+          Posts the form but commits nothing. The application deliberately
+          separates review from commit, which gives the policy layer a natural
+          place to stop before anything becomes permanent.
+      checkpoint:
+        describe: the review screen shows the details to be committed
+        all: [{ kind: textPresent, text: Review New Sub-Account }]
+
+    - id: s9
+      intent: Commit the application and open the account.
+      action:
+        type: click
+        target:
+          description: the Submit Application button on the review screen
+          role: button
+          name: Submit Application
+          scope:
+            framePath: [main, contentFrame]
+      guard:
+        risk: irreversible
+        note: >
+          Creates a real account record. Staff cannot withdraw it. Requires both
+          an approved artifact and explicit per-invocation authorisation, or it
+          escalates to a human operator.
+      checkpoint:
+        describe: the confirmation screen reports the account was opened
+        all: [{ kind: textPresent, text: Sub-account opened successfully }]
+        timeoutMs: 12000
+
+  successCheckpoint:
+    describe: the sub-account confirmation screen is displayed with a new account number
+    all:
+      - { kind: textPresent, text: Sub-account opened successfully }
+      - { kind: textPresent, text: 'New account number' }
+
+  outcomes:
+    business:
+      - code: VALIDATION_ERROR
+        meaning: >
+          The application rejected the submitted values — most commonly an
+          opening deposit below the institution's $25 minimum, or a nickname
+          longer than 20 characters. Nothing was created; correct the inputs and
+          invoke again.
+        outputsAvailable: false
+      - code: MEMBER_NOT_FOUND
+        meaning: No member matches the supplied identifier. Nothing was created.
+        outputsAvailable: false
+      - code: PERMISSION_DENIED
+        meaning: >
+          The member record is restricted and this operator cannot service it.
+          Nothing was created.
+        outputsAvailable: false
+
+  escalation:
+    onUnrecovered: escalate
+    onAmbiguous: escalate
+    onIrreversible: require_approval
+
+overrides:
+  firstvalley:
+    note: First Valley relabelled the menu link and the search button.
+    patches:
+      - path: /steps/0/action/target/name
+        value: Find Member
+        why: Their menu says "Find Member".
+      - path: /steps/2/action/target/name
+        value: Go
+        why: Their search button is captioned "Go".
