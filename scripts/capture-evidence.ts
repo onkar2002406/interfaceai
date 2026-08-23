@@ -40,6 +40,7 @@ const lookup = store.load('lookup_member_savings_balance');
 const subAccount = store.load('open_sub_account');
 
 const results: Array<{ dir: string; headline: string; note: string }> = [];
+let usedLiveModel = false;
 
 async function armFault(baseUrl: string, mode: string, route?: string): Promise<void> {
   await fetch(`${baseUrl}/_admin/fault`, {
@@ -91,10 +92,12 @@ async function discoveryCase(): Promise<void> {
   let provider: LlmProvider;
   if (process.env.OPENAI_API_KEY) {
     provider = new OpenAiProvider();
+    usedLiveModel = true;
     console.log(`  using live model ${provider.model}`);
   } else {
     provider = new MockProvider({ memberId: '10001' });
-    console.log('  OPENAI_API_KEY not set — using the scripted fixture for this capture');
+    console.log('  !! OPENAI_API_KEY not set — falling back to the scripted fixture.');
+    console.log('  !! The committed discovery evidence MUST come from a live model run.');
   }
 
   const recorder = new RunRecorder(slug, 'discovery', EVIDENCE, { consoleEcho: false });
@@ -244,7 +247,13 @@ try {
 
   writeIndex();
   console.log(`\nWrote ${results.length} runs to ${EVIDENCE}/`);
-  console.log('Run `npx tsx scripts/demo-handoff.ts` separately to capture the human-handoff run.');
+  console.log('Run `npm run handoff` separately to capture the human-handoff run.');
+  if (!usedLiveModel) {
+    console.log(
+      '\n!! The discovery run used the offline fixture. Set OPENAI_API_KEY in .env and\n' +
+        '!! re-run `npm run evidence` before submitting — see the banner in evidence/README.md.',
+    );
+  }
 } finally {
   if (started.length) await stopCoreBank(started);
 }
@@ -253,12 +262,25 @@ function writeIndex(): void {
   const lines: string[] = [];
   lines.push('# Evidence');
   lines.push('');
+
+  if (!usedLiveModel) {
+    lines.push('> [!IMPORTANT]');
+    lines.push('> **The discovery run below was produced by the offline scripted fixture, not a live model.**');
+    lines.push('> `OPENAI_API_KEY` was not set when this evidence was captured.');
+    lines.push('>');
+    lines.push('> Set the key in `.env` and re-run `npm run evidence` to replace it with a real');
+    lines.push('> LLM-driven run before this repository is submitted. The compiled capability');
+    lines.push('> `capabilities/discovered_member_savings@1.0.0.yaml` should be regenerated at the');
+    lines.push('> same time — its `provenance.model` field records which produced it.');
+    lines.push('');
+  }
+
   lines.push('Recorded runs against the local target application. Regenerate with:');
   lines.push('');
   lines.push('```bash');
-  lines.push('npm run app                              # in one terminal');
-  lines.push('npx tsx scripts/capture-evidence.ts      # in another');
-  lines.push('npx tsx scripts/demo-handoff.ts          # the human-handoff run');
+  lines.push('npm run app        # in one terminal');
+  lines.push('npm run evidence   # in another — everything except the handoff run');
+  lines.push('npm run handoff    # the human-handoff run');
   lines.push('```');
   lines.push('');
   lines.push('Every directory contains:');

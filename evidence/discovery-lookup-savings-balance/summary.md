@@ -6,9 +6,9 @@
 | Run | `lookup-savings-balance` |
 | Model | mock:scripted-fixture |
 | Tenant | base (corebank-servicing) |
-| Model calls | 5 |
+| Model calls | 4 |
 | Tokens | 0 prompt / 0 completion |
-| Steps taken | 4 |
+| Steps taken | 3 |
 
 ## What the model did
 
@@ -17,7 +17,6 @@
 | 1 | click | Member Search | Open the member search screen from the left-hand menu. | yes |
 | 2 | type | Member ID | Type the member identifier into the search field. | yes |
 | 3 | click | Search | Submit the search and land on the member's detail screen. | yes |
-| 4 | click | Search | Submit the search and land on the member's detail screen. | yes |
 
 ## Compiled capability
 

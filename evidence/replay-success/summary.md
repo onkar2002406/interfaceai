@@ -5,8 +5,8 @@
 | Status | **success** |
 | Run | `success` |
 | Tenant | base (corebank-servicing) |
-| Started | 2026-08-23T07:38:13.279Z |
-| Duration | 2440 ms |
+| Started | 2026-08-23T14:06:54.735Z |
+| Duration | 2858 ms |
 | Overrides applied | 0 |
 | Drift signals | 0 |
 
@@ -15,7 +15,7 @@
 ```json
 {
   "savingsBalance": 8412.55,
-  "savingsAccountNumber": "[pii:57efb147…7735]"
+  "savingsAccountNumber": "[pii:ad4acdbc…7735]"
 }
 ```
 
@@ -23,9 +23,9 @@
 
 | # | Step | Intent | Action | Status | ms | Locator |
 |---|---|---|---|---|---|---|
-| 1 | `s1` | Open the member search screen from the left-hand menu. | click | ok | 502 | 1 via `name:normalized` |
-| 2 | `s2` | Type the member identifier into the search field. | type | ok | 178 | 1 via `anchor:proximateLabel` |
-| 3 | `s3` | Submit the search and land on the member's detail screen. | click | ok | 287 | 1 via `name:normalized` |
+| 1 | `s1` | Open the member search screen from the left-hand menu. | click | ok | 511 | 1 via `name:normalized` |
+| 2 | `s2` | Type the member identifier into the search field. | type | ok | 198 | 1 via `anchor:proximateLabel` |
+| 3 | `s3` | Submit the search and land on the member's detail screen. | click | ok | 316 | 1 via `name:normalized` |
 
 ## Evidence
 

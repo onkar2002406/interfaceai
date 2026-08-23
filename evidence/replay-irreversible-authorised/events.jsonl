@@ -1,37 +1,37 @@
-{"at":"2026-08-23T07:38:49.827Z","seq":1,"kind":"replay_start","detail":{"capability":"open_sub_account@1.0.0","tenant":"base","product":"corebank-servicing v8.2","baseUrl":"http://localhost:4000","approval":"approved","irreversibleAuthorized":true,"params":{"memberId":"[pii:81fd421c…0002]","accountType":"Checking","initialDeposit":"250.00","nickname":"Escrow"},"overrides":0}}
-{"at":"2026-08-23T07:38:50.110Z","seq":2,"kind":"navigate_entry","detail":{"url":"http://localhost:4000/"}}
-{"at":"2026-08-23T07:38:50.148Z","seq":3,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-23T07:38:50.450Z","seq":4,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-23T07:38:50.631Z","seq":5,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:50.802Z","seq":6,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:50.846Z","seq":7,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-23T07:38:51.112Z","seq":8,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-23T07:38:51.114Z","seq":9,"kind":"auth_precondition","detail":{"ok":true,"note":"signed on and returned to the entry point"}}
-{"at":"2026-08-23T07:38:51.115Z","seq":10,"kind":"step_start","detail":{"step":"s1","index":1,"of":9,"intent":"Open the member search screen from the left-hand menu.","action":"click","risk":"safe"}}
-{"at":"2026-08-23T07:38:51.310Z","seq":11,"kind":"surface_action","detail":{"action":"click","target":"Member Search","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-23T07:38:51.508Z","seq":12,"kind":"step_ok","detail":{"step":"s1","durationMs":393,"score":1,"via":"name:normalized","checkpoint":"the member search screen is loaded"}}
-{"at":"2026-08-23T07:38:51.508Z","seq":13,"kind":"step_start","detail":{"step":"s2","index":2,"of":9,"intent":"Type the member identifier into the search field.","action":"type","risk":"mutating","value":"{{memberId}}"}}
-{"at":"2026-08-23T07:38:51.623Z","seq":14,"kind":"surface_action","detail":{"action":"type","target":"Member ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:51.656Z","seq":15,"kind":"step_ok","detail":{"step":"s2","durationMs":148,"score":1,"via":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:51.657Z","seq":16,"kind":"step_start","detail":{"step":"s3","index":3,"of":9,"intent":"Submit the search and land on the member's detail screen.","action":"click","risk":"safe"}}
-{"at":"2026-08-23T07:38:51.687Z","seq":17,"kind":"surface_action","detail":{"action":"click","target":"Search","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-23T07:38:51.900Z","seq":18,"kind":"step_ok","detail":{"step":"s3","durationMs":243,"score":1,"via":"name:normalized","checkpoint":"the member detail screen is displayed"}}
-{"at":"2026-08-23T07:38:51.901Z","seq":19,"kind":"step_start","detail":{"step":"s4","index":4,"of":9,"intent":"Open the new sub-account form for this member.","action":"click","risk":"safe"}}
-{"at":"2026-08-23T07:38:51.930Z","seq":20,"kind":"surface_action","detail":{"action":"click","target":"Open Sub-Account","risk":"safe","score":1,"strategy":"name:contains"}}
-{"at":"2026-08-23T07:38:52.141Z","seq":21,"kind":"step_ok","detail":{"step":"s4","durationMs":240,"score":1,"via":"name:contains","checkpoint":"the new sub-account form is displayed"}}
-{"at":"2026-08-23T07:38:52.141Z","seq":22,"kind":"step_start","detail":{"step":"s5","index":5,"of":9,"intent":"Choose the share account product to open.","action":"select","risk":"mutating","value":"Checking"}}
-{"at":"2026-08-23T07:38:52.177Z","seq":23,"kind":"surface_action","detail":{"action":"select","target":"Account Type","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:52.214Z","seq":24,"kind":"step_ok","detail":{"step":"s5","durationMs":73,"score":1,"via":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:52.215Z","seq":25,"kind":"step_start","detail":{"step":"s6","index":6,"of":9,"intent":"Enter the opening deposit amount.","action":"type","risk":"mutating","value":"250.00"}}
-{"at":"2026-08-23T07:38:52.358Z","seq":26,"kind":"surface_action","detail":{"action":"type","target":"Initial Deposit","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:52.404Z","seq":27,"kind":"step_ok","detail":{"step":"s6","durationMs":189,"score":1,"via":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:52.405Z","seq":28,"kind":"step_start","detail":{"step":"s7","index":7,"of":9,"intent":"Enter the member-facing nickname for the account.","action":"type","risk":"mutating","value":"Escrow"}}
-{"at":"2026-08-23T07:38:52.578Z","seq":29,"kind":"surface_action","detail":{"action":"type","target":"Nickname","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:52.621Z","seq":30,"kind":"step_ok","detail":{"step":"s7","durationMs":216,"score":1,"via":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:52.622Z","seq":31,"kind":"step_start","detail":{"step":"s8","index":8,"of":9,"intent":"Submit the form for review, without committing anything yet.","action":"click","risk":"mutating"}}
-{"at":"2026-08-23T07:38:52.671Z","seq":32,"kind":"surface_action","detail":{"action":"click","target":"Review","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-23T07:38:52.709Z","seq":33,"kind":"step_ok","detail":{"step":"s8","durationMs":88,"score":1,"via":"name:normalized","checkpoint":"the review screen shows the details to be committed"}}
-{"at":"2026-08-23T07:38:52.710Z","seq":34,"kind":"step_start","detail":{"step":"s9","index":9,"of":9,"intent":"Commit the application and open the account.","action":"click","risk":"irreversible"}}
-{"at":"2026-08-23T07:38:52.742Z","seq":35,"kind":"surface_action","detail":{"action":"click","target":"Submit Application","risk":"irreversible","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-23T07:38:52.953Z","seq":36,"kind":"step_ok","detail":{"step":"s9","durationMs":243,"committed":"irreversible","score":1,"via":"name:normalized","checkpoint":"the confirmation screen reports the account was opened"}}
-{"at":"2026-08-23T07:38:52.979Z","seq":37,"kind":"replay_success","detail":{"outputs":{"newAccountNumber":"[declared-sensitive]"},"durationMs":3152,"driftSignals":0}}
+{"at":"2026-08-23T14:07:29.863Z","seq":1,"kind":"replay_start","detail":{"capability":"open_sub_account@1.0.0","tenant":"base","product":"corebank-servicing v8.2","baseUrl":"http://localhost:4000","approval":"approved","irreversibleAuthorized":true,"params":{"memberId":"[pii:18c08e57…0002]","accountType":"Checking","initialDeposit":"250.00","nickname":"Escrow"},"overrides":0}}
+{"at":"2026-08-23T14:07:30.181Z","seq":2,"kind":"navigate_entry","detail":{"url":"http://localhost:4000/"}}
+{"at":"2026-08-23T14:07:30.217Z","seq":3,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-08-23T14:07:30.471Z","seq":4,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-08-23T14:07:30.648Z","seq":5,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:07:30.818Z","seq":6,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:07:30.863Z","seq":7,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-08-23T14:07:31.123Z","seq":8,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-08-23T14:07:31.124Z","seq":9,"kind":"auth_precondition","detail":{"ok":true,"note":"signed on and returned to the entry point"}}
+{"at":"2026-08-23T14:07:31.125Z","seq":10,"kind":"step_start","detail":{"step":"s1","index":1,"of":9,"intent":"Open the member search screen from the left-hand menu.","action":"click","risk":"safe"}}
+{"at":"2026-08-23T14:07:31.314Z","seq":11,"kind":"surface_action","detail":{"action":"click","target":"Member Search","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-08-23T14:07:31.517Z","seq":12,"kind":"step_ok","detail":{"step":"s1","durationMs":392,"score":1,"via":"name:normalized","checkpoint":"the member search screen is loaded"}}
+{"at":"2026-08-23T14:07:31.518Z","seq":13,"kind":"step_start","detail":{"step":"s2","index":2,"of":9,"intent":"Type the member identifier into the search field.","action":"type","risk":"mutating","value":"{{memberId}}"}}
+{"at":"2026-08-23T14:07:31.640Z","seq":14,"kind":"surface_action","detail":{"action":"type","target":"Member ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:07:31.673Z","seq":15,"kind":"step_ok","detail":{"step":"s2","durationMs":155,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:07:31.674Z","seq":16,"kind":"step_start","detail":{"step":"s3","index":3,"of":9,"intent":"Submit the search and land on the member's detail screen.","action":"click","risk":"safe"}}
+{"at":"2026-08-23T14:07:31.710Z","seq":17,"kind":"surface_action","detail":{"action":"click","target":"Search","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-08-23T14:07:31.919Z","seq":18,"kind":"step_ok","detail":{"step":"s3","durationMs":245,"score":1,"via":"name:normalized","checkpoint":"the member detail screen is displayed"}}
+{"at":"2026-08-23T14:07:31.919Z","seq":19,"kind":"step_start","detail":{"step":"s4","index":4,"of":9,"intent":"Open the new sub-account form for this member.","action":"click","risk":"safe"}}
+{"at":"2026-08-23T14:07:31.954Z","seq":20,"kind":"surface_action","detail":{"action":"click","target":"Open Sub-Account","risk":"safe","score":1,"strategy":"name:contains"}}
+{"at":"2026-08-23T14:07:32.173Z","seq":21,"kind":"step_ok","detail":{"step":"s4","durationMs":254,"score":1,"via":"name:contains","checkpoint":"the new sub-account form is displayed"}}
+{"at":"2026-08-23T14:07:32.174Z","seq":22,"kind":"step_start","detail":{"step":"s5","index":5,"of":9,"intent":"Choose the share account product to open.","action":"select","risk":"mutating","value":"Checking"}}
+{"at":"2026-08-23T14:07:32.214Z","seq":23,"kind":"surface_action","detail":{"action":"select","target":"Account Type","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:07:32.254Z","seq":24,"kind":"step_ok","detail":{"step":"s5","durationMs":80,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:07:32.254Z","seq":25,"kind":"step_start","detail":{"step":"s6","index":6,"of":9,"intent":"Enter the opening deposit amount.","action":"type","risk":"mutating","value":"250.00"}}
+{"at":"2026-08-23T14:07:32.401Z","seq":26,"kind":"surface_action","detail":{"action":"type","target":"Initial Deposit","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:07:32.441Z","seq":27,"kind":"step_ok","detail":{"step":"s6","durationMs":187,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:07:32.441Z","seq":28,"kind":"step_start","detail":{"step":"s7","index":7,"of":9,"intent":"Enter the member-facing nickname for the account.","action":"type","risk":"mutating","value":"Escrow"}}
+{"at":"2026-08-23T14:07:32.589Z","seq":29,"kind":"surface_action","detail":{"action":"type","target":"Nickname","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:07:32.645Z","seq":30,"kind":"step_ok","detail":{"step":"s7","durationMs":204,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:07:32.646Z","seq":31,"kind":"step_start","detail":{"step":"s8","index":8,"of":9,"intent":"Submit the form for review, without committing anything yet.","action":"click","risk":"mutating"}}
+{"at":"2026-08-23T14:07:32.714Z","seq":32,"kind":"surface_action","detail":{"action":"click","target":"Review","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-08-23T14:07:32.777Z","seq":33,"kind":"step_ok","detail":{"step":"s8","durationMs":131,"score":1,"via":"name:normalized","checkpoint":"the review screen shows the details to be committed"}}
+{"at":"2026-08-23T14:07:32.778Z","seq":34,"kind":"step_start","detail":{"step":"s9","index":9,"of":9,"intent":"Commit the application and open the account.","action":"click","risk":"irreversible"}}
+{"at":"2026-08-23T14:07:32.817Z","seq":35,"kind":"surface_action","detail":{"action":"click","target":"Submit Application","risk":"irreversible","score":1,"strategy":"name:normalized"}}
+{"at":"2026-08-23T14:07:33.068Z","seq":36,"kind":"step_ok","detail":{"step":"s9","durationMs":290,"committed":"irreversible","score":1,"via":"name:normalized","checkpoint":"the confirmation screen reports the account was opened"}}
+{"at":"2026-08-23T14:07:33.111Z","seq":37,"kind":"replay_success","detail":{"outputs":{"newAccountNumber":"[declared-sensitive]"},"durationMs":3248,"driftSignals":0}}

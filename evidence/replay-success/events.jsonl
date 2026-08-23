@@ -1,19 +1,19 @@
-{"at":"2026-08-23T07:38:13.280Z","seq":1,"kind":"replay_start","detail":{"capability":"lookup_member_savings_balance@1.0.0","tenant":"base","product":"corebank-servicing v8.2","baseUrl":"http://localhost:4000","approval":"approved","irreversibleAuthorized":false,"params":{"memberId":"[pii:7f6881e7…0001]"},"overrides":0}}
-{"at":"2026-08-23T07:38:13.545Z","seq":2,"kind":"navigate_entry","detail":{"url":"http://localhost:4000/"}}
-{"at":"2026-08-23T07:38:13.578Z","seq":3,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-23T07:38:13.866Z","seq":4,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-23T07:38:14.164Z","seq":5,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:14.347Z","seq":6,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:14.399Z","seq":7,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-23T07:38:14.700Z","seq":8,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-23T07:38:14.701Z","seq":9,"kind":"auth_precondition","detail":{"ok":true,"note":"signed on and returned to the entry point"}}
-{"at":"2026-08-23T07:38:14.703Z","seq":10,"kind":"step_start","detail":{"step":"s1","index":1,"of":3,"intent":"Open the member search screen from the left-hand menu.","action":"click","risk":"safe"}}
-{"at":"2026-08-23T07:38:14.942Z","seq":11,"kind":"surface_action","detail":{"action":"click","target":"Member Search","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-23T07:38:15.204Z","seq":12,"kind":"step_ok","detail":{"step":"s1","durationMs":502,"score":1,"via":"name:normalized","checkpoint":"the member search screen is loaded in the content frame"}}
-{"at":"2026-08-23T07:38:15.205Z","seq":13,"kind":"step_start","detail":{"step":"s2","index":2,"of":3,"intent":"Type the member identifier into the search field.","action":"type","risk":"mutating","value":"{{memberId}}"}}
-{"at":"2026-08-23T07:38:15.340Z","seq":14,"kind":"surface_action","detail":{"action":"type","target":"Member ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:15.382Z","seq":15,"kind":"step_ok","detail":{"step":"s2","durationMs":178,"score":1,"via":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:15.383Z","seq":16,"kind":"step_start","detail":{"step":"s3","index":3,"of":3,"intent":"Submit the search and land on the member's detail screen.","action":"click","risk":"safe"}}
-{"at":"2026-08-23T07:38:15.428Z","seq":17,"kind":"surface_action","detail":{"action":"click","target":"Search","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-23T07:38:15.670Z","seq":18,"kind":"step_ok","detail":{"step":"s3","durationMs":287,"score":1,"via":"name:normalized","checkpoint":"the member detail screen for the requested member is displayed"}}
-{"at":"2026-08-23T07:38:15.718Z","seq":19,"kind":"replay_success","detail":{"outputs":{"savingsBalance":"[declared-sensitive]","savingsAccountNumber":"[declared-sensitive]"},"durationMs":2439,"driftSignals":0}}
+{"at":"2026-08-23T14:06:54.736Z","seq":1,"kind":"replay_start","detail":{"capability":"lookup_member_savings_balance@1.0.0","tenant":"base","product":"corebank-servicing v8.2","baseUrl":"http://localhost:4000","approval":"approved","irreversibleAuthorized":false,"params":{"memberId":"[pii:a38ca6c0…0001]"},"overrides":0}}
+{"at":"2026-08-23T14:06:55.087Z","seq":2,"kind":"navigate_entry","detail":{"url":"http://localhost:4000/"}}
+{"at":"2026-08-23T14:06:55.122Z","seq":3,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-08-23T14:06:55.459Z","seq":4,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-08-23T14:06:55.661Z","seq":5,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:06:55.957Z","seq":6,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:06:56.014Z","seq":7,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-08-23T14:06:56.493Z","seq":8,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-08-23T14:06:56.497Z","seq":9,"kind":"auth_precondition","detail":{"ok":true,"note":"signed on and returned to the entry point"}}
+{"at":"2026-08-23T14:06:56.500Z","seq":10,"kind":"step_start","detail":{"step":"s1","index":1,"of":3,"intent":"Open the member search screen from the left-hand menu.","action":"click","risk":"safe"}}
+{"at":"2026-08-23T14:06:56.770Z","seq":11,"kind":"surface_action","detail":{"action":"click","target":"Member Search","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-08-23T14:06:57.011Z","seq":12,"kind":"step_ok","detail":{"step":"s1","durationMs":511,"score":1,"via":"name:normalized","checkpoint":"the member search screen is loaded in the content frame"}}
+{"at":"2026-08-23T14:06:57.012Z","seq":13,"kind":"step_start","detail":{"step":"s2","index":2,"of":3,"intent":"Type the member identifier into the search field.","action":"type","risk":"mutating","value":"{{memberId}}"}}
+{"at":"2026-08-23T14:06:57.165Z","seq":14,"kind":"surface_action","detail":{"action":"type","target":"Member ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:06:57.209Z","seq":15,"kind":"step_ok","detail":{"step":"s2","durationMs":198,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:06:57.210Z","seq":16,"kind":"step_start","detail":{"step":"s3","index":3,"of":3,"intent":"Submit the search and land on the member's detail screen.","action":"click","risk":"safe"}}
+{"at":"2026-08-23T14:06:57.262Z","seq":17,"kind":"surface_action","detail":{"action":"click","target":"Search","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-08-23T14:06:57.526Z","seq":18,"kind":"step_ok","detail":{"step":"s3","durationMs":316,"score":1,"via":"name:normalized","checkpoint":"the member detail screen for the requested member is displayed"}}
+{"at":"2026-08-23T14:06:57.592Z","seq":19,"kind":"replay_success","detail":{"outputs":{"savingsBalance":"[declared-sensitive]","savingsAccountNumber":"[declared-sensitive]"},"durationMs":2857,"driftSignals":0}}

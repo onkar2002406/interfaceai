@@ -12,8 +12,8 @@
     "discover": "tsx src/cli/index.ts discover",
     "replay": "tsx src/cli/index.ts replay",
     "catalog": "tsx src/cli/index.ts catalog",
-    "operator": "tsx src/cli/index.ts operator",
-    "demo": "tsx scripts/demo.ts",
+    "handoff": "tsx scripts/demo-handoff.ts",
+    "evidence": "tsx scripts/capture-evidence.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"

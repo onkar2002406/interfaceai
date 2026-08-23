@@ -15,7 +15,7 @@ metadata:
   version: 1.0.0
   title: Look up a member and read their savings share account balance
   summary: look up a member and read their savings share account balance
-  createdAt: 2026-08-23T07:38:11.730Z
+  createdAt: 2026-08-23T14:06:54.527Z
   app:
     product: corebank-servicing
     productVersion: "8.2"
@@ -27,7 +27,7 @@ metadata:
     model: mock:scripted-fixture
     surfaceKind: web
     traceRef: evidence\discovery-lookup-savings-balance\trace.json
-    traceSha256: baaa3ca3af326cc62a03d8ea2cc4947885ba3210b618ad2f9eac85f4e9f6b221
+    traceSha256: ae78288e8ebde1b1fe45a49bc7ec6f66f684b4a02ecc7226386ecd80253bf15e
 spec:
   inputs:
     - name: memberId
@@ -43,7 +43,7 @@ spec:
       description: Current balance of the member's savings share account, in USD.
       sensitivity: pii
       from:
-        afterStep: s4
+        afterStep: s3
         target:
           description: the savingsBalance value on the final screen
           role: cell
@@ -127,31 +127,6 @@ spec:
       conditions: []
       optional: false
     - id: s3
-      intent: Submit the search and land on the member's detail screen.
-      action:
-        type: click
-        target:
-          description: Submit the search and land on the member's detail screen.
-          role: button
-          name: Search
-          nameMatch: normalized
-          scope:
-            framePath:
-              - main
-              - contentFrame
-          anchors: []
-          hints:
-            domHint: input
-            boundsAtRecord:
-              x: 409.59375
-              y: 65
-              width: 38.078125
-              height: 13
-      guard:
-        risk: safe
-      conditions: []
-      optional: false
-    - id: s4
       intent: Submit the search and land on the member's detail screen.
       action:
         type: click

@@ -98,7 +98,7 @@ export class UnattendedSink implements EscalationSink {
       resolution: 'unattended',
       reason:
         `intervention ${req.id} required a human operator but no operator console is attached. ` +
-        `Start one with \`npm run operator\` and re-run to take control of the live session.`,
+        `Re-run with --operator to start one and take control of the live session.`,
       actions: [],
     };
   }

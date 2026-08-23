@@ -5,8 +5,8 @@
 | Status | **success** |
 | Run | `tenant-firstvalley` |
 | Tenant | firstvalley (corebank-servicing) |
-| Started | 2026-08-23T07:38:41.941Z |
-| Duration | 2025 ms |
+| Started | 2026-08-23T14:07:20.677Z |
+| Duration | 2673 ms |
 | Overrides applied | 2 |
 | Drift signals | 1 |
 
@@ -15,7 +15,7 @@
 ```json
 {
   "savingsBalance": 8412.55,
-  "savingsAccountNumber": "[pii:57efb147…7735]"
+  "savingsAccountNumber": "[pii:ad4acdbc…7735]"
 }
 ```
 
@@ -23,9 +23,9 @@
 
 | # | Step | Intent | Action | Status | ms | Locator |
 |---|---|---|---|---|---|---|
-| 1 | `s1` | Open the member search screen from the left-hand menu. | click | ok | 409 | 1 via `name:normalized` |
-| 2 | `s2` | Type the member identifier into the search field. | type | ok | 161 | 0.571 via `frame` ⚠︎drift |
-| 3 | `s3` | Submit the search and land on the member's detail screen. | click | ok | 287 | 1 via `name:normalized` |
+| 1 | `s1` | Open the member search screen from the left-hand menu. | click | ok | 420 | 1 via `name:normalized` |
+| 2 | `s2` | Type the member identifier into the search field. | type | ok | 158 | 0.571 via `frame` ⚠︎drift |
+| 3 | `s3` | Submit the search and land on the member's detail screen. | click | ok | 242 | 1 via `name:normalized` |
 
 ## Tenant overrides applied
 

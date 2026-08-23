@@ -2,23 +2,23 @@
   "status": "success",
   "outputs": {
     "savingsBalance": 8412.55,
-    "savingsAccountNumber": "[pii:57efb147…7735]"
+    "savingsAccountNumber": "[pii:ad4acdbc…7735]"
   },
   "runId": "tenant-harborcu",
   "capability": "lookup_member_savings_balance",
   "capabilityVersion": "1.0.0",
   "tenant": "harborcu",
   "product": "corebank-servicing",
-  "startedAt": "2026-08-23T07:38:44.042Z",
-  "durationMs": 2683,
+  "startedAt": "2026-08-23T14:07:23.417Z",
+  "durationMs": 2820,
   "steps": [
     {
       "stepId": "s1",
       "intent": "Open the member search screen from the left-hand menu.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-08-23T07:38:45.253Z",
-      "durationMs": 401,
+      "startedAt": "2026-08-23T14:07:24.724Z",
+      "durationMs": 442,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -37,8 +37,8 @@
       "intent": "Type the member identifier into the search field.",
       "actionType": "type",
       "status": "ok",
-      "startedAt": "2026-08-23T07:38:45.655Z",
-      "durationMs": 155,
+      "startedAt": "2026-08-23T14:07:25.166Z",
+      "durationMs": 175,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -52,8 +52,8 @@
       "intent": "Submit the search and land on the member's detail screen.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-08-23T07:38:45.811Z",
-      "durationMs": 315,
+      "startedAt": "2026-08-23T14:07:25.342Z",
+      "durationMs": 299,
       "recoveries": [
         {
           "conditionId": "privacy_acknowledgement",
@@ -61,7 +61,7 @@
           "attempt": 1,
           "ok": true,
           "note": "dismissed via \"Acknowledge and Continue\"",
-          "at": "2026-08-23T07:38:46.081Z"
+          "at": "2026-08-23T14:07:25.604Z"
         }
       ],
       "resolution": {

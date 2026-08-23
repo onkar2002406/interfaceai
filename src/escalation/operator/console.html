@@ -93,8 +93,8 @@ async function refresh() {
   const r = await fetch('/api/interventions').then((r) => r.json());
   const q = $('queue');
   if (!r.open.length) {
-    q.innerHTML = '<div class="empty">No open interventions.<br><br>Run a capability that needs a human, e.g.<br>'
-      + '<code>npm run replay -- --capability open_sub_account --input memberId=10001 --operator</code></div>';
+    q.innerHTML = '<div class="empty">No open interventions.<br><br>This console attaches to a run started with '
+      + '<code>--operator</code>. It stays empty until that run needs a human.</div>';
     if (current && !r.open.find((i) => i.id === current)) teardown();
     return;
   }

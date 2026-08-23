@@ -38,8 +38,41 @@ OPENAI_MODEL=gpt-4o
 whole discovery pipeline runs offline against a scripted fixture — real browser,
 real perception, real compilation, no API key and no tokens. It exists so the
 pipeline is testable deterministically and so a reviewer without a key can still
-run the complete end-to-end thread. It is not a substitute for the real thing:
-the committed discovery evidence comes from a live model run.
+run the complete end-to-end thread. It refuses to guess on a screen it has not
+been taught, so it is a fixture, not a general offline mode — and it is not a
+substitute for the real thing.
+
+---
+
+## Before submitting: capture a live discovery run
+
+> [!IMPORTANT]
+> If [`evidence/README.md`](evidence/README.md) carries a warning banner, the
+> committed discovery run came from the offline fixture and still needs to be
+> replaced with a real one.
+
+```bash
+# 1. put a real key in .env
+echo OPENAI_API_KEY=sk-...  >> .env
+
+# 2. start the target app in one terminal
+npm run app
+
+# 3. regenerate all recorded runs, discovery included, in another
+npm run evidence
+
+# 4. the human-handoff run is captured separately
+npm run handoff
+
+# 5. confirm the freshly compiled artifact still replays
+npm run replay -- --capability discovered_member_savings --input memberId=10003
+```
+
+`npm run evidence` uses the live model whenever `OPENAI_API_KEY` is set and says
+so in its output. Check that
+`capabilities/discovered_member_savings@1.0.0.yaml` records a real model under
+`metadata.provenance.model`, then commit the regenerated `evidence/` and
+`capabilities/`.
 
 ---
 
@@ -167,11 +200,12 @@ re-verifies its resume contract and finishes the run.
 A scripted end-to-end version of that whole exchange, for reproducible evidence:
 
 ```bash
-npx tsx scripts/demo-handoff.ts
+npm run handoff
 ```
 
 It simulates only the *person*. The console, the screencast, the input path, the
-token checks and the resume verification are all the real ones.
+token checks and the resume verification are all the real ones — including the
+assertion that input is **refused** until control has actually been claimed.
 
 With explicit authorisation, the same flow runs unattended:
 

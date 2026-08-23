@@ -1,19 +1,19 @@
-{"at":"2026-08-23T07:38:19.972Z","seq":1,"kind":"replay_start","detail":{"capability":"lookup_member_savings_balance@1.0.0","tenant":"base","product":"corebank-servicing v8.2","baseUrl":"http://localhost:4000","approval":"approved","irreversibleAuthorized":false,"params":{"memberId":"[pii:7f6881e7…0001]"},"overrides":0}}
-{"at":"2026-08-23T07:38:20.233Z","seq":2,"kind":"navigate_entry","detail":{"url":"http://localhost:4000/"}}
-{"at":"2026-08-23T07:38:20.275Z","seq":3,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-23T07:38:20.575Z","seq":4,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-23T07:38:20.786Z","seq":5,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:21.099Z","seq":6,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:21.202Z","seq":7,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-23T07:38:21.589Z","seq":8,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-23T07:38:21.592Z","seq":9,"kind":"auth_precondition","detail":{"ok":true,"note":"signed on and returned to the entry point"}}
-{"at":"2026-08-23T07:38:21.593Z","seq":10,"kind":"step_start","detail":{"step":"s1","index":1,"of":3,"intent":"Open the member search screen from the left-hand menu.","action":"click","risk":"safe"}}
-{"at":"2026-08-23T07:38:21.890Z","seq":11,"kind":"surface_action","detail":{"action":"click","target":"Member Search","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-23T07:38:21.991Z","seq":12,"kind":"step_ok","detail":{"step":"s1","durationMs":398,"score":1,"via":"name:normalized","checkpoint":"the member search screen is loaded in the content frame"}}
-{"at":"2026-08-23T07:38:21.992Z","seq":13,"kind":"step_start","detail":{"step":"s2","index":2,"of":3,"intent":"Type the member identifier into the search field.","action":"type","risk":"mutating","value":"{{memberId}}"}}
-{"at":"2026-08-23T07:38:22.303Z","seq":14,"kind":"surface_action","detail":{"action":"type","target":"Member ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:22.432Z","seq":15,"kind":"step_ok","detail":{"step":"s2","durationMs":440,"score":1,"via":"anchor:proximateLabel"}}
-{"at":"2026-08-23T07:38:22.434Z","seq":16,"kind":"step_start","detail":{"step":"s3","index":3,"of":3,"intent":"Submit the search and land on the member's detail screen.","action":"click","risk":"safe"}}
-{"at":"2026-08-23T07:38:22.677Z","seq":17,"kind":"surface_action","detail":{"action":"click","target":"Search","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-23T07:38:23.241Z","seq":18,"kind":"screenshot","detail":{"file":"evidence\\replay-failure-app-error\\condition-fail-s3.png"}}
-{"at":"2026-08-23T07:38:23.245Z","seq":19,"kind":"step_failed","detail":{"step":"s3","class":"surface_error","message":"The application returned its system error page. The on-screen error reference identifies the failure in the vendor's logs.\n","screenshot":"evidence\\replay-failure-app-error\\condition-fail-s3.png"}}
+{"at":"2026-08-23T14:07:02.395Z","seq":1,"kind":"replay_start","detail":{"capability":"lookup_member_savings_balance@1.0.0","tenant":"base","product":"corebank-servicing v8.2","baseUrl":"http://localhost:4000","approval":"approved","irreversibleAuthorized":false,"params":{"memberId":"[pii:a38ca6c0…0001]"},"overrides":0}}
+{"at":"2026-08-23T14:07:02.694Z","seq":2,"kind":"navigate_entry","detail":{"url":"http://localhost:4000/"}}
+{"at":"2026-08-23T14:07:02.722Z","seq":3,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-08-23T14:07:03.009Z","seq":4,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-08-23T14:07:03.243Z","seq":5,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:07:03.431Z","seq":6,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:07:03.481Z","seq":7,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-08-23T14:07:03.769Z","seq":8,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-08-23T14:07:03.771Z","seq":9,"kind":"auth_precondition","detail":{"ok":true,"note":"signed on and returned to the entry point"}}
+{"at":"2026-08-23T14:07:03.772Z","seq":10,"kind":"step_start","detail":{"step":"s1","index":1,"of":3,"intent":"Open the member search screen from the left-hand menu.","action":"click","risk":"safe"}}
+{"at":"2026-08-23T14:07:03.995Z","seq":11,"kind":"surface_action","detail":{"action":"click","target":"Member Search","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-08-23T14:07:04.223Z","seq":12,"kind":"step_ok","detail":{"step":"s1","durationMs":451,"score":1,"via":"name:normalized","checkpoint":"the member search screen is loaded in the content frame"}}
+{"at":"2026-08-23T14:07:04.224Z","seq":13,"kind":"step_start","detail":{"step":"s2","index":2,"of":3,"intent":"Type the member identifier into the search field.","action":"type","risk":"mutating","value":"{{memberId}}"}}
+{"at":"2026-08-23T14:07:04.382Z","seq":14,"kind":"surface_action","detail":{"action":"type","target":"Member ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:07:04.416Z","seq":15,"kind":"step_ok","detail":{"step":"s2","durationMs":192,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-08-23T14:07:04.417Z","seq":16,"kind":"step_start","detail":{"step":"s3","index":3,"of":3,"intent":"Submit the search and land on the member's detail screen.","action":"click","risk":"safe"}}
+{"at":"2026-08-23T14:07:04.459Z","seq":17,"kind":"surface_action","detail":{"action":"click","target":"Search","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-08-23T14:07:04.708Z","seq":18,"kind":"screenshot","detail":{"file":"evidence\\replay-failure-app-error\\condition-fail-s3.png"}}
+{"at":"2026-08-23T14:07:04.710Z","seq":19,"kind":"step_failed","detail":{"step":"s3","class":"surface_error","message":"The application returned its system error page. The on-screen error reference identifies the failure in the vendor's logs.\n","screenshot":"evidence\\replay-failure-app-error\\condition-fail-s3.png"}}
