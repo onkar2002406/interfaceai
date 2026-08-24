@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 
+# personal notes — submission email, interview prep. Not part of the deliverable.
+SUBMISSION-NOTES.md
+
 # dependencies / build
 node_modules/
 dist/
