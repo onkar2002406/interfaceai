@@ -1,6 +1,6 @@
-# Look up a member and read their savings share account balance
+# Retrieved the current savings balance for member 10001
 #
-# look up a member and read their savings share account balance
+# Retrieved the current savings balance for member 10001
 #
 # Reviewed by a human before `approval: approved` is set. Approval is what
 # permits unattended replay of any step marked risk: irreversible.
@@ -13,9 +13,9 @@ metadata:
   id: cap_discovered_member_savings
   name: discovered_member_savings
   version: 1.0.0
-  title: Look up a member and read their savings share account balance
-  summary: look up a member and read their savings share account balance
-  createdAt: 2026-08-23T19:36:00.564Z
+  title: Retrieved the current savings balance for member 10001
+  summary: Retrieved the current savings balance for member 10001
+  createdAt: 2026-08-24T01:53:36.016Z
   app:
     product: corebank-servicing
     productVersion: "8.2"
@@ -24,10 +24,10 @@ metadata:
   approval: draft
   provenance:
     discoveryRunId: lookup-savings-balance
-    model: scripted:scripted-fixture
+    model: groq:openai/gpt-oss-120b
     surfaceKind: web
-    traceRef: evidence\discovery-lookup-savings-balance\trace.json
-    traceSha256: 040fe85a90f865b31e99b600426fe5b44aeaa4ff61bc2a1db7ad7950c5fbfdfa
+    traceRef: evidence/discovery-lookup-savings-balance/trace.json
+    traceSha256: 482cd3cd0df77890245b68f19b1dbb8f1e349c26f65f722ec0479d544c31af20
 spec:
   inputs:
     - name: memberId
@@ -40,7 +40,7 @@ spec:
   outputs:
     - name: savingsBalance
       type: money
-      description: Current balance of the member's savings share account, in USD.
+      description: Savings balance
       sensitivity: pii
       from:
         afterStep: s3
@@ -65,11 +65,11 @@ spec:
       of this flow.
   steps:
     - id: s1
-      intent: Open the member search screen from the left-hand menu.
+      intent: Click the Member Search link to open the member search screen
       action:
         type: click
         target:
-          description: Open the member search screen from the left-hand menu.
+          description: Click the Member Search link to open the member search screen
           role: link
           name: Member Search
           nameMatch: normalized
@@ -98,11 +98,11 @@ spec:
       conditions: []
       optional: false
     - id: s2
-      intent: Type the member identifier into the search field.
+      intent: Enter member ID 10001 into the Member ID textbox
       action:
         type: type
         target:
-          description: Type the member identifier into the search field.
+          description: Enter member ID 10001 into the Member ID textbox
           role: textbox
           nameMatch: normalized
           scope:
@@ -127,11 +127,11 @@ spec:
       conditions: []
       optional: false
     - id: s3
-      intent: Submit the search and land on the member's detail screen.
+      intent: Click the Search button to retrieve member information
       action:
         type: click
         target:
-          description: Submit the search and land on the member's detail screen.
+          description: Click the Search button to retrieve member information
           role: button
           name: Search
           nameMatch: normalized
@@ -149,14 +149,6 @@ spec:
               height: 13
       guard:
         risk: safe
-      checkpoint:
-        describe: the route matches /member/[0-9]+$
-        all:
-          - kind: urlMatches
-            pattern: /member/[0-9]+$
-        any: []
-        timeoutMs: 12000
-        pollMs: 250
       conditions: []
       optional: false
   successCheckpoint:

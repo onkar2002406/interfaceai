@@ -9,16 +9,16 @@
   "capabilityVersion": "1.0.0",
   "tenant": "base",
   "product": "corebank-servicing",
-  "startedAt": "2026-08-23T19:36:05.694Z",
-  "durationMs": 2000,
+  "startedAt": "2026-08-24T01:53:44.828Z",
+  "durationMs": 2640,
   "steps": [
     {
       "stepId": "s1",
       "intent": "Open the member search screen from the left-hand menu.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-08-23T19:36:07.018Z",
-      "durationMs": 389,
+      "startedAt": "2026-08-24T01:53:46.673Z",
+      "durationMs": 499,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -37,8 +37,8 @@
       "intent": "Type the member identifier into the search field.",
       "actionType": "type",
       "status": "ok",
-      "startedAt": "2026-08-23T19:36:07.408Z",
-      "durationMs": 181,
+      "startedAt": "2026-08-24T01:53:47.173Z",
+      "durationMs": 190,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -52,8 +52,8 @@
       "intent": "Submit the search and land on the member's detail screen.",
       "actionType": "click",
       "status": "business",
-      "startedAt": "2026-08-23T19:36:07.590Z",
-      "durationMs": 103,
+      "startedAt": "2026-08-24T01:53:47.363Z",
+      "durationMs": 104,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -65,6 +65,6 @@
   ],
   "driftSignals": [],
   "appliedOverrides": [],
-  "evidenceDir": "evidence\\replay-business-outcome-permission-denied",
+  "evidenceDir": "evidence/replay-business-outcome-permission-denied",
   "blockedNavigations": []
 }

@@ -1,0 +1,85 @@
+/**
+ * The set of language-model providers discovery can run against, and the logic
+ * for picking one.
+ *
+ * Adding a provider is a configuration entry, not a class, because every entry
+ * here speaks the same wire format. That is the point of keeping the
+ * `LlmProvider` interface narrow: the choice of model host is genuinely a
+ * deployment decision, not an architectural one.
+ *
+ * Selection order when `--provider` is not given: whichever key is actually
+ * present in the environment, then the scripted fixture. Defaulting to a
+ * provider whose key is missing produces a confusing failure three seconds into
+ * a browser launch; defaulting to what is configured just works.
+ */
+
+import { ScriptedProvider } from './scripted-provider.js';
+import { OpenAiCompatibleProvider, type ProviderConfig } from './openai-compatible-provider.js';
+import type { LlmProvider } from './llm-provider.js';
+
+export const PROVIDERS: Record<string, ProviderConfig> = {
+  groq: {
+    id: 'groq',
+    label: 'Groq',
+    baseUrl: 'https://api.groq.com/openai/v1',
+    apiKeyEnv: 'GROQ_API_KEY',
+    modelEnv: 'GROQ_MODEL',
+    // Tool calling is what discovery needs, and this is the strongest model on
+    // Groq's free tier that supports it reliably with `tool_choice: required`.
+    defaultModel: 'openai/gpt-oss-120b',
+    // Groq's free tier currently exposes no vision model that also supports tool
+    // calling. Discovery works without one — the model acts by element id from
+    // the text inventory, and the screenshot was always corroboration. It is
+    // still captured as run evidence, just not sent to the model.
+    supportsVision: false,
+    consoleUrl: 'https://console.groq.com/keys',
+  },
+
+  openai: {
+    id: 'openai',
+    label: 'OpenAI',
+    apiKeyEnv: 'OPENAI_API_KEY',
+    modelEnv: 'OPENAI_MODEL',
+    defaultModel: 'gpt-4o',
+    supportsVision: true,
+    consoleUrl: 'https://platform.openai.com/settings/organization/billing',
+  },
+};
+
+export type ProviderName = keyof typeof PROVIDERS | 'scripted';
+
+/** The provider to use when none was named. */
+export function defaultProviderName(): ProviderName {
+  for (const name of Object.keys(PROVIDERS)) {
+    if (process.env[PROVIDERS[name]!.apiKeyEnv]) return name;
+  }
+  return 'scripted';
+}
+
+export function createProvider(
+  name: string,
+  opts: { model?: string; scriptedParams?: Record<string, string> } = {},
+): LlmProvider {
+  if (name === 'scripted') return new ScriptedProvider(opts.scriptedParams ?? {});
+
+  const config = PROVIDERS[name];
+  if (!config) {
+    throw new Error(
+      `Unknown provider "${name}". Available: ${[...Object.keys(PROVIDERS), 'scripted'].join(', ')}.`,
+    );
+  }
+  return new OpenAiCompatibleProvider(config, opts.model ? { model: opts.model } : {});
+}
+
+/** True if a live provider could actually run right now. */
+export function hasLiveProviderConfigured(): boolean {
+  return defaultProviderName() !== 'scripted';
+}
+
+/** Human-readable list for CLI help and error messages. */
+export function describeProviders(): string {
+  return Object.values(PROVIDERS)
+    .map((p) => `${p.id} (${p.apiKeyEnv}, default model ${p.defaultModel})`)
+    .concat('scripted (offline fixture, no key needed)')
+    .join('; ');
+}

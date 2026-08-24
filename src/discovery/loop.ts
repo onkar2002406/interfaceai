@@ -123,6 +123,9 @@ export async function discover(opts: DiscoveryOptions): Promise<DiscoveryTrace> 
     tenant: opts.tenant,
     provider: provider.name,
     model: provider.model,
+    // Recorded so a run report says plainly whether the model could see the
+    // screenshots, rather than leaving a reader to infer it.
+    vision: provider.supportsVision ? 'screenshot sent to model' : 'text inventory only',
     maxSteps,
   });
 
@@ -168,6 +171,9 @@ export async function discover(opts: DiscoveryOptions): Promise<DiscoveryTrace> 
       return finish({ kind: 'stopped', why: `wall-clock timeout after ${timeoutMs}ms` });
     }
 
+    // The screenshot is always captured — it is run evidence, and a human
+    // debugging a discovery run wants to see what the screen looked like. It is
+    // only *sent to the model* when the model can see images.
     const obs = await surface.observe({ screenshot: true });
     if (obs.screenshot) recorder.screenshot(`step-${String(stepIndex + 1).padStart(2, '0')}`, obs.screenshot);
 
@@ -182,7 +188,7 @@ export async function discover(opts: DiscoveryOptions): Promise<DiscoveryTrace> 
       turn = await provider.decide({
         system,
         userText,
-        ...(obs.screenshot ? { screenshot: obs.screenshot } : {}),
+        ...(obs.screenshot && provider.supportsVision ? { screenshot: obs.screenshot } : {}),
         history,
         tools: AGENT_TOOLS,
       });

@@ -46,7 +46,7 @@ export class RunRecorder {
     baseDir = 'evidence',
     opts: { consoleEcho?: boolean } = {},
   ) {
-    this.dir = join(baseDir, `${kind}-${runId}`);
+    this.dir = join(baseDir, `${kind}-${runId}`).replace(/\\/g, '/');
     mkdirSync(this.dir, { recursive: true });
     this.consoleEcho = opts.consoleEcho ?? true;
   }
@@ -67,9 +67,21 @@ export class RunRecorder {
     if (this.consoleEcho) console.log(formatEvent(e));
   }
 
+  /**
+   * Paths recorded in evidence and in artifacts always use forward slashes.
+   *
+   * They end up in YAML that is committed to git, in Markdown links, and in
+   * reports read on other machines. A path recorded with backslashes on Windows
+   * is a broken link everywhere else, and a spurious diff when the same evidence
+   * is regenerated on another platform.
+   */
+  private path(name: string): string {
+    return join(this.dir, name).replace(/\\/g, '/');
+  }
+
   /** PNG bytes are expected to have been masked at capture time, not here. */
   screenshot(name: string, png: Buffer): string {
-    const file = join(this.dir, `${name}.png`);
+    const file = this.path(`${name}.png`);
     writeFileSync(file, png);
     this.event('screenshot', { file });
     return file;
@@ -77,20 +89,20 @@ export class RunRecorder {
 
   /** Arbitrary structured snapshot — AX inventory, candidate rankings, config. */
   snapshot(name: string, data: unknown): string {
-    const file = join(this.dir, `${name}.json`);
+    const file = this.path(`${name}.json`);
     writeFileSync(file, JSON.stringify(redactDeep(data), null, 2), 'utf8');
     return file;
   }
 
   text(name: string, body: string): string {
-    const file = join(this.dir, name);
+    const file = this.path(name);
     writeFileSync(file, redactText(body), 'utf8');
     return file;
   }
 
   finish(result: unknown, summaryMarkdown: string): void {
-    writeFileSync(join(this.dir, 'result.json'), JSON.stringify(redactDeep(result), null, 2), 'utf8');
-    writeFileSync(join(this.dir, 'summary.md'), redactText(summaryMarkdown), 'utf8');
+    writeFileSync(this.path('result.json'), JSON.stringify(redactDeep(result), null, 2), 'utf8');
+    writeFileSync(this.path('summary.md'), redactText(summaryMarkdown), 'utf8');
   }
 
   all(): readonly RunEvent[] {

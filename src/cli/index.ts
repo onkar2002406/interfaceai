@@ -21,6 +21,7 @@ import { Policy } from '../policy/guardrails.js';
 import { RunRecorder } from '../observability/run-recorder.js';
 import { replay, CapabilityInputError } from '../replay/executor.js';
 import type { ReplayResult } from '../replay/replay-result.js';
+import { createProvider, defaultProviderName, describeProviders } from '../discovery/llm/provider-registry.js';
 import { summarize } from '../replay/replay-result.js';
 import { renderDiscoverySummary, renderReplaySummary } from './run-reports.js';
 
@@ -58,8 +59,8 @@ program
   .requiredOption('-g, --goal <text>', 'goal in natural language; may use {{param}} references')
   .option('-p, --param <key=value...>', 'value to supply for a {{param}} (repeatable)', collectInputs, {})
   .option('-t, --tenant <id>', 'tenant to record against', 'base')
-  .option('--provider <name>', 'openai | mock', process.env.LLM_PROVIDER ?? 'openai')
-  .option('--model <name>', 'model id (openai provider)', process.env.OPENAI_MODEL)
+  .option('--provider <name>', `groq | openai | scripted — ${describeProviders()}`, process.env.LLM_PROVIDER)
+  .option('--model <name>', 'override the provider default model')
   .option('--max-steps <n>', 'stop after this many model turns', '20')
   .option('--name <slug>', 'override the compiled capability name')
   .option('--headful', 'show the browser window', false)
@@ -78,12 +79,14 @@ program
     const { ControlAuthority } = await import('../escalation/control-authority.js');
     const { PlaywrightSurface } = await import('../surface/web/playwright-surface.js');
 
-    const provider =
-      opts.provider === 'scripted'
-        ? new (await import('../discovery/llm/scripted-provider.js')).ScriptedProvider(opts.param)
-        : new (await import('../discovery/llm/openai-provider.js')).OpenAiProvider(
-            opts.model ? { model: opts.model } : {},
-          );
+    // No provider named: use whichever key is actually configured. Defaulting to
+    // a provider whose key is missing fails three seconds into a browser launch,
+    // which is a needlessly confusing way to say "set your key".
+    const providerName = opts.provider ?? defaultProviderName();
+    const provider = createProvider(providerName, {
+      ...(opts.model ? { model: opts.model } : {}),
+      scriptedParams: opts.param,
+    });
 
     const runId = randomUUID().slice(0, 8);
     const recorder = new RunRecorder(runId, 'discovery');
@@ -95,7 +98,10 @@ program
       console.log(`Operator console: ${attached.console.url}\n`);
     }
 
-    console.log(`Discovering against ${tenant.label} using ${provider.name}:${provider.model}`);
+    console.log(
+      `Discovering against ${tenant.label} using ${provider.name}:${provider.model}` +
+        `${provider.supportsVision ? ' (screenshots sent to the model)' : ' (text inventory only)'}`,
+    );
     console.log(`Goal: ${opts.goal}\n`);
 
     const authority = new ControlAuthority(runId);

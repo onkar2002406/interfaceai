@@ -40,6 +40,16 @@ export interface DecideRequest {
 export interface LlmProvider {
   readonly name: string;
   readonly model: string;
+  /**
+   * Whether this model accepts a screenshot alongside the text inventory.
+   *
+   * Declared rather than assumed, because plenty of hosts offer no vision model
+   * at all, and several that do cannot combine images with tool calling. The
+   * discovery loop attaches the screenshot only when this is true — and works
+   * either way, because the model acts by element id from the text inventory.
+   * The screenshot is corroboration, never the action space.
+   */
+  readonly supportsVision: boolean;
   decide(req: DecideRequest): Promise<ModelTurn>;
   /** Total tokens consumed, for the run report. */
   usage(): { promptTokens: number; completionTokens: number; calls: number };

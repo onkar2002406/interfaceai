@@ -64,6 +64,22 @@ describe('redaction', () => {
     expect(containsPii('412-55-9087')).toBe(true);
     expect(containsPii('Member Detail')).toBe(false);
   });
+
+  it('scrubs provider API keys, whatever prefix they use', () => {
+    // A key that reaches a log is unrecoverable, so each provider's shape is
+    // listed explicitly rather than left to a generic heuristic.
+    // Fabricated, and deliberately so: never paste a real key into a test, not
+    // even a truncated one. A prefix is still a prefix.
+    for (const key of [
+      'sk-proj-EXAMPLEexampleEXAMPLEexample0000',
+      'gsk_EXAMPLEexampleEXAMPLEexample00000000',
+      'ghp_EXAMPLEexampleEXAMPLEexample00000000',
+    ]) {
+      const out = redactText(`authorization header was ${key} at 12:04`);
+      expect(out).not.toContain(key);
+      expect(out).toContain('[REDACTED:apiKey]');
+    }
+  });
 });
 
 /* ------------------------------------------------------------- allowlist */

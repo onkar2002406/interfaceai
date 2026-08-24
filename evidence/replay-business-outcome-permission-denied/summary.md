@@ -5,8 +5,8 @@
 | Status | **business_outcome** |
 | Run | `business-outcome-permission-denied` |
 | Tenant | base (corebank-servicing) |
-| Started | 2026-08-23T19:36:05.694Z |
-| Duration | 2000 ms |
+| Started | 2026-08-24T01:53:44.828Z |
+| Duration | 2640 ms |
 | Overrides applied | 0 |
 | Drift signals | 0 |
 
@@ -23,9 +23,9 @@ The member record is restricted and the signed-on operator lacks the entitlement
 
 | # | Step | Intent | Action | Status | ms | Locator |
 |---|---|---|---|---|---|---|
-| 1 | `s1` | Open the member search screen from the left-hand menu. | click | ok | 389 | 1 via `name:normalized` |
-| 2 | `s2` | Type the member identifier into the search field. | type | ok | 181 | 1 via `anchor:proximateLabel` |
-| 3 | `s3` | Submit the search and land on the member's detail screen. | click | business | 103 | 1 via `name:normalized` |
+| 1 | `s1` | Open the member search screen from the left-hand menu. | click | ok | 499 | 1 via `name:normalized` |
+| 2 | `s2` | Type the member identifier into the search field. | type | ok | 190 | 1 via `anchor:proximateLabel` |
+| 3 | `s3` | Submit the search and land on the member's detail screen. | click | business | 104 | 1 via `name:normalized` |
 
 ## Evidence
 

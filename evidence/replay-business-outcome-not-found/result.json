@@ -9,16 +9,16 @@
   "capabilityVersion": "1.0.0",
   "tenant": "base",
   "product": "corebank-servicing",
-  "startedAt": "2026-08-23T19:36:03.251Z",
-  "durationMs": 2373,
+  "startedAt": "2026-08-24T01:53:41.402Z",
+  "durationMs": 3203,
   "steps": [
     {
       "stepId": "s1",
       "intent": "Open the member search screen from the left-hand menu.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-08-23T19:36:04.701Z",
-      "durationMs": 593,
+      "startedAt": "2026-08-24T01:53:43.371Z",
+      "durationMs": 624,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -37,8 +37,8 @@
       "intent": "Type the member identifier into the search field.",
       "actionType": "type",
       "status": "ok",
-      "startedAt": "2026-08-23T19:36:05.295Z",
-      "durationMs": 228,
+      "startedAt": "2026-08-24T01:53:43.996Z",
+      "durationMs": 197,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -52,8 +52,8 @@
       "intent": "Submit the search and land on the member's detail screen.",
       "actionType": "click",
       "status": "business",
-      "startedAt": "2026-08-23T19:36:05.523Z",
-      "durationMs": 100,
+      "startedAt": "2026-08-24T01:53:44.194Z",
+      "durationMs": 410,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -65,6 +65,6 @@
   ],
   "driftSignals": [],
   "appliedOverrides": [],
-  "evidenceDir": "evidence\\replay-business-outcome-not-found",
+  "evidenceDir": "evidence/replay-business-outcome-not-found",
   "blockedNavigations": []
 }

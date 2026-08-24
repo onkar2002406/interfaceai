@@ -28,8 +28,11 @@ import { discover } from '../src/discovery/loop.js';
 import { compile } from '../src/discovery/trace-compiler.js';
 import { ControlAuthority } from '../src/escalation/control-authority.js';
 import { PlaywrightSurface } from '../src/surface/web/playwright-surface.js';
-import { ScriptedProvider } from '../src/discovery/llm/scripted-provider.js';
-import { OpenAiProvider } from '../src/discovery/llm/openai-provider.js';
+import {
+  createProvider,
+  defaultProviderName,
+  describeProviders,
+} from '../src/discovery/llm/provider-registry.js';
 import type { LlmProvider } from '../src/discovery/llm/llm-provider.js';
 
 const EVIDENCE = 'evidence';
@@ -144,10 +147,14 @@ async function runDiscovery(provider: LlmProvider, slug: string): Promise<{
  */
 async function discoveryCase(): Promise<void> {
   const slug = 'lookup-savings-balance';
+  const providerName = defaultProviderName();
 
-  if (process.env.OPENAI_API_KEY) {
-    const live = new OpenAiProvider();
-    console.log(`  attempting a live run with ${live.model}`);
+  if (providerName !== 'scripted') {
+    const live = createProvider(providerName);
+    console.log(
+      `  attempting a live run with ${live.name}:${live.model}` +
+        `${live.supportsVision ? '' : ' (text inventory only — this model has no vision)'}`,
+    );
     const { trace, recorder } = await runDiscovery(live, slug);
 
     if (trace.outcome.kind === 'success') {
@@ -162,11 +169,11 @@ async function discoveryCase(): Promise<void> {
     console.log(`  !! the live run did not complete: ${why.split('\n')[0]}`);
     console.log('  !! falling back to the scripted fixture so the evidence set stays complete.');
   } else {
-    liveFailureReason = 'OPENAI_API_KEY was not set';
-    console.log('  !! OPENAI_API_KEY not set — using the scripted fixture.');
+    liveFailureReason = `no provider key was set (${describeProviders()})`;
+    console.log('  !! no provider key set — using the scripted fixture.');
   }
 
-  const { trace, recorder } = await runDiscovery(new ScriptedProvider(DISCOVERY_PARAMS), slug);
+  const { trace, recorder } = await runDiscovery(createProvider('scripted', { scriptedParams: DISCOVERY_PARAMS }), slug);
   finishDiscovery(trace, recorder);
 }
 

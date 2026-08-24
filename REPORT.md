@@ -63,6 +63,24 @@ expensive than a targeted selector query — a few hundred milliseconds per step
 here. I think it is the right trade: it is what makes the surface portable and
 what makes ambiguity detectable at all. I did have to work for it (see §3).
 
+**Model choice is a deployment decision, not an architectural one.** The
+`LlmProvider` interface asks the model exactly one question — "given what you can
+see, which single tool next" — and everything else sits outside it. That turned
+out to matter more than expected: the committed discovery evidence was produced
+by `openai/gpt-oss-120b` on Groq, an open-weight model with **no vision at all**,
+and the loop needed no changes to accommodate it. The model acts by element id
+from the text inventory, so the screenshot was always corroboration rather than
+the action space. Screenshots are still captured every step as run evidence; a
+provider declares `supportsVision` and they are only *sent* when it can see them.
+Groq, OpenAI and anything else speaking the OpenAI wire format share one
+implementation and differ by a registry entry.
+
+The pragmatic cost of a smaller model showed up elsewhere: open-weight models
+occasionally answer in prose despite `tool_choice: required`, and some hosts then
+reject their own response with a 400. That is intermittent rather than
+systematic, so the provider nudges and retries up to three times rather than
+letting one flaky turn kill a discovery run.
+
 ---
 
 ## 2. Artifact schema

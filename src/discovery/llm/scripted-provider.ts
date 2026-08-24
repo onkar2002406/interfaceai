@@ -34,6 +34,8 @@ interface Rule {
 export class ScriptedProvider implements LlmProvider {
   readonly name = 'scripted';
   readonly model = 'scripted-fixture';
+  /** It matches on the rendered text inventory, so a screenshot adds nothing. */
+  readonly supportsVision = false;
   private calls = 0;
 
   constructor(private readonly goalValues: Record<string, string> = {}) {}

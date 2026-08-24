@@ -2,23 +2,23 @@
   "status": "success",
   "outputs": {
     "savingsBalance": 8412.55,
-    "savingsAccountNumber": "[pii:365ef92e…7735]"
+    "savingsAccountNumber": "[pii:23a0ee6c…7735]"
   },
   "runId": "recovered-session-expiry",
   "capability": "lookup_member_savings_balance",
   "capabilityVersion": "1.0.0",
   "tenant": "base",
   "product": "corebank-servicing",
-  "startedAt": "2026-08-23T19:36:12.381Z",
-  "durationMs": 3695,
+  "startedAt": "2026-08-24T01:53:54.925Z",
+  "durationMs": 5627,
   "steps": [
     {
       "stepId": "s1",
       "intent": "Open the member search screen from the left-hand menu.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-08-23T19:36:15.195Z",
-      "durationMs": 419,
+      "startedAt": "2026-08-24T01:53:59.079Z",
+      "durationMs": 552,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -37,8 +37,8 @@
       "intent": "Type the member identifier into the search field.",
       "actionType": "type",
       "status": "ok",
-      "startedAt": "2026-08-23T19:36:15.615Z",
-      "durationMs": 162,
+      "startedAt": "2026-08-24T01:53:59.631Z",
+      "durationMs": 193,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -52,8 +52,8 @@
       "intent": "Submit the search and land on the member's detail screen.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-08-23T19:36:15.778Z",
-      "durationMs": 269,
+      "startedAt": "2026-08-24T01:53:59.824Z",
+      "durationMs": 696,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -70,6 +70,6 @@
   ],
   "driftSignals": [],
   "appliedOverrides": [],
-  "evidenceDir": "evidence\\replay-recovered-session-expiry",
+  "evidenceDir": "evidence/replay-recovered-session-expiry",
   "blockedNavigations": []
 }

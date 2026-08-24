@@ -124,12 +124,23 @@ That is enough to run **everything except live discovery**. The demo application
 deterministic replay, the error taxonomy, the safety guardrails, the human
 handoff and the full test suite all work with no API key.
 
-For live discovery, add an OpenAI key to `.env`:
+For live discovery you need a model that supports tool calling. **Groq has a free
+tier**, so it is the default:
 
 ```
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4o
+GROQ_API_KEY=gsk_...              # https://console.groq.com/keys
+GROQ_MODEL=openai/gpt-oss-120b
 ```
+
+OpenAI works too — set `OPENAI_API_KEY` instead. Discovery uses whichever
+provider key it finds, or you can name one with `--provider groq|openai|scripted`.
+
+> **On vision.** Discovery works from a **text inventory** of what is on screen,
+> not from the picture: the model acts by element id, never by coordinate. So a
+> model with no vision at all is fine, and Groq's free tier has none. Screenshots
+> are still captured for every step as run evidence — they are just not sent to
+> the model unless it can see them. The provider declares this, and the run
+> report says which happened.
 
 Then, in **two terminals**:
 
@@ -179,9 +190,9 @@ thing.
 > be replaced with a genuine model-driven run.
 
 ```bash
-# 1. a FUNDED OpenAI key in .env
-#    (a valid key on an account with no credit gives 429 insufficient_quota —
-#     see Troubleshooting)
+# 1. a provider key in .env — GROQ_API_KEY (free tier) or OPENAI_API_KEY
+#    (with OpenAI, a valid key on an unfunded account gives 429
+#     insufficient_quota — see Troubleshooting)
 
 # 2. target application, in one terminal
 npm run app
@@ -196,8 +207,9 @@ npm run handoff
 npm run replay -- --capability discovered_member_savings --input memberId=10003
 ```
 
-`npm run evidence` uses the live model whenever `OPENAI_API_KEY` is set, and says
-which it used in its output. Afterwards, check that
+`npm run evidence` uses a live model whenever a provider key is set, and falls
+back to the fixture only if the live attempt does not *succeed* — saying which,
+and why, in its output and in the evidence banner. Afterwards, check that
 `capabilities/discovered_member_savings@1.0.0.yaml` names a real model under
 `metadata.provenance.model`, then commit the regenerated `evidence/` and
 `capabilities/` directories. A single discovery run costs a few cents.
@@ -539,7 +551,7 @@ metadata:
   approval: approved                       # gates unattended irreversible replay
   app: { product: corebank-servicing, productVersion: '8.2', tenant: base }
   provenance:                              # points AT the transcript, never embeds it
-    model: openai:gpt-4o
+    model: groq:openai/gpt-oss-120b
     traceRef: evidence/discovery-.../trace.json
 
 spec:
@@ -701,9 +713,10 @@ usable token back. A human saying "done" is a claim; the checkpoint is the fact.
 │   │   ├── model-prompt.ts          what the model sees and may say back
 │   │   ├── trace-compiler.ts        trace → capability (deterministic)
 │   │   └── llm/
-│   │       ├── llm-provider.ts      the provider interface
-│   │       ├── openai-provider.ts   live model
-│   │       └── scripted-provider.ts offline fixture
+│   │       ├── llm-provider.ts                the provider interface
+│   │       ├── provider-registry.ts           which providers exist, and picking one
+│   │       ├── openai-compatible-provider.ts  Groq, OpenAI, anything OpenAI-shaped
+│   │       └── scripted-provider.ts           offline fixture
 │   │
 │   ├── replay/                  ── the production path, no model ──
 │   │   ├── executor.ts              the step loop
@@ -813,14 +826,30 @@ These are the two tools to reach for when a replay reports "could not find X".
 ## 11. Troubleshooting
 
 **`429 insufficient_quota` during discovery**
-The API key is valid but the OpenAI account has no credit. This is a billing
-state, not a rate limit, so retrying will not help — add a payment method or
-credits at <https://platform.openai.com/settings/organization/billing>. Use
-`--provider scripted` meanwhile.
+The key is valid but the account has no credit. This is a billing state, not a
+rate limit, so retrying will not help — add credit, or switch to Groq's free tier
+by setting `GROQ_API_KEY`. Use `--provider scripted` meanwhile.
 
-**`401` during discovery**
-The key itself was rejected. Check `OPENAI_API_KEY` in `.env` for a typo, a
-revoked key, or one belonging to a different organisation.
+**`429 rate_limit_exceeded` during discovery**
+Genuinely a rate limit, common on free tiers. The provider already retries with
+exponential backoff (1s, 2s, 4s); if it still fails, wait a minute or set a
+smaller model in `GROQ_MODEL`.
+
+**`401` / `403` during discovery**
+The key itself was rejected. Check `GROQ_API_KEY` (or `OPENAI_API_KEY`) in `.env`
+for a typo or a revoked key. Groq keys are managed at
+<https://console.groq.com/keys>.
+
+**`404` — "model is not available"**
+The account cannot reach the configured model. Set `GROQ_MODEL` to one it can:
+`curl -H "Authorization: Bearer $GROQ_API_KEY" https://api.groq.com/openai/v1/models`
+lists them. It must support tool calling.
+
+**"model answered in prose instead of calling a tool"**
+Open-weight models do this occasionally despite `tool_choice: required`. The
+provider nudges and retries up to three times; seeing this error means it refused
+all three. Usually a larger model fixes it — `openai/gpt-oss-120b` rather than
+`-20b`.
 
 **`Executable doesn't exist at ...chrome-headless-shell`**
 Playwright's browser build does not match the installed package. Run
@@ -841,8 +870,10 @@ guess. Run `npx tsx scripts/inspect-locators.ts` to see the ranking, then make t
 descriptor more specific — usually by adding an anchor or a `scope.container`.
 
 **`npm run evidence` says it used the scripted fixture**
-`OPENAI_API_KEY` was not visible to the process. Confirm it is in `.env` at the
-project root, then re-run — see [section 4](#4-capturing-a-live-discovery-run).
+Either no provider key was visible to the process, or the live attempt did not
+succeed. It prints the reason, and repeats it in the banner at the top of
+`evidence/README.md`. Fix that cause and re-run — see
+[section 4](#4-capturing-a-live-discovery-run).
 
 ---
 

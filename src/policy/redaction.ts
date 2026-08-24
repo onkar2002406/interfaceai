@@ -83,7 +83,12 @@ const PATTERNS: Pattern[] = [
   // redacted into uselessness.
   { name: 'email', re: /\b[\w.+-]+@[\w-]+(?:\.[a-zA-Z]{2,})+\b/g },
   { name: 'bearer', re: /\bBearer\s+[A-Za-z0-9._~+/-]{16,}=*/gi },
+  // Provider API keys. Worth listing the shapes explicitly rather than relying
+  // on a generic "long random string" heuristic: a key that reaches a log is
+  // unrecoverable, and each provider stamps its own recognisable prefix.
   { name: 'apiKey', re: /\b(?:sk|pk|rk)-[A-Za-z0-9_-]{16,}\b/g },
+  { name: 'apiKey', re: /\bgsk_[A-Za-z0-9]{20,}\b/g },
+  { name: 'apiKey', re: /\b(?:AIza|ghp_|gho_|github_pat_)[A-Za-z0-9_-]{16,}\b/g },
   // Institution account numbers in this product are 10 digits starting 482.
   // Real deployments would configure this per vendor product.
   { name: 'accountNumber', re: /\b482\d{7}\b/g },
