@@ -81,6 +81,20 @@ reject their own response with a 400. That is intermittent rather than
 systematic, so the provider nudges and retries up to three times rather than
 letting one flaky turn kill a discovery run.
 
+**Every surface is a projection of one engine.** There are now four ways to reach
+the same code — the CLI, the agent-facing catalog, the web control panel
+(`npm run panel`) and the operator console — and none of them is a second
+implementation. The panel in particular was written under the rule that it may
+compose `Catalog`, `replay()` and `RunRecorder` and reimplement none of them: a
+run started from a browser takes the identical path as `npm run replay`, honours
+the identical guardrails, and writes identical evidence. This is worth stating
+because the tempting version of a control panel — one that reaches into the
+executor to render "nicer" progress, or keeps its own copy of the policy to
+display — is exactly how a UI ends up able to do something the tested path
+cannot. The panel reads `config/policy.json` live rather than restating it, for
+the same reason: a safety page that can drift out of agreement with the safety
+layer is worse than no safety page.
+
 ---
 
 ## 2. Artifact schema

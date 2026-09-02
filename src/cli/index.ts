@@ -6,7 +6,11 @@
  *   npm run discover -- --goal "..."  LLM-driven discovery -> capability artifact
  *   npm run replay   -- --capability  deterministic replay (no model involved)
  *   npm run catalog  -- list          the agent-facing capability catalog
- *   npm run operator                  human-in-the-loop operator console
+ *   npm run panel                     web control panel for all of the above
+ *
+ * The human-in-the-loop operator console is not a separate command: pass
+ * `--operator` to `discover` or `replay` and it is started in-process, so it can
+ * hand a person the live browser session. `npm run handoff` demonstrates it.
  */
 
 import 'dotenv/config';
@@ -46,9 +50,11 @@ program
     console.log('CoreBank Servicing Console — same vendor product, three institutions:\n');
     for (const i of instances) {
       const t = TENANTS[i.tenantId]!;
-      console.log(`  ${i.baseUrl.padEnd(24)} ${t.institutionName} (CoreBank v${t.productVersion})`);
+      console.log(
+        `  ${i.baseUrl.padEnd(24)} ${t.institutionName.padEnd(28)} CoreBank v${t.productVersion}  operator ${t.operator}`,
+      );
     }
-    console.log('\nSign on with svc.demo / demo1234. Ctrl+C to stop.');
+    console.log('\nEach install has its own operator; passwords are in .env. Ctrl+C to stop.');
   });
 
 /* --------------------------------------------------------------- discover */
@@ -323,6 +329,30 @@ program
     }
 
     throw new Error(`unknown catalog action "${action}". Use list | describe | tools | invoke.`);
+  });
+
+/* ------------------------------------------------------------------ panel */
+
+program
+  .command('panel')
+  .description('Web control panel: browse the capability catalog, run a replay, watch it, read the evidence.')
+  .option('--port <n>', 'port to serve on', String(process.env.PANEL_PORT ?? 4200))
+  .option('--headful', 'show the browser window for runs started from the panel', false)
+  .option('--profile <path>', 'app profile', DEFAULT_PROFILE)
+  .option('--policy <path>', 'policy config', DEFAULT_POLICY)
+  .option('--capabilities <dir>', 'capability store directory', DEFAULT_CAPABILITIES)
+  .action(async (opts) => {
+    const { startControlPanel } = await import('../panel/server.js');
+    const panel = await startControlPanel({
+      profile: loadAppProfile(resolvePath(opts.profile)),
+      policy: Policy.fromFile(resolvePath(opts.policy)),
+      store: new CapabilityStore(resolvePath(opts.capabilities)),
+      port: Number(opts.port),
+      headful: Boolean(opts.headful),
+    });
+    console.log(`Control panel    ${panel.url}`);
+    console.log(`Operator console ${panel.operatorUrl}`);
+    console.log('\nStart the target application in another terminal with `npm run app`. Ctrl+C to stop.');
   });
 
 /* -------------------------------------------------------------- utilities */

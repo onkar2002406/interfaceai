@@ -21,6 +21,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { startCoreBank, stopCoreBank, type RunningInstance } from '../apps/corebank/start-servers.js';
+import { TENANTS } from '../apps/corebank/tenants.js';
 import { loadAppProfile, tenantOf } from '../src/capability/application-profile.js';
 import { CapabilityStore } from '../src/capability/store.js';
 import { Policy } from '../src/policy/guardrails.js';
@@ -71,8 +72,13 @@ async function run(
 
 beforeAll(async () => {
   await ensureApp();
-  process.env.COREBANK_OPERATOR ??= 'svc.demo';
-  process.env.COREBANK_PASSWORD ??= 'demo1234';
+  // One credential pair per install: the cross-tenant cases sign on to their own
+  // institution, so a single shared pair would no longer authenticate.
+  for (const t of Object.values(TENANTS)) {
+    const suffix = t.id === 'base' ? '' : `_${t.id.toUpperCase()}`;
+    process.env[`COREBANK_OPERATOR${suffix}`] ??= t.operator;
+    process.env[`COREBANK_PASSWORD${suffix}`] ??= t.password;
+  }
 }, 60_000);
 
 afterAll(async () => {

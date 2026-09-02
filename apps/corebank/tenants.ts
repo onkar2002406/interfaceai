@@ -21,6 +21,22 @@ export interface TenantConfig {
   productVersion: string;
   /** Brand colour, purely cosmetic — proves visual drift doesn't break replay. */
   accent: string;
+  /**
+   * Staff sign-on for THIS institution. Each tenant runs its own directory, so
+   * the same operator identity does not exist across installs — which is the
+   * realistic case and the reason a capability may not carry credentials. The
+   * artifact declares "I need an authenticated session"; the runtime resolves
+   * whose session that is from the tenant it was pointed at.
+   *
+   * These literals are the demo application's own user directory — the thing a
+   * real install would keep in LDAP. They are the *target's* secrets, not the
+   * automation's: nothing here is ever read by the agent, written to a
+   * capability, or emitted into evidence. The automation receives its
+   * credentials from the environment (see `auth.credentialEnv` in the app
+   * profile) and redacts them on the way out.
+   */
+  operator: string;
+  password: string;
   labels: {
     searchNavLink: string;
     memberIdField: string;
@@ -40,6 +56,8 @@ export const TENANTS: Record<string, TenantConfig> = {
     institutionName: 'CoreBank Reference Install',
     productVersion: '8.2',
     accent: '#003366',
+    operator: 'svc.demo',
+    password: 'demo1234',
     labels: {
       searchNavLink: 'Member Search',
       memberIdField: 'Member ID',
@@ -58,6 +76,8 @@ export const TENANTS: Record<string, TenantConfig> = {
     institutionName: 'First Valley Credit Union',
     productVersion: '8.2',
     accent: '#7a1f2b',
+    operator: 'svc.fvcu',
+    password: 'valley4321',
     labels: {
       searchNavLink: 'Find Member',
       memberIdField: 'Member Number',
@@ -76,6 +96,8 @@ export const TENANTS: Record<string, TenantConfig> = {
     institutionName: 'Harbor Credit Union',
     productVersion: '9.0',
     accent: '#0b5c4a',
+    operator: 'svc.harbor',
+    password: 'harbor8765',
     labels: {
       searchNavLink: 'Member Search',
       memberIdField: 'Member ID',

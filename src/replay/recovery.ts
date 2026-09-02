@@ -19,6 +19,7 @@
  */
 
 import type { RecoveryAction } from '../capability/schema.js';
+import { credentialEnvFor } from '../capability/application-profile.js';
 import type { AppProfile, TenantProfile } from '../capability/application-profile.js';
 import type { Surface } from '../surface/types.js';
 import type { ControlToken } from '../escalation/control-authority.js';
@@ -98,15 +99,17 @@ export async function runRecovery(action: RecoveryAction, ctx: RecoveryContext):
 
 async function reauthenticate(ctx: RecoveryContext): Promise<RecoveryResult> {
   const { auth } = ctx.profile;
-  const user = process.env[auth.credentialEnv.user];
-  const password = process.env[auth.credentialEnv.password];
+  // Whose session this is, is a property of the tenant, not of the capability.
+  const credentialEnv = credentialEnvFor(ctx.profile, ctx.tenant);
+  const user = process.env[credentialEnv.user];
+  const password = process.env[credentialEnv.password];
 
   if (!user || !password) {
     return {
       ok: false,
       note:
-        `cannot re-authenticate: ${auth.credentialEnv.user} / ${auth.credentialEnv.password} are not set ` +
-        `in the environment (credentials are never stored in the profile or the artifact)`,
+        `cannot re-authenticate as ${ctx.tenant.id}: ${credentialEnv.user} / ${credentialEnv.password} ` +
+        `are not set in the environment (credentials are never stored in the profile or the artifact)`,
     };
   }
 

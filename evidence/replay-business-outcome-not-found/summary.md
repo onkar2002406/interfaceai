@@ -5,8 +5,8 @@
 | Status | **business_outcome** |
 | Run | `business-outcome-not-found` |
 | Tenant | base (corebank-servicing) |
-| Started | 2026-08-24T01:53:41.402Z |
-| Duration | 3203 ms |
+| Started | 2026-09-02T05:36:11.801Z |
+| Duration | 1819 ms |
 | Overrides applied | 0 |
 | Drift signals | 0 |
 
@@ -23,9 +23,9 @@ No member matches the supplied identifier. This is a complete and correct answer
 
 | # | Step | Intent | Action | Status | ms | Locator |
 |---|---|---|---|---|---|---|
-| 1 | `s1` | Open the member search screen from the left-hand menu. | click | ok | 624 | 1 via `name:normalized` |
-| 2 | `s2` | Type the member identifier into the search field. | type | ok | 197 | 1 via `anchor:proximateLabel` |
-| 3 | `s3` | Submit the search and land on the member's detail screen. | click | business | 410 | 1 via `name:normalized` |
+| 1 | `s1` | Open the member search screen from the left-hand menu. | click | ok | 374 | 1 via `name:normalized` |
+| 2 | `s2` | Type the member identifier into the search field. | type | ok | 144 | 1 via `anchor:proximateLabel` |
+| 3 | `s3` | Submit the search and land on the member's detail screen. | click | business | 63 | 1 via `name:normalized` |
 
 ## Evidence
 

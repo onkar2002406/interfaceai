@@ -85,7 +85,9 @@ ${error ? `<div class="err">${esc(error)}</div>` : ''}
 </table>
 </form>
 <div class="note"><font size="1" color="#666">
-  Demo install. Use operator <b>svc.demo</b> / password <b>demo1234</b>.<br>
+  ${esc(t.institutionName)} &#183; CoreBank Servicing Console v${esc(t.productVersion)}
+  &#183; install <b>${esc(t.id)}</b><br>
+  Authorised staff only. Contact your branch administrator for access.<br>
   Synthetic data only &#8212; no real member information.
 </font></div>`,
   );
@@ -119,7 +121,7 @@ export function navPage(t: TenantConfig): string {
   ${item('/search', t.labels.searchNavLink)}
   ${item('/content', 'Home')}
   <tr><td><hr size="1"></td></tr>
-  <tr><td><font size="1" color="#666">Signed on as<br><b>svc.demo</b></font></td></tr>
+  <tr><td><font size="1" color="#666">Signed on as<br><b>${esc(t.operator)}</b></font></td></tr>
   <tr><td><font size="2"><a href="/logout" target="_top">Sign Off</a></font></td></tr>
 </table>`,
   );
@@ -369,6 +371,39 @@ export function transferPage(t: TenantConfig, m: Member): string {
   <tr><td>&nbsp;</td><td><input type="submit" name="ctl00$btnPost" value="Post Transfer"></td></tr>
 </table>
 </form>`,
+  );
+}
+
+/**
+ * What a posted transfer actually hits.
+ *
+ * This install never moves money — deliberately. `/member/*​/transfer` is the
+ * one maximally irreversible act in the app, and it exists so the policy layer
+ * has something real to refuse: `FUNDS_TRANSFER` in config/policy.json stops the
+ * automation at the Post Transfer button, before this handler is ever reached.
+ *
+ * This page is the server-side backstop behind that policy — defence in depth,
+ * for the case where something slipped past the guardrail. It used to render the
+ * generic system-error page, which was wrong in a way worth fixing: a refusal
+ * that is indistinguishable from a crash teaches a reviewer (and a classifier)
+ * the wrong thing. A deliberate control should say so.
+ */
+export function transferBlockedPage(t: TenantConfig, m: Member): string {
+  return chrome(
+    t,
+    'Transfer Not Posted',
+    `
+<div class="note"><font size="2" color="#a00"><b>Transfer not posted</b></font></div>
+<div class="note">
+  <p><font size="2">This is a demonstration install. Funds transfer is disabled at the
+     server, so <b>no money moved and no record was written</b>.</font></p>
+  <p><font size="2">Reaching this screen from automation means a guardrail was
+     bypassed: posting a transfer is classified <b>irreversible</b> and must be
+     stopped for human authorisation before the button is pressed.</font></p>
+  <p><font size="1" color="#666">Reference: TRANSFER-BLOCKED &#183; member ${esc(m.id)}
+     &#183; ${esc(t.institutionName)}</font></p>
+</div>
+<div class="note"><font size="2"><a href="/member/${esc(m.id)}">Back to Member Detail</a></font></div>`,
   );
 }
 

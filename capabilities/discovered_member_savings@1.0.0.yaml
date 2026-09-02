@@ -15,7 +15,7 @@ metadata:
   version: 1.0.0
   title: Retrieved the current savings balance for member 10001
   summary: Retrieved the current savings balance for member 10001
-  createdAt: 2026-08-24T01:53:36.016Z
+  createdAt: 2026-09-02T05:36:09.827Z
   app:
     product: corebank-servicing
     productVersion: "8.2"
@@ -27,7 +27,7 @@ metadata:
     model: groq:openai/gpt-oss-120b
     surfaceKind: web
     traceRef: evidence/discovery-lookup-savings-balance/trace.json
-    traceSha256: 482cd3cd0df77890245b68f19b1dbb8f1e349c26f65f722ec0479d544c31af20
+    traceSha256: bad81ee116e5f570e01a8ca5a817a89ff2cf8d65651fade0b9d864eb3035ff46
 spec:
   inputs:
     - name: memberId
@@ -127,11 +127,11 @@ spec:
       conditions: []
       optional: false
     - id: s3
-      intent: Click the Search button to retrieve member information
+      intent: Click the Search button to look up member 10001
       action:
         type: click
         target:
-          description: Click the Search button to retrieve member information
+          description: Click the Search button to look up member 10001
           role: button
           name: Search
           nameMatch: normalized
@@ -149,6 +149,14 @@ spec:
               height: 13
       guard:
         risk: safe
+      checkpoint:
+        describe: the route matches /member/[0-9]+$
+        all:
+          - kind: urlMatches
+            pattern: /member/[0-9]+$
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
       conditions: []
       optional: false
   successCheckpoint:

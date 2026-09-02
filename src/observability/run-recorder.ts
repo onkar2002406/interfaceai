@@ -40,15 +40,25 @@ export class RunRecorder {
   private readonly events: RunEvent[] = [];
   private readonly consoleEcho: boolean;
 
+  /**
+   * Optional live subscriber, for a UI watching a run in progress.
+   *
+   * It is handed the event *after* redaction, deliberately: a viewer streaming
+   * a run gets exactly what the committed evidence gets, and there is no second
+   * path out of this class for a raw member record to escape through.
+   */
+  private readonly onEvent: ((e: RunEvent) => void) | undefined;
+
   constructor(
     readonly runId: string,
     readonly kind: RunKind,
     baseDir = 'evidence',
-    opts: { consoleEcho?: boolean } = {},
+    opts: { consoleEcho?: boolean; onEvent?: (e: RunEvent) => void } = {},
   ) {
     this.dir = join(baseDir, `${kind}-${runId}`).replace(/\\/g, '/');
     mkdirSync(this.dir, { recursive: true });
     this.consoleEcho = opts.consoleEcho ?? true;
+    this.onEvent = opts.onEvent;
   }
 
   /**
@@ -65,6 +75,12 @@ export class RunRecorder {
     this.events.push(e);
     appendFileSync(join(this.dir, 'events.jsonl'), `${JSON.stringify(e)}\n`, 'utf8');
     if (this.consoleEcho) console.log(formatEvent(e));
+    // A subscriber must never be able to take the run down with it.
+    try {
+      this.onEvent?.(e);
+    } catch {
+      /* a broken viewer is not a failed run */
+    }
   }
 
   /**

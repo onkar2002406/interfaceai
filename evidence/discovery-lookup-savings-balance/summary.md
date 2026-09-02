@@ -7,7 +7,7 @@
 | Model | groq:openai/gpt-oss-120b |
 | Tenant | base (corebank-servicing) |
 | Model calls | 4 |
-| Tokens | 6748 prompt / 469 completion |
+| Tokens | 6691 prompt / 465 completion |
 | Steps taken | 3 |
 
 ## What the model did
@@ -16,7 +16,7 @@
 |---|---|---|---|---|
 | 1 | click | Member Search | Click the Member Search link to open the member search screen | yes |
 | 2 | type | Member ID | Enter member ID 10001 into the Member ID textbox | yes |
-| 3 | click | Search | Click the Search button to retrieve member information | yes |
+| 3 | click | Search | Click the Search button to look up member 10001 | yes |
 
 ## Compiled capability
 

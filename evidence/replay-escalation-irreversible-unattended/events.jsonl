@@ -1,38 +1,38 @@
-{"at":"2026-08-24T01:54:46.708Z","seq":1,"kind":"replay_start","detail":{"capability":"open_sub_account@1.0.0","tenant":"base","product":"corebank-servicing v8.2","baseUrl":"http://localhost:4000","approval":"approved","irreversibleAuthorized":false,"params":{"memberId":"[pii:6f56cc84…0001]","accountType":"Savings","initialDeposit":"100.00","nickname":"Holiday Fund"},"overrides":0}}
-{"at":"2026-08-24T01:54:47.406Z","seq":2,"kind":"navigate_entry","detail":{"url":"http://localhost:4000/"}}
-{"at":"2026-08-24T01:54:47.497Z","seq":3,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-24T01:54:48.213Z","seq":4,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-24T01:54:48.504Z","seq":5,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-24T01:54:48.732Z","seq":6,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-24T01:54:48.824Z","seq":7,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-24T01:54:49.493Z","seq":8,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-24T01:54:49.496Z","seq":9,"kind":"auth_precondition","detail":{"ok":true,"note":"signed on and returned to the entry point"}}
-{"at":"2026-08-24T01:54:49.497Z","seq":10,"kind":"step_start","detail":{"step":"s1","index":1,"of":9,"intent":"Open the member search screen from the left-hand menu.","action":"click","risk":"safe"}}
-{"at":"2026-08-24T01:54:49.734Z","seq":11,"kind":"surface_action","detail":{"action":"click","target":"Member Search","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-24T01:54:49.949Z","seq":12,"kind":"step_ok","detail":{"step":"s1","durationMs":453,"score":1,"via":"name:normalized","checkpoint":"the member search screen is loaded"}}
-{"at":"2026-08-24T01:54:49.950Z","seq":13,"kind":"step_start","detail":{"step":"s2","index":2,"of":9,"intent":"Type the member identifier into the search field.","action":"type","risk":"mutating","value":"{{memberId}}"}}
-{"at":"2026-08-24T01:54:50.068Z","seq":14,"kind":"surface_action","detail":{"action":"type","target":"Member ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-24T01:54:50.106Z","seq":15,"kind":"step_ok","detail":{"step":"s2","durationMs":156,"score":1,"via":"anchor:proximateLabel"}}
-{"at":"2026-08-24T01:54:50.107Z","seq":16,"kind":"step_start","detail":{"step":"s3","index":3,"of":9,"intent":"Submit the search and land on the member's detail screen.","action":"click","risk":"safe"}}
-{"at":"2026-08-24T01:54:50.144Z","seq":17,"kind":"surface_action","detail":{"action":"click","target":"Search","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-24T01:54:50.350Z","seq":18,"kind":"step_ok","detail":{"step":"s3","durationMs":243,"score":1,"via":"name:normalized","checkpoint":"the member detail screen is displayed"}}
-{"at":"2026-08-24T01:54:50.351Z","seq":19,"kind":"step_start","detail":{"step":"s4","index":4,"of":9,"intent":"Open the new sub-account form for this member.","action":"click","risk":"safe"}}
-{"at":"2026-08-24T01:54:50.386Z","seq":20,"kind":"surface_action","detail":{"action":"click","target":"Open Sub-Account","risk":"safe","score":1,"strategy":"name:contains"}}
-{"at":"2026-08-24T01:54:52.025Z","seq":21,"kind":"step_ok","detail":{"step":"s4","durationMs":1674,"score":1,"via":"name:contains","checkpoint":"the new sub-account form is displayed"}}
-{"at":"2026-08-24T01:54:52.026Z","seq":22,"kind":"step_start","detail":{"step":"s5","index":5,"of":9,"intent":"Choose the share account product to open.","action":"select","risk":"mutating","value":"Savings"}}
-{"at":"2026-08-24T01:54:52.725Z","seq":23,"kind":"surface_action","detail":{"action":"select","target":"Account Type","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-24T01:54:52.780Z","seq":24,"kind":"step_ok","detail":{"step":"s5","durationMs":754,"score":1,"via":"anchor:proximateLabel"}}
-{"at":"2026-08-24T01:54:52.784Z","seq":25,"kind":"step_start","detail":{"step":"s6","index":6,"of":9,"intent":"Enter the opening deposit amount.","action":"type","risk":"mutating","value":"100.00"}}
-{"at":"2026-08-24T01:54:52.994Z","seq":26,"kind":"surface_action","detail":{"action":"type","target":"Initial Deposit","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-24T01:54:53.057Z","seq":27,"kind":"step_ok","detail":{"step":"s6","durationMs":273,"score":1,"via":"anchor:proximateLabel"}}
-{"at":"2026-08-24T01:54:53.058Z","seq":28,"kind":"step_start","detail":{"step":"s7","index":7,"of":9,"intent":"Enter the member-facing nickname for the account.","action":"type","risk":"mutating","value":"Holiday Fund"}}
-{"at":"2026-08-24T01:54:53.382Z","seq":29,"kind":"surface_action","detail":{"action":"type","target":"Nickname","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-24T01:54:53.462Z","seq":30,"kind":"step_ok","detail":{"step":"s7","durationMs":404,"score":1,"via":"anchor:proximateLabel"}}
-{"at":"2026-08-24T01:54:53.463Z","seq":31,"kind":"step_start","detail":{"step":"s8","index":8,"of":9,"intent":"Submit the form for review, without committing anything yet.","action":"click","risk":"mutating"}}
-{"at":"2026-08-24T01:54:53.534Z","seq":32,"kind":"surface_action","detail":{"action":"click","target":"Review","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-24T01:54:53.660Z","seq":33,"kind":"step_ok","detail":{"step":"s8","durationMs":197,"score":1,"via":"name:normalized","checkpoint":"the review screen shows the details to be committed"}}
-{"at":"2026-08-24T01:54:53.661Z","seq":34,"kind":"step_start","detail":{"step":"s9","index":9,"of":9,"intent":"Commit the application and open the account.","action":"click","risk":"irreversible"}}
-{"at":"2026-08-24T01:54:53.798Z","seq":35,"kind":"surface_policy_denied","detail":{"action":"click","url":"http://localhost:4000/","risk":"irreversible","rule":"IRREVERSIBLE_SUBMIT","reason":"irreversible step requires an approved artifact and explicit invocation authorisation (IRREVERSIBLE_SUBMIT)"}}
-{"at":"2026-08-24T01:54:56.606Z","seq":36,"kind":"screenshot","detail":{"file":"evidence/replay-escalation-irreversible-unattended/escalation-s9.png"}}
-{"at":"2026-08-24T01:54:56.695Z","seq":37,"kind":"escalation_raised","detail":{"interventionId":"int_edffe020","step":"s9","reasonClass":"policy_irreversible","reason":"irreversible step requires an approved artifact and explicit invocation authorisation (IRREVERSIBLE_SUBMIT)","resumeContract":"the confirmation screen reports the account was opened","screenshot":"evidence/replay-escalation-irreversible-unattended/escalation-s9.png"}}
-{"at":"2026-08-24T01:54:56.696Z","seq":38,"kind":"escalation_resolved","detail":{"interventionId":"int_edffe020","resolution":"unattended","reason":"intervention int_edffe020 required a human operator but no operator console is attached. Re-run with --operator to start one and take control of the live session.","humanActions":0}}
+{"at":"2026-09-02T05:36:38.070Z","seq":1,"kind":"replay_start","detail":{"capability":"open_sub_account@1.0.0","tenant":"base","product":"corebank-servicing v8.2","baseUrl":"http://localhost:4000","approval":"approved","irreversibleAuthorized":false,"params":{"memberId":"[pii:07ab5c4d…0001]","accountType":"Savings","initialDeposit":"100.00","nickname":"Holiday Fund"},"overrides":0}}
+{"at":"2026-09-02T05:36:38.299Z","seq":2,"kind":"navigate_entry","detail":{"url":"http://localhost:4000/"}}
+{"at":"2026-09-02T05:36:38.324Z","seq":3,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-02T05:36:38.560Z","seq":4,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-02T05:36:38.716Z","seq":5,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-02T05:36:38.870Z","seq":6,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-02T05:36:38.909Z","seq":7,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-02T05:36:39.150Z","seq":8,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-02T05:36:39.151Z","seq":9,"kind":"auth_precondition","detail":{"ok":true,"note":"signed on and returned to the entry point"}}
+{"at":"2026-09-02T05:36:39.152Z","seq":10,"kind":"step_start","detail":{"step":"s1","index":1,"of":9,"intent":"Open the member search screen from the left-hand menu.","action":"click","risk":"safe"}}
+{"at":"2026-09-02T05:36:39.348Z","seq":11,"kind":"surface_action","detail":{"action":"click","target":"Member Search","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-02T05:36:39.531Z","seq":12,"kind":"step_ok","detail":{"step":"s1","durationMs":379,"score":1,"via":"name:normalized","checkpoint":"the member search screen is loaded"}}
+{"at":"2026-09-02T05:36:39.532Z","seq":13,"kind":"step_start","detail":{"step":"s2","index":2,"of":9,"intent":"Type the member identifier into the search field.","action":"type","risk":"mutating","value":"{{memberId}}"}}
+{"at":"2026-09-02T05:36:39.648Z","seq":14,"kind":"surface_action","detail":{"action":"type","target":"Member ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-02T05:36:39.673Z","seq":15,"kind":"step_ok","detail":{"step":"s2","durationMs":141,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-02T05:36:39.674Z","seq":16,"kind":"step_start","detail":{"step":"s3","index":3,"of":9,"intent":"Submit the search and land on the member's detail screen.","action":"click","risk":"safe"}}
+{"at":"2026-09-02T05:36:39.701Z","seq":17,"kind":"surface_action","detail":{"action":"click","target":"Search","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-02T05:36:39.889Z","seq":18,"kind":"step_ok","detail":{"step":"s3","durationMs":215,"score":1,"via":"name:normalized","checkpoint":"the member detail screen is displayed"}}
+{"at":"2026-09-02T05:36:39.890Z","seq":19,"kind":"step_start","detail":{"step":"s4","index":4,"of":9,"intent":"Open the new sub-account form for this member.","action":"click","risk":"safe"}}
+{"at":"2026-09-02T05:36:39.916Z","seq":20,"kind":"surface_action","detail":{"action":"click","target":"Open Sub-Account","risk":"safe","score":1,"strategy":"name:contains"}}
+{"at":"2026-09-02T05:36:40.132Z","seq":21,"kind":"step_ok","detail":{"step":"s4","durationMs":242,"score":1,"via":"name:contains","checkpoint":"the new sub-account form is displayed"}}
+{"at":"2026-09-02T05:36:40.132Z","seq":22,"kind":"step_start","detail":{"step":"s5","index":5,"of":9,"intent":"Choose the share account product to open.","action":"select","risk":"mutating","value":"Savings"}}
+{"at":"2026-09-02T05:36:40.170Z","seq":23,"kind":"surface_action","detail":{"action":"select","target":"Account Type","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-02T05:36:40.215Z","seq":24,"kind":"step_ok","detail":{"step":"s5","durationMs":83,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-02T05:36:40.216Z","seq":25,"kind":"step_start","detail":{"step":"s6","index":6,"of":9,"intent":"Enter the opening deposit amount.","action":"type","risk":"mutating","value":"100.00"}}
+{"at":"2026-09-02T05:36:40.360Z","seq":26,"kind":"surface_action","detail":{"action":"type","target":"Initial Deposit","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-02T05:36:40.397Z","seq":27,"kind":"step_ok","detail":{"step":"s6","durationMs":181,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-02T05:36:40.397Z","seq":28,"kind":"step_start","detail":{"step":"s7","index":7,"of":9,"intent":"Enter the member-facing nickname for the account.","action":"type","risk":"mutating","value":"Holiday Fund"}}
+{"at":"2026-09-02T05:36:40.653Z","seq":29,"kind":"surface_action","detail":{"action":"type","target":"Nickname","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-02T05:36:40.686Z","seq":30,"kind":"step_ok","detail":{"step":"s7","durationMs":289,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-02T05:36:40.687Z","seq":31,"kind":"step_start","detail":{"step":"s8","index":8,"of":9,"intent":"Submit the form for review, without committing anything yet.","action":"click","risk":"mutating"}}
+{"at":"2026-09-02T05:36:40.721Z","seq":32,"kind":"surface_action","detail":{"action":"click","target":"Review","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-02T05:36:40.753Z","seq":33,"kind":"step_ok","detail":{"step":"s8","durationMs":66,"score":1,"via":"name:normalized","checkpoint":"the review screen shows the details to be committed"}}
+{"at":"2026-09-02T05:36:40.753Z","seq":34,"kind":"step_start","detail":{"step":"s9","index":9,"of":9,"intent":"Commit the application and open the account.","action":"click","risk":"irreversible"}}
+{"at":"2026-09-02T05:36:40.773Z","seq":35,"kind":"surface_policy_denied","detail":{"action":"click","url":"http://localhost:4000/","risk":"irreversible","rule":"IRREVERSIBLE_SUBMIT","reason":"irreversible step requires an approved artifact and explicit invocation authorisation (IRREVERSIBLE_SUBMIT)"}}
+{"at":"2026-09-02T05:36:40.830Z","seq":36,"kind":"screenshot","detail":{"file":"evidence/replay-escalation-irreversible-unattended/escalation-s9.png"}}
+{"at":"2026-09-02T05:36:40.853Z","seq":37,"kind":"escalation_raised","detail":{"interventionId":"int_61805519","step":"s9","reasonClass":"policy_irreversible","reason":"irreversible step requires an approved artifact and explicit invocation authorisation (IRREVERSIBLE_SUBMIT)","resumeContract":"the confirmation screen reports the account was opened","screenshot":"evidence/replay-escalation-irreversible-unattended/escalation-s9.png"}}
+{"at":"2026-09-02T05:36:40.854Z","seq":38,"kind":"escalation_resolved","detail":{"interventionId":"int_61805519","resolution":"unattended","reason":"intervention int_61805519 required a human operator but no operator console is attached. Re-run with --operator to start one and take control of the live session.","humanActions":0}}

@@ -2,23 +2,23 @@
   "status": "success",
   "outputs": {
     "savingsBalance": 8412.55,
-    "savingsAccountNumber": "[pii:23a0ee6c…7735]"
+    "savingsAccountNumber": "[pii:230c34d1…7735]"
   },
   "runId": "success",
   "capability": "lookup_member_savings_balance",
   "capabilityVersion": "1.0.0",
   "tenant": "base",
   "product": "corebank-servicing",
-  "startedAt": "2026-08-24T01:53:36.061Z",
-  "durationMs": 3582,
+  "startedAt": "2026-09-02T05:36:09.842Z",
+  "durationMs": 1864,
   "steps": [
     {
       "stepId": "s1",
       "intent": "Open the member search screen from the left-hand menu.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-08-24T01:53:37.743Z",
-      "durationMs": 385,
+      "startedAt": "2026-09-02T05:36:10.912Z",
+      "durationMs": 378,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -37,8 +37,8 @@
       "intent": "Type the member identifier into the search field.",
       "actionType": "type",
       "status": "ok",
-      "startedAt": "2026-08-24T01:53:38.129Z",
-      "durationMs": 409,
+      "startedAt": "2026-09-02T05:36:11.290Z",
+      "durationMs": 154,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -52,8 +52,8 @@
       "intent": "Submit the search and land on the member's detail screen.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-08-24T01:53:38.539Z",
-      "durationMs": 1057,
+      "startedAt": "2026-09-02T05:36:11.445Z",
+      "durationMs": 232,
       "recoveries": [],
       "resolution": {
         "score": 1,

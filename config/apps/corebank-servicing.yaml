@@ -156,11 +156,19 @@ tenants:
     label: First Valley Credit Union
     baseUrl: http://localhost:4001
     productVersion: '8.2'
+    # Its own staff directory, so its own operator. Names only — the values are
+    # supplied by the environment at run time.
+    credentialEnv:
+      user: COREBANK_OPERATOR_FIRSTVALLEY
+      password: COREBANK_PASSWORD_FIRSTVALLEY
 
   - id: harborcu
     label: Harbor Credit Union
     baseUrl: http://localhost:4002
     productVersion: '9.0'
+    credentialEnv:
+      user: COREBANK_OPERATOR_HARBORCU
+      password: COREBANK_PASSWORD_HARBORCU
     extraConditions:
       - id: privacy_acknowledgement
         description: >

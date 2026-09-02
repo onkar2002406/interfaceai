@@ -28,6 +28,10 @@ import { z } from 'zod';
 import { ElementDescriptorSchema } from '../surface/element-descriptor.js';
 import { CheckpointSchema, ConditionSchema } from './schema.js';
 
+/** Names of the env vars holding a set of credentials. Never the values. */
+const CredentialEnvSchema = z.object({ user: z.string(), password: z.string() });
+export type CredentialEnv = z.infer<typeof CredentialEnvSchema>;
+
 export const TenantSchema = z.object({
   id: z.string(),
   label: z.string(),
@@ -35,6 +39,13 @@ export const TenantSchema = z.object({
   productVersion: z.string(),
   /** Conditions this tenant adds on top of the product-wide set. */
   extraConditions: z.array(ConditionSchema).default([]),
+  /**
+   * Where THIS institution's operator credentials live, when it has its own.
+   * Each tenant runs its own directory, so an operator valid at one install is
+   * rejected at the next. Still only variable *names* — the profile is
+   * committed to the repo and must never carry a value.
+   */
+  credentialEnv: CredentialEnvSchema.optional(),
 });
 export type TenantProfile = z.infer<typeof TenantSchema>;
 
@@ -57,8 +68,8 @@ export const AppProfileSchema = z.object({
     passwordField: ElementDescriptorSchema,
     submitTarget: ElementDescriptorSchema,
     successCheckpoint: CheckpointSchema,
-    /** Names of the env vars holding the credentials. Never the values. */
-    credentialEnv: z.object({ user: z.string(), password: z.string() }),
+    /** Product-wide default. A tenant may point at its own pair instead. */
+    credentialEnv: CredentialEnvSchema,
   }),
 
   tenants: z.array(TenantSchema),
@@ -78,6 +89,18 @@ export function tenantOf(profile: AppProfile, tenantId: string): TenantProfile {
     );
   }
   return t;
+}
+
+/**
+ * Which credentials this tenant signs on with — its own if it declares a pair,
+ * otherwise the product-wide default.
+ *
+ * The same specialisation rule as conditions: tenant overrides product. That is
+ * what keeps a capability portable. The artifact never names an operator; it
+ * declares that it needs a session, and the runtime decides whose.
+ */
+export function credentialEnvFor(profile: AppProfile, tenant: TenantProfile): CredentialEnv {
+  return tenant.credentialEnv ?? profile.auth.credentialEnv;
 }
 
 /**

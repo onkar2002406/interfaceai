@@ -17,8 +17,6 @@ import { FaultController, FAULT_MODES, type FaultMode } from './fault-injection.
 import { findMember, OPENED_SUBACCOUNTS, type Member } from './seed-data.js';
 import * as V from './pages.js';
 
-const VALID_OPERATOR = 'svc.demo';
-const VALID_PASSWORD = 'demo1234';
 const MIN_OPENING_DEPOSIT = 25;
 const SLOW_FAULT_MS = 6000;
 
@@ -98,7 +96,9 @@ export function createCoreBankApp(tenantId: string): CoreBankApp {
   app.post('/login', (req, res) => {
     const operator = String(req.body['ctl00$txtOperator'] ?? '').trim();
     const password = String(req.body['ctl00$txtPwd'] ?? '');
-    if (operator !== VALID_OPERATOR || password !== VALID_PASSWORD) {
+    // Each institution authenticates against its own directory, so an operator
+    // valid at one tenant is rejected at the next.
+    if (operator !== tenant.operator || password !== tenant.password) {
       res.status(200).send(V.loginPage(tenant, 'Invalid operator ID or password.'));
       return;
     }
@@ -259,15 +259,20 @@ export function createCoreBankApp(tenantId: string): CoreBankApp {
     res.send(V.transferPage(tenant, m));
   });
 
+  /**
+   * The server-side backstop for the one irreversible act in this app.
+   *
+   * Transfers never post here. The policy layer (`FUNDS_TRANSFER` in
+   * config/policy.json) is what *should* stop the automation, at the button;
+   * this handler is the second line, for anything that got past it. It answers
+   * with a page that names itself as a deliberate refusal rather than the
+   * generic system-error page, so a human who clicks through by hand is not
+   * shown what looks like a crash.
+   */
   app.post('/member/:id/transfer', requireSession, (req, res) => {
     const m = loadMember(req, res);
     if (!m) return;
-    res.send(
-      V.appErrorPage(
-        tenant,
-        'TRANSFER-BLOCKED: this demo install does not post transfers. The automation layer should never have reached here unattended.',
-      ),
-    );
+    res.status(403).send(V.transferBlockedPage(tenant, m));
   });
 
   /* ------------------------------------------------------- admin (test) */
@@ -312,3 +317,15 @@ export const TENANT_PORTS: Record<string, number> = {
   firstvalley: 4001,
   harborcu: 4002,
 };
+
+/**
+ * Which install answers on a given origin, and therefore which operator can
+ * sign on to it. For dev utilities that get pointed at an arbitrary tenant URL —
+ * the replay engine resolves credentials through the app profile instead.
+ */
+export function tenantForOrigin(origin: string): TenantConfig {
+  const port = Number(new URL(origin).port);
+  const id = Object.keys(TENANT_PORTS).find((k) => TENANT_PORTS[k] === port);
+  if (!id) throw new Error(`No CoreBank tenant runs on port ${port}. Known: ${Object.values(TENANT_PORTS).join(', ')}`);
+  return getTenant(id);
+}

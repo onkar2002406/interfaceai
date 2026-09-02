@@ -162,6 +162,41 @@ Outputs: {
 
 No model was involved in that run.
 
+### The control panel
+
+Everything above is also drivable from a browser, which is usually the faster way
+to see what the system does:
+
+```bash
+# Terminal 1 — the target application
+npm run app
+
+# Terminal 2 — the control panel
+npm run panel        # http://localhost:4200
+```
+
+The panel is a **view onto the same engine**, not a second one. It composes
+`Catalog`, `replay()` and `RunRecorder`; a run started from a browser takes the
+identical code path as `npm run replay`, honours the identical guardrails, and
+writes evidence in the identical format. It shows:
+
+- the **capability contract** — typed inputs, typed outputs, and the business
+  outcomes a caller should expect, read from the artifact rather than restated;
+- a form **generated from the input schema**, so the UI cannot drift from the
+  contract, with arguments validated before a browser is launched;
+- the run **streaming step by step**, then the result rendered as one of the four
+  arms — success with outputs, a business outcome, an escalation, or a failure
+  with step / expected / observed;
+- a **runtime-condition injector** for demonstrating the recovery paths;
+- the **evidence browser**, curated runs separated from ad-hoc ones; and
+- the **guardrails**, read live from `config/policy.json` — the same object the
+  engine enforces, not a second copy that could drift out of agreement with it.
+
+Runs started from the panel are written to `evidence/runs/` (gitignored) so that
+clicking Replay during a demo never disturbs the curated evidence set. When a run
+stops for a human, the panel hands it to the real operator console on port 4100 —
+the same broker, the same live session.
+
 ### Running discovery without an API key
 
 ```bash
@@ -230,11 +265,11 @@ npm run app
 Three instances of the **same fake vendor product**, configured as three
 different institutions:
 
-| URL | Institution | Product version | How it differs |
-|---|---|---|---|
-| http://localhost:4000 | CoreBank Reference Install | 8.2 | the baseline |
-| http://localhost:4001 | First Valley Credit Union | 8.2 | two controls relabelled |
-| http://localhost:4002 | Harbor Credit Union | 9.0 | reordered accounts table, mandatory privacy screen |
+| URL | Institution | Product version | Operator | How it differs |
+|---|---|---|---|---|
+| http://localhost:4000 | CoreBank Reference Install | 8.2 | `svc.demo` | the baseline |
+| http://localhost:4001 | First Valley Credit Union | 8.2 | `svc.fvcu` | two controls relabelled |
+| http://localhost:4002 | Harbor Credit Union | 9.0 | `svc.harbor` | reordered accounts table, mandatory privacy screen |
 
 This is a deliberately hostile stand-in for a back-office banking application. It
 uses a real `<frameset>`, table-based layout, `<font>` tags, ASP.NET-style
@@ -242,7 +277,23 @@ generated ids (`ctl00_ContentPlaceHolder1_txtMbrId`), no test IDs, and — the
 important one — **no `<label for>` on any text input**, so those inputs have a
 completely empty accessible name, exactly as they do in the real thing.
 
-Sign on with `svc.demo` / `demo1234`. Every piece of data is invented.
+**Each institution has its own operator.** An operator valid at one install is
+rejected at the next, because each runs its own staff directory — which is the
+realistic case, and the reason a capability cannot carry credentials. The
+artifact declares only that it needs an authenticated session; the runtime
+resolves *whose* from the tenant it was pointed at, via the `credentialEnv` names
+in the app profile. Passwords live in `.env` (see `.env.example`) and are printed
+nowhere in the application. Every piece of data is invented.
+
+**Funds Transfer never posts, on purpose.** It is the one maximally irreversible
+act in the app, and it exists so the policy layer has something real to refuse:
+`FUNDS_TRANSFER` in [`config/policy.json`](config/policy.json) stops the
+automation at the *Post Transfer* button. The server refuses the POST as well —
+defence in depth — and answers with a page that names itself as a deliberate
+refusal, so a human clicking through by hand is not shown what looks like a
+crash. Open Sub-Account, by contrast, is a fully working flow through to a
+committed record; it is the one the irreversible-step machinery is demonstrated
+against.
 
 <details>
 <summary>Members you can look up</summary>
@@ -734,6 +785,9 @@ usable token back. A human saying "done" is a claim; the checkpoint is the fact.
 │   │   └── operator/                the operator console (server + UI)
 │   │
 │   ├── observability/run-recorder.ts   structured logs, screenshots, snapshots
+│   ├── panel/                   ── the web control panel ──
+│   │   ├── server.ts                composes catalog + replay + recorder; SSE
+│   │   └── panel.html               contract, live run, evidence, guardrails
 │   └── cli/                     command-line entry point and run reports
 │
 ├── scripts/

@@ -13,6 +13,9 @@ dist/
 
 # runtime output that is NOT curated evidence
 evidence/_scratch/
+# ad-hoc runs started from the control panel. Real evidence, same format, but
+# the committed set is the curated one that `npm run evidence` regenerates.
+evidence/runs/
 .playwright/
 test-results/
 playwright-report/

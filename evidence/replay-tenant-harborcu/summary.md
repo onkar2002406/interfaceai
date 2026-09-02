@@ -5,8 +5,8 @@
 | Status | **success** |
 | Run | `tenant-harborcu` |
 | Tenant | harborcu (corebank-servicing) |
-| Started | 2026-08-24T01:54:40.581Z |
-| Duration | 3235 ms |
+| Started | 2026-09-02T05:36:35.970Z |
+| Duration | 2039 ms |
 | Overrides applied | 0 |
 | Drift signals | 0 |
 
@@ -15,7 +15,7 @@
 ```json
 {
   "savingsBalance": 8412.55,
-  "savingsAccountNumber": "[pii:23a0ee6c…7735]"
+  "savingsAccountNumber": "[pii:230c34d1…7735]"
 }
 ```
 
@@ -23,9 +23,9 @@
 
 | # | Step | Intent | Action | Status | ms | Locator |
 |---|---|---|---|---|---|---|
-| 1 | `s1` | Open the member search screen from the left-hand menu. | click | ok | 437 | 1 via `name:normalized` |
-| 2 | `s2` | Type the member identifier into the search field. | type | ok | 164 | 1 via `anchor:proximateLabel` |
-| 3 | `s3` | Submit the search and land on the member's detail screen. | click | ok | 1125 | 1 via `name:normalized` |
+| 1 | `s1` | Open the member search screen from the left-hand menu. | click | ok | 380 | 1 via `name:normalized` |
+| 2 | `s2` | Type the member identifier into the search field. | type | ok | 127 | 1 via `anchor:proximateLabel` |
+| 3 | `s3` | Submit the search and land on the member's detail screen. | click | ok | 293 | 1 via `name:normalized` |
 
 ## Recovery attempts
 
