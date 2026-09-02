@@ -3,8 +3,12 @@
 .env.*
 !.env.example
 
-# personal notes — submission email, interview prep. Not part of the deliverable.
+# personal notes — submission email, interview prep, demo rehearsal.
+# Not part of the deliverable.
 SUBMISSION-NOTES.md
+EVALUATION-MAP.md
+DEMO-GUIDE.md
+DEMO-GUIDE*.pdf
 
 # dependencies / build
 node_modules/
