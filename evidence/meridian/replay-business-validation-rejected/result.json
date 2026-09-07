@@ -1,0 +1,91 @@
+{
+  "status": "business_outcome",
+  "code": "VALIDATION_ERROR",
+  "message": "The application rejected the submitted transaction.",
+  "conditionId": "transaction_rejected",
+  "atStep": "s4",
+  "runId": "business-validation-rejected",
+  "capability": "get_balance",
+  "capabilityVersion": "1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "product": "meridian-core",
+  "startedAt": "2026-09-06T21:02:35.277Z",
+  "durationMs": 4147,
+  "steps": [
+    {
+      "stepId": "s1",
+      "intent": "Click the Member Inquiry link to start searching for a member record",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:02:37.305Z",
+      "durationMs": 523,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Member Inquiry"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members(?:[?#]|$) and \"MEMBER INQUIRY / SELECTION\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter member number {{memberId}} into the Value field to search for the member record",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:02:37.829Z",
+      "durationMs": 618,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s3",
+      "intent": "Click the Search button to retrieve the member record for member number {{memberId}}",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:02:38.448Z",
+      "durationMs": 602,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Search"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members(?:[?#]|$)",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s4",
+      "intent": "Click the Select link for member {{memberId}} to open the member record",
+      "actionType": "click",
+      "status": "business",
+      "startedAt": "2026-09-06T21:02:39.051Z",
+      "durationMs": 369,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Select"
+      }
+    }
+  ],
+  "driftSignals": [],
+  "appliedOverrides": [],
+  "evidenceDir": "evidence/meridian/replay-business-validation-rejected",
+  "blockedNavigations": []
+}

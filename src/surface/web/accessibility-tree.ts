@@ -285,7 +285,12 @@ interface TextBox {
  * left-hand label suppresses above-labels entirely rather than merely
  * outranking them.
  */
-function labelsFor(rect: Rect | null, textBoxes: TextBox[], viewportWidth: number): string[] {
+function labelsFor(
+  rect: Rect | null,
+  textBoxes: TextBox[],
+  viewportWidth: number,
+  opts: { captionsOnly?: boolean } = {},
+): string[] {
   if (!rect) return [];
   const left: Array<{ text: string; d: number }> = [];
   const above: Array<{ text: string; d: number }> = [];
@@ -295,12 +300,35 @@ function labelsFor(rect: Rect | null, textBoxes: TextBox[], viewportWidth: numbe
     if (t.rect.width === 0 || t.rect.height === 0) continue;
     // Full-width banners and headers are page furniture, not field captions.
     if (t.rect.width > viewportWidth * 0.6) continue;
+    // For a read-only VALUE, require the neighbour to look like a caption.
+    //
+    // Geometry alone is enough for a form control — anything to the left of an
+    // input box is a caption by construction. It is nowhere near enough for a
+    // run of text: every word on a page has something to its left, so applying
+    // the same rule to values yields dozens of pairings like "F3" / "=Sign Off"
+    // and buries the handful that mean something. A trailing colon is the
+    // convention this class of application states a caption with, and it is the
+    // signal a person reads too.
+    if (opts.captionsOnly && !t.text.trimEnd().endsWith(':')) continue;
 
     const tcy = t.rect.y + t.rect.height / 2;
     const tRight = t.rect.x + t.rect.width;
     const tBottom = t.rect.y + t.rect.height;
 
-    if (tRight <= rect.x + 8 && Math.abs(tcy - cy) <= Math.max(rect.height, 22) * 0.9) {
+    // How far out of line a caption may sit and still be this thing's caption.
+    //
+    // A form control is taller than its caption, so it needs slack. A read-only
+    // value is exactly as tall as the caption beside it and sits in the same
+    // table row, so it needs almost none — and giving it slack is actively
+    // wrong: rows in a legacy table are ~18px apart, which the generous band
+    // spans, so a value would pair with the caption from the row BELOW it. That
+    // is how "Hopper, Grace" ends up labelled "Phone:" while "Name:", directly
+    // to its left, loses on horizontal distance.
+    const band = opts.captionsOnly
+      ? Math.max(rect.height, 12) * 0.5
+      : Math.max(rect.height, 22) * 0.9;
+
+    if (tRight <= rect.x + 8 && Math.abs(tcy - cy) <= band) {
       const d = rect.x - tRight;
       if (d >= -8 && d < 320) left.push({ text: t.text, d });
       continue;
@@ -442,16 +470,37 @@ export async function perceive(page: Page, cdp: CDPSession): Promise<ElementNode
 
     /* ---- geometry, only where it earns its keep ----
        Every box model is a CDP round trip. Interactive controls always need one
-       (we click by coordinate). Text only needs one if there is an unnamed
-       control on this screen whose caption we have to recover geometrically —
-       which is the expensive case, and not the common one. */
+       (we click by coordinate). Text only needs one if there is something on
+       this screen whose caption we have to recover geometrically. */
     const hasUnnamedInteractive = selected.some(
       ({ ax }) => INTERACTIVE_ROLES.has(str(ax.role)) && !str(ax.name).trim(),
     );
+
+    /**
+     * Does this screen lay values out as caption/value pairs?
+     *
+     * A legacy app states a read-only value as a caption cell beside a value
+     * cell — "Member No.: | 100234", "Confirmation: | CN480196". When the
+     * surrounding table is borderless, Chromium reports the whole thing as
+     * presentational, so there are no cells to key on and the value arrives as
+     * bare text with no identity of any kind. It is on screen, a person reads it
+     * without difficulty, and nothing could address it.
+     *
+     * The caption is the answer, exactly as it is for an unnamed input — so the
+     * same geometric recovery runs, gated on a cheap text test so screens
+     * without this layout pay nothing for it.
+     */
+    const hasCaptionedValues = selected.some(({ ax }) => {
+      if (str(ax.role) !== 'StaticText') return false;
+      const t = idx.subtreeText(ax.nodeId);
+      return t.length > 0 && t.length < 40 && t.trimEnd().endsWith(':');
+    });
+
+    const wantsLabels = hasUnnamedInteractive || hasCaptionedValues;
     const needsGeometry = (ax: AXNode): boolean => {
       const role = str(ax.role);
       if (INTERACTIVE_ROLES.has(role)) return true;
-      return hasUnnamedInteractive && LABEL_CANDIDATE_ROLES.has(role);
+      return wantsLabels && LABEL_CANDIDATE_ROLES.has(role);
     };
 
     const bounds = new Map<string, Rect | null>();
@@ -462,12 +511,32 @@ export async function perceive(page: Page, cdp: CDPSession): Promise<ElementNode
       bounds.set(ax.nodeId, await boxOf(cdp, ax.backendDOMNodeId));
     }
 
-    const textBoxes: TextBox[] = hasUnnamedInteractive
+    const textBoxes: TextBox[] = wantsLabels
       ? selected
           .filter(({ ax }) => LABEL_CANDIDATE_ROLES.has(str(ax.role)) && bounds.get(ax.nodeId))
           .map(({ ax }) => ({ text: idx.subtreeText(ax.nodeId), rect: bounds.get(ax.nodeId)! }))
           .filter((t) => t.text.length > 0 && t.text.length < 60)
       : [];
+
+    /**
+     * Which nodes get a caption recovered for them, and how strictly.
+     *
+     * An unnamed control: always, on geometry alone — whatever sits to the left
+     * of an input box is its caption.
+     *
+     * A read-only value: only where the neighbour is punctuated like a caption,
+     * and never for a caption itself ("the text left of 'Name:'" identifies
+     * nothing and would double the label set).
+     *
+     * Everything else: nothing. A named button already knows what it is.
+     */
+    const labelsForNode = (role: string, name: string, rect: Rect | null): string[] => {
+      if (INTERACTIVE_ROLES.has(role)) {
+        return name ? [] : labelsFor(rect, textBoxes, viewportWidth);
+      }
+      if (role !== 'StaticText' || !wantsLabels || name.trimEnd().endsWith(':')) return [];
+      return labelsFor(rect, textBoxes, viewportWidth, { captionsOnly: true });
+    };
 
     /* ---- build ---- */
     const builtByAxId = new Map<string, ElementNode>();
@@ -495,8 +564,11 @@ export async function perceive(page: Page, cdp: CDPSession): Promise<ElementNode
         framePath: frame.path,
         states,
         bounds: rect,
-        proximateLabels:
-          INTERACTIVE_ROLES.has(role) && !name ? labelsFor(rect, textBoxes, viewportWidth) : [],
+        // An unnamed control is identified by its caption; so is a read-only
+        // value, whose own text is exactly the thing that differs run to run.
+        // A caption cell is not itself given one — "the text left of 'Name:'"
+        // identifies nothing useful, and it would double the label set.
+        proximateLabels: labelsForNode(role, name, rect),
         context: {
           ...(heading ? { heading } : {}),
           ...(container ? { container: { role: str(container.role), name: str(container.name).trim() } } : {}),

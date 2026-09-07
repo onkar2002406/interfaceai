@@ -24,7 +24,7 @@
 
 import { randomUUID } from 'node:crypto';
 import type { LlmProvider, ModelTurn } from './llm/llm-provider.js';
-import { AGENT_TOOLS, renderObservation, systemPrompt } from './model-prompt.js';
+import { renderObservation, systemPrompt, toolsPermittedBy } from './model-prompt.js';
 import type { Action, ElementNode, Observation } from '../surface/types.js';
 import type { PlaywrightSurface } from '../surface/web/playwright-surface.js';
 import { captureDescriptor, type ElementDescriptor } from '../surface/element-descriptor.js';
@@ -33,7 +33,8 @@ import type { ControlAuthority } from '../escalation/control-authority.js';
 import type { EscalationSink } from '../escalation/intervention-broker.js';
 import { newInterventionId } from '../escalation/intervention-broker.js';
 import { ensureAuthenticated } from '../replay/recovery.js';
-import type { AppProfile, TenantProfile } from '../capability/application-profile.js';
+import { evaluatePredicate } from '../replay/checkpoints.js';
+import { conditionsFor, type AppProfile, type TenantProfile } from '../capability/application-profile.js';
 
 export interface TraceStep {
   index: number;
@@ -72,6 +73,21 @@ export interface DiscoveryTrace {
   steps: TraceStep[];
   outcome:
     | { kind: 'success'; summary: string; outputs: Array<{ name: string; description: string; descriptor: ElementDescriptor; sampleText: string }> }
+    /**
+     * The application answered, and the answer was not the goal.
+     *
+     * This arm exists because of a real defect. A goal naming a member who does
+     * not exist used to end as `gave_up`, and every `gave_up` raised an
+     * escalation — so asking a live agent to look up member 999999 parked a
+     * browser and paged a human to come and look at a screen that said, in
+     * words, RECORD NOT FOUND. Replay had classified that correctly as a
+     * business outcome since the beginning; discovery simply never consulted
+     * the same taxonomy.
+     *
+     * `why` is present so every existing consumer that reports on a non-success
+     * outcome keeps working unchanged.
+     */
+    | { kind: 'business_outcome'; code: string; message: string; why: string }
     | { kind: 'gave_up'; why: string }
     | { kind: 'stopped'; why: string };
   usage: { promptTokens: number; completionTokens: number; calls: number };
@@ -85,11 +101,26 @@ export interface DiscoveryOptions {
   tenant: string;
   profile: AppProfile;
   tenantProfile: TenantProfile;
+  /**
+   * Which operator identity to record under. It never reaches the artifact —
+   * the compiled capability declares that it needs a session, not whose — but
+   * it decides what the model is allowed to SEE, and a flow behind a restricted
+   * function cannot be discovered by an operator without the entitlement.
+   */
+  identity?: string;
   provider: LlmProvider;
   surface: PlaywrightSurface;
   authority: ControlAuthority;
   recorder: RunRecorder;
   allowedOrigins: string[];
+  /** Action types policy permits. The model is offered no tool outside this set. */
+  allowedActions: string[];
+  /**
+   * Human-readable names of the controls policy treats as irreversible, so the
+   * prompt can say which ones will be refused instead of leaving the model to
+   * infer it. Derived from the policy, never authored twice.
+   */
+  irreversibleControls?: string[];
   maxSteps?: number;
   timeoutMs?: number;
   sink?: EscalationSink;
@@ -112,7 +143,12 @@ export async function discover(opts: DiscoveryOptions): Promise<DiscoveryTrace> 
   const startedAt = new Date().toISOString();
   const deadline = Date.now() + timeoutMs;
 
-  const system = systemPrompt({ product: opts.product, allowedOrigins: opts.allowedOrigins });
+  const system = systemPrompt({
+    product: opts.product,
+    allowedOrigins: opts.allowedOrigins,
+    irreversibleControls: opts.irreversibleControls ?? [],
+  });
+  const tools = toolsPermittedBy(opts.allowedActions);
   const history: Array<{ turn: ModelTurn; result: string }> = [];
   const steps: TraceStep[] = [];
 
@@ -157,8 +193,13 @@ export async function discover(opts: DiscoveryOptions): Promise<DiscoveryTrace> 
     profile: opts.profile,
     tenant: opts.tenantProfile,
     returnUrl: opts.entryUrl,
+    ...(opts.identity ? { identity: opts.identity } : {}),
   });
-  recorder.event('auth_precondition', { ok: auth.ok, note: auth.note });
+  recorder.event('auth_precondition', {
+    ok: auth.ok,
+    ...(opts.identity ? { identity: opts.identity } : {}),
+    note: auth.note,
+  });
   if (!auth.ok) {
     return finish({ kind: 'stopped', why: `could not establish an authenticated session: ${auth.note}` });
   }
@@ -190,7 +231,7 @@ export async function discover(opts: DiscoveryOptions): Promise<DiscoveryTrace> 
         userText,
         ...(obs.screenshot && provider.supportsVision ? { screenshot: obs.screenshot } : {}),
         history,
-        tools: AGENT_TOOLS,
+        tools,
       });
     } catch (err) {
       const why = err instanceof Error ? err.message : String(err);
@@ -209,10 +250,31 @@ export async function discover(opts: DiscoveryOptions): Promise<DiscoveryTrace> 
 
     if (turn.toolName === 'give_up') {
       const why = String(turn.arguments.why ?? 'no reason given');
+
+      /**
+       * Before escalating, ask the product's own taxonomy what is on screen.
+       *
+       * A model that stops because the screen says RECORD NOT FOUND has not got
+       * stuck — it has received an answer, and the product profile already
+       * declares that screen as `MEMBER_NOT_FOUND`. Replay has classified it
+       * that way since the beginning; discovery used to escalate it, which
+       * parked a browser and paged a human to read a message the system could
+       * read itself.
+       *
+       * Only `business` conditions short-circuit here. A `recover` condition
+       * means the run hit something replay would have fixed and discovery does
+       * not attempt, and a `fail` condition is a genuine breakage — both of
+       * those still deserve a human.
+       */
+      const answered = businessAnswerOn(obs, opts);
+      if (answered) {
+        recorder.event('discovery_business_outcome', { code: answered.code, why });
+        return finish({ kind: 'business_outcome', code: answered.code, message: answered.message, why });
+      }
+
       recorder.event('discovery_gave_up', { why });
-      // A model that stops because the screen said "no such member" has
-      // discovered something real. Escalating it to a human is the honest
-      // response — the goal may simply not be achievable with these inputs.
+      // Genuinely stuck: the goal may simply not be achievable with these
+      // inputs, and a human is the right thing to ask.
       if (opts.sink) await raiseStuck(opts, why, obs, stepIndex, steps.length);
       return finish({ kind: 'gave_up', why });
     }
@@ -385,6 +447,30 @@ function redactArgs(args: Record<string, unknown>, params: Record<string, string
 
 function keyFor(params: Record<string, string>, value: string): string {
   return Object.entries(params).find(([, v]) => v === value)?.[0] ?? 'param';
+}
+
+/**
+ * Does the product's condition taxonomy say this screen is a business answer?
+ *
+ * Reuses `conditionsFor()` and `evaluatePredicate()` — the same two functions
+ * replay uses, in the same order — rather than re-implementing the match here.
+ * That is the whole point: the taxonomy is authored once per product, and
+ * "member not found" must mean the same thing whichever loop is looking at it.
+ * A second implementation would be a second thing to keep in agreement.
+ */
+function businessAnswerOn(
+  obs: Observation,
+  opts: DiscoveryOptions,
+): { code: string; message: string } | undefined {
+  for (const c of conditionsFor(opts.profile, opts.tenantProfile, [])) {
+    if (c.then.kind !== 'business') continue;
+    if (!evaluatePredicate(c.when, obs).ok) continue;
+    // `message` is optional on a condition — the code is the contract and the
+    // wording is a courtesy. Fall back to the condition's own description
+    // rather than emitting an empty string a caller would have to handle.
+    return { code: c.then.code, message: c.then.message ?? c.description };
+  }
+  return undefined;
 }
 
 /**

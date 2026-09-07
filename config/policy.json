@@ -16,7 +16,7 @@
       "/member/*",
       "/member/*/subaccount",
       "/member/*/subaccount/commit",
-      "/member/*/transfer"
+      "/member/*/update"
     ],
     "deny": [
       "/_admin/**"
@@ -34,17 +34,17 @@
   "risk": {
     "irreversible": [
       {
-        "code": "FUNDS_TRANSFER",
-        "description": "Posts a funds transfer. Money moves and staff cannot reverse it.",
-        "when": { "actionType": "click", "routePattern": "^/member/[^/]+/transfer" }
-      },
-      {
         "code": "IRREVERSIBLE_SUBMIT",
-        "description": "Commits a new record (account opening, application submission).",
+        "description": "Commits a new record (account opening, application submission). Deliberately broad and keyed on the control's name: an unrecognised commit button should stop and ask, not proceed.",
         "when": { "actionType": "click", "namePattern": "^(submit|post|commit|approve|delete|remove|close account)\\b" }
       }
     ],
     "mutating": [
+      {
+        "code": "MEMBER_DETAILS_SAVE",
+        "description": "Writes new contact details onto the member record. Changes real data, but the previous values are on the form and can be typed back — which is exactly what separates mutating from irreversible. Keyed on the control name ALONE and not on the route: this product is a <frameset>, so the surface's location is the frameset shell and a routePattern would never match. See REPORT.md section 6.",
+        "when": { "actionType": "click", "namePattern": "^save changes\\b" }
+      },
       {
         "code": "FORM_INPUT",
         "description": "Types into a field. Changes client state only until submitted.",

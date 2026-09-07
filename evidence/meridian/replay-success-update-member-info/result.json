@@ -1,0 +1,178 @@
+{
+  "status": "success",
+  "outputs": {},
+  "runId": "success-update-member-info",
+  "capability": "update_member_info",
+  "capabilityVersion": "1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "product": "meridian-core",
+  "startedAt": "2026-09-06T21:03:08.609Z",
+  "durationMs": 5052,
+  "steps": [
+    {
+      "stepId": "s1",
+      "intent": "Click the 'Member Inquiry / Selection' link to start member lookup",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:10.167Z",
+      "durationMs": 166,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Member Inquiry / Selection"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members(?:[?#]|$) and \"MEMBER INQUIRY / SELECTION\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter member number {{memberId}} into the Value textbox for member lookup",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:10.334Z",
+      "durationMs": 179,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s3",
+      "intent": "Click the Search button to find member {{memberId}}",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:10.514Z",
+      "durationMs": 189,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Search"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members(?:[?#]|$)",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s4",
+      "intent": "Click the Select link for member {{memberId}} to open the member details page",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:10.703Z",
+      "durationMs": 263,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Select"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members/[0-9]+(?:[?#]|$) and \"MEMBER RECORD\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s5",
+      "intent": "Click the 'Update Member Information' link to open the edit form for email and phone",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:10.966Z",
+      "durationMs": 278,
+      "recoveries": [],
+      "resolution": {
+        "score": 0.997,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Update Member Information"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members/[0-9]+/update(?:[?#]|$) and \"UPDATE MEMBER INFORMATION\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s6",
+      "intent": "Enter {{email}} into the E-mail textbox",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:11.244Z",
+      "durationMs": 794,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s7",
+      "intent": "Enter {{phone}} into the Phone textbox",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:12.040Z",
+      "durationMs": 624,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s7a",
+      "intent": "Enter {{address}} into the Mailing Address textbox",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:12.665Z",
+      "durationMs": 808,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s8",
+      "intent": "Click the Save Changes button to commit the updated email and phone values",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:13.473Z",
+      "durationMs": 162,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Save Changes"
+      },
+      "checkpoint": {
+        "describe": "\"MEMBER INFORMATION UPDATED\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    }
+  ],
+  "driftSignals": [],
+  "appliedOverrides": [],
+  "evidenceDir": "evidence/meridian/replay-success-update-member-info",
+  "blockedNavigations": []
+}

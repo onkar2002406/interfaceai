@@ -1,0 +1,11 @@
+{
+  "status": "business_outcome",
+  "capability": "get_balance@1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "runId": "business-member-not-found",
+  "evidence": "evidence/meridian/replay-business-member-not-found",
+  "durationMs": 2352,
+  "code": "MEMBER_NOT_FOUND",
+  "message": "No member record matches the supplied identifier."
+}

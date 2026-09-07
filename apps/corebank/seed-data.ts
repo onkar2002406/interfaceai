@@ -19,7 +19,12 @@ export interface Member {
   firstName: string;
   lastName: string;
   ssn: string;
+  /** Editable from the Update Member Details screen and by capability. */
   email: string;
+  /** Editable. */
+  phone: string;
+  /** Editable. */
+  address: string;
   branch: string;
   joinedOn: string;
   accounts: Account[];
@@ -38,6 +43,8 @@ export const MEMBERS: Member[] = [
     lastName: 'Whitfield',
     ssn: '412-55-9087',
     email: 'dana.whitfield@example.invalid',
+    phone: '(503) 555-0142',
+    address: '118 Alder Court, Riverside',
     branch: 'Riverside',
     joinedOn: '2014-03-11',
     accounts: [
@@ -51,6 +58,8 @@ export const MEMBERS: Member[] = [
     lastName: 'Oyelaran',
     ssn: '388-21-4410',
     email: 'marcus.o@example.invalid',
+    phone: '(503) 555-0188',
+    address: '92 Northgate Way, Apt 4B',
     branch: 'Northgate',
     joinedOn: '2019-08-02',
     accounts: [
@@ -64,6 +73,8 @@ export const MEMBERS: Member[] = [
     lastName: 'Ramanathan',
     ssn: '501-77-1123',
     email: 'priya.r@example.invalid',
+    phone: '(971) 555-0107',
+    address: '40 Elm Terrace, Riverside',
     branch: 'Riverside',
     joinedOn: '2008-11-27',
     accounts: [
@@ -76,6 +87,8 @@ export const MEMBERS: Member[] = [
     lastName: 'Kereszti',
     ssn: '229-64-0032',
     email: 'tomas.k@example.invalid',
+    phone: '(503) 555-0231',
+    address: '7 Eastview Row',
     branch: 'Eastview',
     joinedOn: '2022-05-19',
     accounts: [
@@ -89,6 +102,8 @@ export const MEMBERS: Member[] = [
     lastName: 'Voss',
     ssn: '600-13-7788',
     email: 'e.voss@example.invalid',
+    phone: '(503) 555-0100',
+    address: '1 Executive Plaza, Suite 900',
     branch: 'Executive',
     joinedOn: '2001-02-04',
     restricted: true,
@@ -100,6 +115,33 @@ export const MEMBERS: Member[] = [
 
 export function findMember(id: string): Member | undefined {
   return MEMBERS.find((m) => m.id === id.trim());
+}
+
+/**
+ * Writes new contact details onto a member record.
+ *
+ * The single mutation point for member data, called by the `POST
+ * /member/:id/update` handler — which is reached both by a human clicking
+ * through the website and by the `update_member_details` capability driving the
+ * same screen. There is deliberately no second, automation-only write path: if
+ * the capability could write somewhere the website could not read, replaying it
+ * would prove nothing about driving a real console.
+ *
+ * Mutates the seeded array in place, so changes last until the process
+ * restarts. Note the three tenant instances run in one process and share this
+ * array, which is the honest simplification to make here — three separate
+ * member directories would be more realistic and would test nothing extra.
+ */
+export function updateMember(
+  id: string,
+  patch: { email?: string; phone?: string; address?: string },
+): Member | undefined {
+  const m = findMember(id);
+  if (!m) return undefined;
+  if (patch.email !== undefined) m.email = patch.email;
+  if (patch.phone !== undefined) m.phone = patch.phone;
+  if (patch.address !== undefined) m.address = patch.address;
+  return m;
 }
 
 export function formatMoney(n: number): string {

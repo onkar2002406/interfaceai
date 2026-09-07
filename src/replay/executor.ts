@@ -28,10 +28,9 @@
  * the fact.
  */
 
-import { randomUUID } from 'node:crypto';
 import type { Capability, Checkpoint, Condition, ErrorClass, Step } from '../capability/schema.js';
-import { interpolate } from '../capability/schema.js';
-import { conditionsFor, tenantOf, type AppProfile } from '../capability/application-profile.js';
+import { interpolate, interpolateCheckpoint } from '../capability/schema.js';
+import { conditionsFor, credentialEnvFor, tenantOf, type AppProfile } from '../capability/application-profile.js';
 import { resolveForTenant } from '../capability/tenant-overrides.js';
 import { ControlAuthority, type ControlToken } from '../escalation/control-authority.js';
 import {
@@ -43,10 +42,10 @@ import {
   type InterventionRequest,
 } from '../escalation/intervention-broker.js';
 import type { Policy } from '../policy/guardrails.js';
-import { redactParams } from '../policy/redaction.js';
-import { PlaywrightSurface } from '../surface/web/playwright-surface.js';
+import { redactParams, type Sensitivity } from '../policy/redaction.js';
+import { PlaywrightSurface, type SurfaceFault } from '../surface/web/playwright-surface.js';
 import { resolve as resolveDescriptor } from '../surface/element-resolver.js';
-import { describeDescriptor } from '../surface/element-descriptor.js';
+import { describeDescriptor, interpolateDescriptor } from '../surface/element-descriptor.js';
 import { applyTransform, elementText, TransformError } from '../surface/element-values.js';
 import type { Action, Observation } from '../surface/types.js';
 import type { RunRecorder } from '../observability/run-recorder.js';
@@ -108,6 +107,19 @@ export interface ReplayOptions {
   sink?: EscalationSink;
   headful?: boolean;
   /**
+   * Which named operator identity to sign on as. Decided at invocation time
+   * rather than baked into the artifact, which is what lets the same recorded
+   * flow run as a teller and as a supervisor and return the application's own
+   * answer about entitlement in each case.
+   */
+  identity?: string;
+  /**
+   * A runtime fault the harness wants this run to hit, for demonstrating the
+   * error paths. Passed to the surface, never to the agent loop — the
+   * automation must not be able to arm its own faults.
+   */
+  fault?: SurfaceFault;
+  /**
    * The caller explicitly authorises irreversible effects for this invocation.
    * Only honoured when the artifact is also `approval: approved` — two
    * independent gates, because either alone is too easy to set by accident.
@@ -133,11 +145,92 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
   validateInputs(opts.capability, opts.params);
 
   const tenant = tenantOf(profile, opts.tenantId);
+
+  /**
+   * Credentials the engine supplies, which a caller cannot.
+   *
+   * `sign_on` has to type an operator id and a password, and neither may be a
+   * capability input. An input appears in the invocation arguments — the object
+   * a language model fills in, the object the chat endpoint composes, and the
+   * object written to the evidence log. Redaction would mask a password there,
+   * but the right answer is for it never to reach that object at all.
+   *
+   * So these two references are resolved here, from the environment variables
+   * the profile names for the selected identity, and merged in *under* the
+   * caller's arguments — `__operator` and `__password` are reserved, and a
+   * caller who tries to supply them is ignored rather than obeyed. They are
+   * also declared `secret` for the logger, which means the typed value is
+   * never written in any form, not even hashed.
+   */
+  const credentialEnv = credentialEnvFor(profile, tenant, opts.identity);
+  const engineParams: Record<string, string> = {
+    __operator: process.env[credentialEnv.user] ?? '',
+    __password: process.env[credentialEnv.password] ?? '',
+  };
+  // Engine values last: they are reserved names, so a caller who supplies one is
+  // overridden rather than trusted.
+  const params: Record<string, unknown> = { ...opts.params, ...engineParams };
+
   const { capability, appliedOverrides } = resolveForTenant(opts.capability, opts.tenantId);
   const spec = capability.spec;
 
-  const sensitivity = Object.fromEntries(spec.inputs.map((i) => [i.name, i.sensitivity]));
+  /**
+   * Checkpoints bound to this invocation's arguments, once, up front.
+   *
+   * A checkpoint is an assertion about the screen, and where a table is keyed by
+   * record identifier the assertion is necessarily about *this* record — "the
+   * Balance cell in the {{shareId}} row is present". Binding happens after
+   * `resolveForTenant`, so a tenant override to a checkpoint is bound too.
+   */
+  const boundCheckpoints = new Map<string, Checkpoint>(
+    spec.steps.flatMap((s) =>
+      s.checkpoint ? [[s.id, interpolateCheckpoint(s.checkpoint, params)] as const] : [],
+    ),
+  );
+  const boundSuccess = interpolateCheckpoint(spec.successCheckpoint, params);
+  const checkpointOf = (step: Step): Checkpoint | undefined => boundCheckpoints.get(step.id);
+
+  const sensitivity: Record<string, Sensitivity> = {
+    ...Object.fromEntries(spec.inputs.map((i) => [i.name, i.sensitivity])),
+    // Not inputs, so not covered by the declared contract — declared here
+    // instead. `secret` means never written in any form, not even hashed.
+    __operator: 'pii',
+    __password: 'secret',
+  };
+  // Built from the CALLER's arguments, not the merged set. The engine's
+  // credential references are not invocation arguments, and reporting them as
+  // such would put `__password: [REDACTED:secret]` in front of an operator on
+  // every intervention for every capability — noise that reads like a leak
+  // narrowly averted rather than like a field that was never theirs.
+  //
+  // They are still declared in `sensitivity` above, which is what keeps the
+  // typed value out of the step log: it is logged as `{{__password}}`, never
+  // resolved.
   const safeParams = redactParams(opts.params, sensitivity);
+
+  /**
+   * Drops the session-recovery conditions for a flow that starts anonymous.
+   *
+   * A product profile says "the sign-on screen means the session was lost — go
+   * and re-authenticate". That is right for every capability except the one
+   * whose whole job is to be on the sign-on screen: for `sign_on`, the recovery
+   * fires on the first step, re-authenticates behind the flow's back, declares
+   * the flow position lost, restarts, and does it again until the run fails as
+   * `unrecovered_condition`. The engine and the capability disagree about what
+   * the screen means.
+   *
+   * `preconditions.authState` is where that disagreement is already stated, so
+   * it is where it gets resolved. Declaring `anonymous` is a capability saying
+   * "I do not assume a session" — which is exactly the assumption those
+   * handlers exist to restore. Business outcomes and hard-failure conditions are
+   * untouched: a rejected sign-on is still `VALIDATION_ERROR`, and an
+   * application error page is still a failure.
+   */
+  const anonymousFlow = spec.preconditions.authState === 'anonymous';
+  const applicableConditions = (all: Condition[]): Condition[] =>
+    anonymousFlow
+      ? all.filter((c) => !(c.then.kind === 'recover' && c.then.action.handler === 'reauthenticate'))
+      : all;
 
   const approved = capability.metadata.approval === 'approved';
   const irreversibleAuthorized = approved && opts.authorizeIrreversible === true;
@@ -145,6 +238,7 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
   recorder.event('replay_start', {
     capability: `${capability.metadata.name}@${capability.metadata.version}`,
     tenant: tenant.id,
+    ...(opts.identity ? { identity: opts.identity } : {}),
     product: `${profile.product} v${tenant.productVersion}`,
     baseUrl: tenant.baseUrl,
     approval: capability.metadata.approval,
@@ -165,8 +259,18 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
     mode: 'replay',
     headful: opts.headful ?? false,
     irreversibleAuthorized,
+    ...(opts.fault ? { fault: opts.fault } : {}),
     onEvent: (e) => recorder.event(`surface_${e.kind}`, e.detail),
   });
+
+  if (opts.fault) {
+    recorder.event('fault_armed', {
+      kind: opts.fault.kind,
+      route: opts.fault.route,
+      times: opts.fault.times,
+      note: 'armed by the harness on this browser session only; the agent loop cannot reach it',
+    });
+  }
 
   const steps: StepReport[] = [];
   const driftSignals: DriftSignal[] = [];
@@ -181,6 +285,7 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
     capability: capability.metadata.name,
     capabilityVersion: capability.metadata.version,
     tenant: tenant.id,
+    ...(opts.identity ? { identity: opts.identity } : {}),
     product: profile.product,
     startedAt,
     durationMs: Date.now() - t0,
@@ -249,7 +354,7 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
         describe:
           step.checkpoint?.describe ??
           `step "${step.intent}" has been completed and the flow can continue from step ${index + 2}`,
-        ...(step.checkpoint ? { checkpoint: step.checkpoint } : {}),
+        ...(checkpointOf(step) ? { checkpoint: checkpointOf(step)! } : {}),
       },
     };
 
@@ -296,8 +401,9 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
     // A human said they finished. Verify before believing it.
     authority.resumeAutomation(`operator ${outcome.operator} handed back`);
     const after = await surface.observe();
-    if (step.checkpoint) {
-      const cp = evaluateCheckpoint(step.checkpoint, after);
+    const resumeCheckpoint = checkpointOf(step);
+    if (resumeCheckpoint) {
+      const cp = evaluateCheckpoint(resumeCheckpoint, after);
       if (!cp.ok) {
         recorder.event('resume_contract_unmet', {
           interventionId: request.id,
@@ -406,7 +512,14 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
           why: c.evidence.observed.slice(0, 160),
         });
 
-        const res = await runRecovery(action, { surface, token, profile, tenant, returnUrl });
+        const res = await runRecovery(action, {
+          surface,
+          token,
+          profile,
+          tenant,
+          returnUrl,
+          ...(opts.identity ? { identity: opts.identity } : {}),
+        });
         recoveries.push({
           conditionId: c.condition.id,
           handler: action.handler,
@@ -462,7 +575,7 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
 
   try {
     // Bootstrap: get to the capability's declared entry point.
-    const entryUrl = new URL(interpolate(capability.metadata.app.entryPoint, opts.params), tenant.baseUrl).toString();
+    const entryUrl = new URL(interpolate(capability.metadata.app.entryPoint, params), tenant.baseUrl).toString();
     recorder.event('navigate_entry', { url: entryUrl });
     const entryResult = await surface.act({ type: 'navigate', url: entryUrl }, token());
     if (!entryResult.ok) {
@@ -491,8 +604,22 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
     // credentials. That keeps every capability replayable under any operator
     // identity, and keeps secrets out of files that get committed.
     if (spec.preconditions.authState === 'authenticated') {
-      const res = await ensureAuthenticated({ surface, token, profile, tenant, returnUrl: entryUrl });
-      recorder.event('auth_precondition', { ok: res.ok, note: res.note });
+      const res = await ensureAuthenticated({
+        surface,
+        token,
+        profile,
+        tenant,
+        returnUrl: entryUrl,
+        ...(opts.identity ? { identity: opts.identity } : {}),
+      });
+      recorder.event('auth_precondition', {
+        ok: res.ok,
+        // WHO signed on is part of the audit trail — a run's result is only
+        // interpretable if you know which entitlements produced it. The name of
+        // the identity, never the credential it resolves to.
+        ...(opts.identity ? { identity: opts.identity } : {}),
+        note: res.note,
+      });
       if (!res.ok) {
         return {
           status: 'failed',
@@ -525,7 +652,7 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
     for (let index = 0; index < spec.steps.length; index++) {
       const step = spec.steps[index]!;
       const stepStart = Date.now();
-      const conditions = conditionsFor(profile, tenant, step.conditions);
+      const conditions = applicableConditions(conditionsFor(profile, tenant, step.conditions));
       const recoveries: RecoveryAttemptReport[] = [];
       const returnUrl = await surface.location();
 
@@ -543,21 +670,22 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
       // tenant added that others don't have.
       if (step.optional && 'target' in step.action) {
         const obs = await surface.observe();
-        const probe = resolveDescriptor(step.action.target, obs.elements);
+        const wanted = interpolateDescriptor(step.action.target, params);
+        const probe = resolveDescriptor(wanted, obs.elements);
         if (!probe.ok) {
           report.status = 'skipped';
           report.durationMs = Date.now() - stepStart;
-          report.note = `optional step skipped: ${describeDescriptor(step.action.target)} is not present`;
+          report.note = `optional step skipped: ${describeDescriptor(wanted)} is not present`;
           steps.push(report);
           recorder.event('step_skipped', { step: step.id, intent: step.intent });
           continue;
         }
       }
 
-      const action = toAction(step, opts.params);
+      const action = toAction(step, params);
       const displayValue =
         'value' in step.action
-          ? valueForLog(step.action.value, opts.params, sensitivity)
+          ? valueForLog(step.action.value, params, sensitivity)
           : undefined;
 
       recorder.event('step_start', {
@@ -654,7 +782,7 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
         // Before calling a missing target a failure, let the detectors speak:
         // the control may be missing because an overlay is covering the page or
         // the session expired, both of which are recoverable.
-        const settled = await settle(conditions, step.checkpoint, recoveries, returnUrl);
+        const settled = await settle(conditions, checkpointOf(step), recoveries, returnUrl);
         if (settled.kind === 'business') {
           return finishBusiness(settled, step);
         }
@@ -715,7 +843,7 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
 
       /* ---------------------- settle: classify + checkpoint ---------------------- */
 
-      const settled = await settle(conditions, step.checkpoint, recoveries, returnUrl);
+      const settled = await settle(conditions, checkpointOf(step), recoveries, returnUrl);
       report.durationMs = Date.now() - stepStart;
 
       if (settled.kind === 'business') {
@@ -902,7 +1030,7 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
     // whole run. A single evaluation here is how you get an engine that works
     // four times in five.
     const finalConditions = conditionsFor(profile, tenant, []);
-    const finalSettled = await settle(finalConditions, spec.successCheckpoint, [], await surface.location());
+    const finalSettled = await settle(finalConditions, boundSuccess, [], await surface.location());
 
     if (finalSettled.kind === 'business') {
       return finishBusiness(finalSettled, spec.steps[spec.steps.length - 1]!);
@@ -948,8 +1076,12 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
       // within a deadline rather than declaring failure on the first glance.
       // Each retry is logged, so a genuinely wrong descriptor still shows up as
       // a descriptor problem rather than hiding behind a retry loop.
+      // The extraction target is parameterised for the same reason a step's is:
+      // "the Balance cell in the {{shareId}} row" identifies a row that only
+      // this invocation knows about.
+      const wanted = interpolateDescriptor(out.from.target, params);
       let obs = observationByStep.get(out.from.afterStep) ?? finalObs;
-      let r = resolveDescriptor(out.from.target, obs.elements);
+      let r = resolveDescriptor(wanted, obs.elements);
 
       for (let attempt = 1; !r.ok && attempt <= 3; attempt++) {
         recorder.event('output_extraction_retry', {
@@ -960,7 +1092,7 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
         });
         await sleep(250);
         obs = await surface.observe();
-        r = resolveDescriptor(out.from.target, obs.elements);
+        r = resolveDescriptor(wanted, obs.elements);
       }
 
       if (!r.ok) {
@@ -983,7 +1115,7 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
             class: r.reason === 'ambiguous' ? 'ambiguous_target' : 'target_not_found',
             stepId: out.from.afterStep,
             stepIntent: `extract declared output "${out.name}"`,
-            expected: describeDescriptor(out.from.target),
+            expected: describeDescriptor(wanted),
             observed: r.ranked
               .slice(0, 3)
               .map((c) => `${c.node.role} "${c.node.name}" @${c.score.toFixed(2)}`)
@@ -1020,7 +1152,7 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
         driftSignals.push({
           stepId: out.from.afterStep,
           intent: `read output "${out.name}"`,
-          expected: describeDescriptor(out.from.target),
+          expected: describeDescriptor(wanted),
           matched: r.node.name,
           score: Number(r.info.score.toFixed(3)),
           strategy: r.info.strategy,
@@ -1066,22 +1198,33 @@ export async function replay(opts: ReplayOptions): Promise<ReplayResult> {
 
 /* ---------------------------------------------------------------- helpers */
 
+/**
+ * Renders a recorded step into a concrete action for this invocation.
+ *
+ * Both halves of a step are parameterised: the *value* it supplies, and the
+ * *control* it means. The second matters wherever an application keys its
+ * tables by record identifier rather than by category — see
+ * `interpolateDescriptor`.
+ */
 function toAction(step: Step, params: Record<string, unknown>): Action {
+  const targetOf = (d: Parameters<typeof interpolateDescriptor>[0]) =>
+    ({ kind: 'descriptor', descriptor: interpolateDescriptor(d, params) }) as const;
+
   switch (step.action.type) {
     case 'navigate':
       return { type: 'navigate', url: interpolate(step.action.url, params) };
     case 'click':
-      return { type: 'click', target: { kind: 'descriptor', descriptor: step.action.target } };
+      return { type: 'click', target: targetOf(step.action.target) };
     case 'type':
       return {
         type: 'type',
-        target: { kind: 'descriptor', descriptor: step.action.target },
+        target: targetOf(step.action.target),
         value: interpolate(step.action.value, params),
       };
     case 'select':
       return {
         type: 'select',
-        target: { kind: 'descriptor', descriptor: step.action.target },
+        target: targetOf(step.action.target),
         value: interpolate(step.action.value, params),
       };
     case 'press':

@@ -1,0 +1,339 @@
+{
+  "url": "https://web-sample.interface-hiring.com/members/103001/transfer/review",
+  "title": "Confirm Transfer - Meridian Core",
+  "frames": [
+    "main"
+  ],
+  "elements": [
+    {
+      "role": "StaticText",
+      "name": "MERIDIAN CORE",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Member Services Platform v4.2.1",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Main Menu",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "·",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Member Inquiry",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "·",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "System Settings",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "·",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Sign Off",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "heading",
+      "name": "CONFIRM FUNDS TRANSFER",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "This will post immediately and cannot be reversed from this screen.",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "OPR TELLER1 | BR MAIN-001 | 09/06/2026 21:03:00 | SID 7EC4983F",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "F3",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "=Sign Off",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "F5",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "=Main Menu",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "F7",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "=Member Inquiry",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "F12",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "=Cancel",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Cornerstone Financial Systems™",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Main Menu",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Member Inquiry",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "System Settings",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Sign Off",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "CONFIRM FUNDS TRANSFER",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "button",
+      "name": "Post Transfer",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Cancel",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Post Transfer",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Cancel",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Member:",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "103001 - Vaughan, Dorothy",
+      "proximateLabels": [
+        "Member"
+      ],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "From:",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "103001-MMKT-5 ($123.00)",
+      "proximateLabels": [
+        "From"
+      ],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "To:",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "103001-MMKT-7 ($52.00)",
+      "proximateLabels": [
+        "To"
+      ],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Amount:",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "$1.00",
+      "proximateLabels": [
+        "Amount"
+      ],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Memo:",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "evidence capture",
+      "proximateLabels": [
+        "Memo"
+      ],
+      "framePath": [
+        "main"
+      ]
+    }
+  ]
+}

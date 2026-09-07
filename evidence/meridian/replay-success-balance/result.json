@@ -1,0 +1,96 @@
+{
+  "status": "success",
+  "outputs": {
+    "shareBalance": 123,
+    "shareStatus": "OPEN"
+  },
+  "runId": "success-balance",
+  "capability": "get_balance",
+  "capabilityVersion": "1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "product": "meridian-core",
+  "startedAt": "2026-09-06T21:02:26.293Z",
+  "durationMs": 4000,
+  "steps": [
+    {
+      "stepId": "s1",
+      "intent": "Click the Member Inquiry link to start searching for a member record",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:02:28.738Z",
+      "durationMs": 286,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Member Inquiry"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members(?:[?#]|$) and \"MEMBER INQUIRY / SELECTION\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter member number {{memberId}} into the Value field to search for the member record",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:02:29.024Z",
+      "durationMs": 317,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s3",
+      "intent": "Click the Search button to retrieve the member record for member number {{memberId}}",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:02:29.342Z",
+      "durationMs": 270,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Search"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members(?:[?#]|$)",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s4",
+      "intent": "Click the Select link for member {{memberId}} to open the member record",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:02:29.613Z",
+      "durationMs": 447,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Select"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members/[0-9]+(?:[?#]|$) and \"MEMBER RECORD\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    }
+  ],
+  "driftSignals": [],
+  "appliedOverrides": [],
+  "evidenceDir": "evidence/meridian/replay-success-balance",
+  "blockedNavigations": []
+}

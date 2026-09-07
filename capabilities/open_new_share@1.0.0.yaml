@@ -1,0 +1,462 @@
+# Open a new share on a member record
+#
+# Opens a {{shareType}} share on member {{memberId}} with an initial deposit of {{deposit}}, reviewing it and then CREATING it. The creating step is irreversible and requires explicit authorisation; without it the run stops for a human at the confirmation screen having created nothing.
+#
+# Reviewed by a human before `approval: approved` is set. Approval is what
+# permits unattended replay of any step marked risk: irreversible.
+#
+# Values below are parameter REFERENCES ({{name}}), never captured data.
+
+apiVersion: capability.interface.ai/v1
+kind: Capability
+metadata:
+  id: cap_open_new_share
+  name: open_new_share
+  version: 1.0.0
+  title: Open a new share on a member record
+  summary: Opens a {{shareType}} share on member {{memberId}} with an initial deposit of {{deposit}},
+    reviewing it and then CREATING it. The creating step is irreversible and requires explicit
+    authorisation; without it the run stops for a human at the confirmation screen having created
+    nothing.
+  createdAt: 2026-09-05T13:45:55.050Z
+  app:
+    product: meridian-core
+    productVersion: 4.2.1
+    tenant: meridian
+    entryPoint: /
+  approval: draft
+  provenance:
+    discoveryRunId: e6e0963c
+    model: groq:openai/gpt-oss-120b
+    surfaceKind: web
+    traceRef: evidence/runs/discovery-e6e0963c/trace.json
+    traceSha256: 6735cba72fab87570b228f36dba0d2c1bf16f7df1c547c8ab7e6daf1cb704240
+    handCompleted: "step s9 (Open Share) was authored by a person, not recorded: policy refuses
+      irreversible actions during discovery, so the agent recorded up to the review screen and
+      stopped. See scripts/complete-posting-steps.ts."
+spec:
+  inputs:
+    - name: memberId
+      type: string
+      description: Enter member number {{memberId}} into the Value textbox for member search.
+      required: true
+      pattern: ^[0-9]{1,9}$
+      sensitivity: pii
+    - name: shareType
+      type: string
+      description: Select {{shareType}} - Money Market in the Share Type dropdown.
+      required: true
+      pattern: ^.{1,40}$
+      sensitivity: pii
+    - name: deposit
+      type: string
+      description: Enter the initial deposit amount of {{deposit}} into the Initial Deposit textbox.
+      required: true
+      pattern: ^[0-9]+(\.[0-9]{1,2})?$
+      sensitivity: pii
+  outputs:
+    - name: shareType
+      type: string
+      description: Share Type displayed on confirmation screen
+      sensitivity: pii
+      from:
+        afterStep: s8
+        target:
+          description: the shareType value on the final screen
+          role: StaticText
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: CONFIRM NEW SHARE
+          anchors:
+            - relation: proximateLabel
+              text: Share Type
+            - relation: nearHeading
+              text: CONFIRM NEW SHARE
+          hints:
+            boundsAtRecord:
+              x: 390.640625
+              y: 134
+              width: 125
+              height: 13
+            proximateLabels:
+              - Share Type
+        transform: trim
+    - name: initialDeposit
+      type: money
+      description: Initial Deposit displayed on confirmation screen
+      sensitivity: pii
+      from:
+        afterStep: s8
+        target:
+          description: the initialDeposit value on the final screen
+          role: StaticText
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: CONFIRM NEW SHARE
+          anchors:
+            - relation: proximateLabel
+              text: Initial Deposit
+            - relation: nearHeading
+              text: CONFIRM NEW SHARE
+          hints:
+            boundsAtRecord:
+              x: 390.640625
+              y: 153
+              width: 36
+              height: 13
+            proximateLabels:
+              - Initial Deposit
+        transform: money
+  preconditions:
+    authState: authenticated
+    describe: An operator session must already exist. Sign-on is the runtime's responsibility, not part
+      of this flow.
+  steps:
+    - id: s1
+      intent: Click the 'Member Inquiry / Selection' link to start member search
+      action:
+        type: click
+        target:
+          description: Click the 'Member Inquiry / Selection' link to start member search
+          role: link
+          name: Member Inquiry / Selection
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MAIN MENU
+          anchors:
+            - relation: nearHeading
+              text: MAIN MENU
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 324.875
+              y: 125
+              width: 151.21875
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members(?:[?#]|$) and "MEMBER INQUIRY / SELECTION" is on screen
+        all:
+          - kind: urlMatches
+            pattern: /members(?:[?#]|$)
+          - kind: textPresent
+            text: MEMBER INQUIRY / SELECTION
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s2
+      intent: Enter member number {{memberId}} into the Value textbox for member search
+      action:
+        type: type
+        target:
+          description: Enter member number {{memberId}} into the Value textbox for member search
+          role: textbox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: proximateLabel
+              text: Value
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 364.28125
+              y: 141
+              width: 212
+              height: 13
+            proximateLabels:
+              - Value
+        value: "{{memberId}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s3
+      intent: Click the Search button to find member {{memberId}}
+      action:
+        type: click
+        target:
+          description: Click the Search button to find member {{memberId}}
+          role: button
+          name: Search
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 600.890625
+              y: 141
+              width: 38.078125
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members(?:[?#]|$)
+        all:
+          - kind: urlMatches
+            pattern: /members(?:[?#]|$)
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s4
+      intent: Click the Select link for member {{memberId}} to open member details
+      action:
+        type: click
+        target:
+          description: Click the Select link for member {{memberId}} to open member details
+          role: link
+          name: Select
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 899.421875
+              y: 214
+              width: 33.71875
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members/[0-9]+(?:[?#]|$) and "MEMBER RECORD" is on screen
+        all:
+          - kind: urlMatches
+            pattern: /members/[0-9]+(?:[?#]|$)
+          - kind: textPresent
+            text: MEMBER RECORD
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s5
+      intent: Click the 'Open New Share' link to start creating a new share for the member
+      action:
+        type: click
+        target:
+          description: Click the 'Open New Share' link to start creating a new share for the member
+          role: link
+          name: Open New Share
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER RECORD
+          anchors:
+            - relation: nearHeading
+              text: MEMBER RECORD
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 375.8125
+              y: 479
+              width: 92.890625
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members/[0-9]+/open-share(?:[?#]|$) and "OPEN NEW SHARE" is on screen
+        all:
+          - kind: urlMatches
+            pattern: /members/[0-9]+/open-share(?:[?#]|$)
+          - kind: textPresent
+            text: OPEN NEW SHARE
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s6
+      intent: Select {{shareType}} - Money Market in the Share Type dropdown
+      action:
+        type: select
+        target:
+          description: Select {{shareType}} - Money Market in the Share Type dropdown
+          role: combobox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: OPEN NEW SHARE
+          anchors:
+            - relation: proximateLabel
+              text: Share Type
+            - relation: nearHeading
+              text: OPEN NEW SHARE
+          hints:
+            domHint: select
+            boundsAtRecord:
+              x: 403.234375
+              y: 128
+              width: 197
+              height: 15
+            proximateLabels:
+              - Share Type
+        value: "{{shareType}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s7
+      intent: Enter the initial deposit amount of {{deposit}} into the Initial Deposit textbox
+      action:
+        type: type
+        target:
+          description: Enter the initial deposit amount of {{deposit}} into the Initial Deposit textbox
+          role: textbox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: OPEN NEW SHARE
+          anchors:
+            - relation: proximateLabel
+              text: $
+            - relation: nearHeading
+              text: OPEN NEW SHARE
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 410.234375
+              y: 153
+              width: 114
+              height: 13
+            proximateLabels:
+              - $
+              - Initial Deposit
+        value: "{{deposit}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s8
+      intent: Click the Continue button to proceed to the share confirmation screen
+      action:
+        type: click
+        target:
+          description: Click the Continue button to proceed to the share confirmation screen
+          role: button
+          name: Continue
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: OPEN NEW SHARE
+          anchors:
+            - relation: nearHeading
+              text: OPEN NEW SHARE
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 410.234375
+              y: 190
+              width: 49.15625
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members/[0-9]+/open-share/review(?:[?#]|$) and "CONFIRM NEW SHARE" is
+          on screen
+        all:
+          - kind: urlMatches
+            pattern: /members/[0-9]+/open-share/review(?:[?#]|$)
+          - kind: textPresent
+            text: CONFIRM NEW SHARE
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s9
+      intent: Click Open Share to create the share shown on the confirmation screen
+      action:
+        type: click
+        target:
+          description: the Open Share control on the CONFIRM NEW SHARE screen
+          role: button
+          name: Open Share
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: CONFIRM NEW SHARE
+          anchors:
+            - relation: nearHeading
+              text: CONFIRM NEW SHARE
+          hints:
+            proximateLabels: []
+      guard:
+        risk: irreversible
+        note: Creates a new share on the member record and posts the initial deposit. Not undoable from the
+          servicing console. Requires explicit authorisation, or the run stops for a human here.
+      checkpoint:
+        describe: the share was opened and the application confirmed it
+        all:
+          - kind: urlMatches
+            pattern: /members/[^/]+/open-share/post
+        any:
+          - kind: textPresent
+            text: SHARE OPENED
+          - kind: textPresent
+            text: Confirmation
+        timeoutMs: 15000
+        pollMs: 250
+      conditions: []
+      optional: false
+  successCheckpoint:
+    describe: the open new share was posted and the application confirmed it
+    all:
+      - kind: urlMatches
+        pattern: /members/[^/]+/open-share/post
+    any:
+      - kind: textPresent
+        text: SHARE OPENED
+      - kind: textPresent
+        text: Confirmation
+    timeoutMs: 15000
+    pollMs: 250
+  outcomes:
+    business:
+      - code: MEMBER_NOT_FOUND
+        meaning: No member record matches the supplied identifier.
+        outputsAvailable: false
+      - code: SUPERVISOR_OVERRIDE_REQUIRED
+        meaning: >
+          The signed-on operator is not entitled to perform this restricted function. A supervisor
+          must carry it out.
+        outputsAvailable: false
+      - code: VALIDATION_ERROR
+        meaning: The application rejected the submitted transaction.
+        outputsAvailable: false
+  escalation:
+    onUnrecovered: escalate
+    onAmbiguous: escalate
+    onIrreversible: require_approval
+overrides: {}

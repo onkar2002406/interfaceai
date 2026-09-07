@@ -20,13 +20,35 @@ import type { ElementNode, Observation } from '../surface/types.js';
 import { isInteractive } from '../surface/web/accessibility-tree.js';
 import type { ToolDefinition } from './llm/llm-provider.js';
 
-export function systemPrompt(opts: { product: string; allowedOrigins: string[] }): string {
+export function systemPrompt(opts: {
+  product: string;
+  allowedOrigins: string[];
+  /**
+   * The controls this product's policy treats as irreversible, named.
+   *
+   * Derived from the same policy object the surface enforces, so the prompt
+   * cannot drift out of agreement with what will actually be refused. Naming
+   * them fixes an error in both directions: a model told only "never do
+   * anything irreversible" refuses to save an edit to an existing record — a
+   * change policy classifies as merely mutating and a human undoes by typing
+   * the old value back — and stops a flow it was supposed to record. Telling it
+   * which specific controls are off limits removes the guesswork without
+   * loosening anything, because the guardrail, not the prompt, is what enforces.
+   */
+  irreversibleControls?: string[];
+}): string {
+  const forbidden = opts.irreversibleControls?.length
+    ? `\nIRREVERSIBLE CONTROLS ON THIS APPLICATION: ${opts.irreversibleControls.join(', ')}.\n` +
+      `Those specific controls are refused during recording. Everything else is permitted, ` +
+      `including saving an edit to an existing record.`
+    : '';
+
   return `You are operating a back-office banking application on behalf of a bank employee, in order to
 work out how a task is done. What you discover will be recorded and replayed later WITHOUT you, so
 prefer the plain, obvious route a trained operator would take over anything clever.
 
 APPLICATION: ${opts.product}
-PERMITTED ORIGINS: ${opts.allowedOrigins.join(', ')}
+PERMITTED ORIGINS: ${opts.allowedOrigins.join(', ')}${forbidden}
 
 HOW YOU SEE THE SCREEN
 You are given an inventory of everything currently perceivable, taken from the accessibility tree,
@@ -46,9 +68,12 @@ Never invent an id. Never describe a CSS selector or a screen coordinate — you
 
 RULES
 1. Take the direct path. Do not explore, do not open things to "check", do not go back and forth.
-2. NEVER take an action that cannot be undone — submitting an application, posting a transfer,
-   deleting a record, approving anything. If the task requires one, call give_up and explain.
+2. NEVER take an action that cannot be undone — posting a transfer, committing a new record,
+   applying a hold, deleting or approving anything. If the task requires one, get as far as the
+   confirmation screen that offers it, then call give_up and say which control you stopped at.
    A human decides those. This is not negotiable and you will be blocked if you try.
+   Editing and saving a field on an existing record is NOT in this category: it is reversible by
+   typing the previous value back, and you should complete it normally.
 3. If a screen shows an error, a "no records found" result, or a permission refusal, that is an
    ANSWER, not an obstacle. Call give_up and say what the screen said. Do not try other values.
 4. If the sign-on screen appears, stop. Authentication is handled outside the flow you are recording.
@@ -86,10 +111,36 @@ export function renderObservation(obs: Observation, goal: string, stepsTaken: nu
   if (interactive.length === 0) lines.push('  (none — the screen has no actionable controls)');
   lines.push('');
 
-  const cells = obs.elements.filter((e) => e.context.columnHeader);
+  // A cell qualifies on EITHER signal — a column header above it, or the
+  // contents of the row it sits in.
+  //
+  // Filtering on `columnHeader` alone made a whole shape of legacy screen
+  // invisible: the two-column label/value table ("Member No.: | 100234",
+  // "Confirmation: | CN480196"), which has a single row and therefore no header
+  // row at all. Those values are on screen, a human reads them straight off,
+  // and `inRowWith` can address them precisely — but the model was never shown
+  // an element id for them, so it correctly reported that the value it was
+  // asked to return could not be referenced, and gave up. The screen was fine;
+  // our description of it omitted half the table.
+  const cells = obs.elements.filter((e) => e.context.columnHeader || e.context.rowCells?.length);
   if (cells.length) {
     lines.push(`TABLE CELLS (${cells.length}):`);
-    for (const e of cells.slice(0, 40)) lines.push(`  ${describe(e)}`);
+    for (const e of cells.slice(0, 60)) lines.push(`  ${describe(e)}`);
+    lines.push('');
+  }
+
+  // Read-only values that a caption identifies. On a legacy screen this is how
+  // most answers are actually stated — "Member No.: 100234", "Confirmation:
+  // CN480196" — in a borderless table that reports as presentational, so these
+  // never appear as cells. Without them the model can see the answer in the page
+  // text and has no id to name it by, which is not a refusal it can reason its
+  // way out of.
+  const labelled = obs.elements.filter(
+    (e) => !isInteractive(e.role) && !e.context.columnHeader && e.proximateLabels.length > 0,
+  );
+  if (labelled.length) {
+    lines.push(`LABELLED VALUES (${labelled.length}):`);
+    for (const e of labelled.slice(0, 40)) lines.push(`  ${describe(e)}`);
     lines.push('');
   }
 
@@ -124,10 +175,25 @@ const why: Record<string, unknown> = {
   description: 'One sentence, phrased as an instruction a colleague could follow. Becomes this step\'s description.',
 };
 
+/**
+ * Every tool the loop knows how to execute.
+ *
+ * Not the list the model is handed — see `toolsPermittedBy`. Some of these map
+ * to action types a given deployment's policy does not allow, and offering a
+ * model a tool that policy will refuse is a trap: a refusal stops the run, so
+ * one unlucky turn ends discovery on a flow it could have completed.
+ */
 export const AGENT_TOOLS: ToolDefinition[] = [
   {
     name: 'click',
-    description: 'Click a control — a link, button, tab or checkbox — by its element id.',
+    // The last sentence is load-bearing. A table cell often sits on top of the
+    // link inside it, so clicking the cell "works" — and records a step
+    // identified by that row's data rather than by the control, which then
+    // resolves against nothing on the next caller's arguments. Naming the
+    // control is what makes the recorded step portable.
+    description:
+      'Click a control — a link, button, tab or checkbox — by its element id. ' +
+      'Always use an id from CONTROLS YOU CAN ACT ON, never one from TABLE CELLS or LABELLED VALUES.',
     parameters: {
       type: 'object',
       properties: { elementId: { type: 'string', description: 'e.g. "e12"' }, why },
@@ -207,3 +273,16 @@ export const AGENT_TOOLS: ToolDefinition[] = [
     },
   },
 ];
+
+/**
+ * The tools a model may actually be offered, given what policy permits.
+ *
+ * `finish` and `give_up` are always present: they end the run rather than touch
+ * the surface, so there is no action for policy to have an opinion about. A tool
+ * whose action type is not on the allowlist is withheld entirely — the model is
+ * never shown a door it would be refused at.
+ */
+export function toolsPermittedBy(allowedActions: readonly string[]): ToolDefinition[] {
+  const terminal = new Set(['finish', 'give_up']);
+  return AGENT_TOOLS.filter((t) => terminal.has(t.name) || allowedActions.includes(t.name));
+}

@@ -15,6 +15,7 @@
 
 import { ScriptedProvider } from './scripted-provider.js';
 import { OpenAiCompatibleProvider, type ProviderConfig } from './openai-compatible-provider.js';
+import { FailoverProvider, type ProviderSwitch } from './failover-provider.js';
 import type { LlmProvider } from './llm-provider.js';
 
 export const PROVIDERS: Record<string, ProviderConfig> = {
@@ -58,7 +59,11 @@ export function defaultProviderName(): ProviderName {
 
 export function createProvider(
   name: string,
-  opts: { model?: string; scriptedParams?: Record<string, string> } = {},
+  opts: {
+    model?: string;
+    scriptedParams?: Record<string, string>;
+    onSwitch?: (s: ProviderSwitch) => void;
+  } = {},
 ): LlmProvider {
   if (name === 'scripted') return new ScriptedProvider(opts.scriptedParams ?? {});
 
@@ -68,7 +73,33 @@ export function createProvider(
       `Unknown provider "${name}". Available: ${[...Object.keys(PROVIDERS), 'scripted'].join(', ')}.`,
     );
   }
-  return new OpenAiCompatibleProvider(config, opts.model ? { model: opts.model } : {});
+
+  const primary = new OpenAiCompatibleProvider(config, opts.model ? { model: opts.model } : {});
+
+  // Chain in every *other* configured host as a fallback, in table order.
+  //
+  // A model override is deliberately not propagated: `--model gpt-oss-120b`
+  // names a model on the provider it was given for, and forcing that string
+  // onto the fallback would guarantee a 404 at the exact moment the fallback is
+  // needed. Each fallback uses its own `modelEnv` / `defaultModel`.
+  const fallbacks = Object.keys(PROVIDERS)
+    .filter((id) => id !== name && process.env[PROVIDERS[id]!.apiKeyEnv])
+    .map((id) => new OpenAiCompatibleProvider(PROVIDERS[id]!));
+
+  if (fallbacks.length === 0) return primary;
+  return new FailoverProvider([primary, ...fallbacks], (s) => {
+    // Always on the console, whether or not a caller asked for the callback.
+    // Moving from a free key onto a paid one is a thing you want to find out
+    // about while it is happening, not on a statement.
+    console.warn(`  ! model provider ${s.from} failed (${s.kind}); falling back to ${s.to}`);
+    opts.onSwitch?.(s);
+  });
+}
+
+/** True when a fallback chain would actually be built — for CLI and panel output. */
+export function describeChainFor(name: string): string {
+  const others = Object.keys(PROVIDERS).filter((id) => id !== name && process.env[PROVIDERS[id]!.apiKeyEnv]);
+  return others.length === 0 ? '' : ` (falls back to ${others.join(', ')})`;
 }
 
 /** True if a live provider could actually run right now. */

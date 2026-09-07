@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "description": "Guardrails for MERIDIAN CORE. One hosted install; the automation is contained to its member-servicing routes and may never reach the fault-injection console it is tested with.",
+
+  "origins": ["https://web-sample.interface-hiring.com"],
+
+  "routes": {
+    "allow": [
+      "/",
+      "/signon",
+      "/signoff",
+      "/menu",
+      "/members",
+      "/members/*",
+      "/members/*/transfer",
+      "/members/*/transfer/review",
+      "/members/*/transfer/post",
+      "/members/*/open-share",
+      "/members/*/open-share/review",
+      "/members/*/open-share/post",
+      "/members/*/update",
+      "/members/*/hold",
+      "/members/*/hold/review",
+      "/members/*/hold/post"
+    ],
+    "deny": [
+      "/settings",
+      "/settings/**"
+    ]
+  },
+
+  "actions": ["click", "type", "select", "press", "navigate", "read", "scroll"],
+
+  "limits": {
+    "maxSteps": 40,
+    "maxRuntimeMs": 300000,
+    "maxRecoveries": 4
+  },
+
+  "risk": {
+    "irreversible": [
+      {
+        "code": "FUNDS_TRANSFER",
+        "description": "Posts a funds transfer. Money moves between shares and staff cannot reverse it from this screen — the application says so on the confirmation page.",
+        "when": { "actionType": "click", "routePattern": "^/members/[^/]+/transfer", "namePattern": "^post transfer\\b" }
+      },
+      {
+        "code": "ACCOUNT_HOLD",
+        "description": "Applies a hold to a share. Restricted to supervisors, freezes the member's funds, and is labelled IRREVERSIBLE ACTION by the application itself.",
+        "when": { "actionType": "click", "routePattern": "^/members/[^/]+/hold", "namePattern": "^apply hold\\b" }
+      },
+      {
+        "code": "OPEN_SHARE",
+        "description": "Opens a new share on the member's record and posts the initial deposit. Creates a record that cannot be un-created.",
+        "when": { "actionType": "click", "routePattern": "^/members/[^/]+/open-share", "namePattern": "^open share\\b" }
+      },
+      {
+        "code": "IRREVERSIBLE_SUBMIT",
+        "description": "Backstop for any commit control this policy has not been taught by name. Deliberately broad: an unrecognised commit button should stop and ask, not proceed.",
+        "when": { "actionType": "click", "namePattern": "^(post|commit|apply|approve|delete|remove|close account)\\b" }
+      }
+    ],
+    "mutating": [
+      {
+        "code": "MEMBER_DETAILS_SAVE",
+        "description": "Writes new contact details onto the member record. Changes real data, but the previous values can be typed back.",
+        "when": { "actionType": "click", "routePattern": "^/members/[^/]+/update", "namePattern": "^save changes\\b" }
+      },
+      {
+        "code": "FORM_INPUT",
+        "description": "Types into a field. Changes client state only until submitted.",
+        "when": { "actionType": "type" }
+      },
+      {
+        "code": "FORM_SELECT",
+        "description": "Chooses a dropdown value. Changes client state only until submitted.",
+        "when": { "actionType": "select" }
+      }
+    ]
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "status": "success",
+  "outputs": {
+    "signedOnAs": "Signed on as J. TELLER (TELLER)"
+  },
+  "runId": "success-sign-on",
+  "capability": "sign_on",
+  "capabilityVersion": "1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "product": "meridian-core",
+  "startedAt": "2026-09-06T21:03:04.137Z",
+  "durationMs": 1247,
+  "steps": [
+    {
+      "stepId": "s1",
+      "intent": "Enter the configured operator ID into the Operator ID box",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:04.651Z",
+      "durationMs": 245,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter the configured password into the Password box",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:04.897Z",
+      "durationMs": 218,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s3",
+      "intent": "Click Sign On to establish the operator session",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:05.116Z",
+      "durationMs": 239,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Sign On"
+      },
+      "checkpoint": {
+        "describe": "the sign-on screen is gone and the main menu is displayed",
+        "ok": true,
+        "failed": []
+      }
+    }
+  ],
+  "driftSignals": [],
+  "appliedOverrides": [],
+  "evidenceDir": "evidence/meridian/replay-success-sign-on",
+  "blockedNavigations": []
+}

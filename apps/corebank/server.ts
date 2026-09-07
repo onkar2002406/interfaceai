@@ -14,7 +14,7 @@ import express, { type Express, type Request, type Response, type NextFunction }
 import { randomUUID } from 'node:crypto';
 import { getTenant, type TenantConfig } from './tenants.js';
 import { FaultController, FAULT_MODES, type FaultMode } from './fault-injection.js';
-import { findMember, OPENED_SUBACCOUNTS, type Member } from './seed-data.js';
+import { findMember, updateMember, OPENED_SUBACCOUNTS, type Member } from './seed-data.js';
 import * as V from './pages.js';
 
 const MIN_OPENING_DEPOSIT = 25;
@@ -84,7 +84,7 @@ export function createCoreBankApp(tenantId: string): CoreBankApp {
 
   /** Applies the surprise-overlay fault to any content page. */
   const withInterstitial = (req: Request, html: string): string =>
-    faults.consume('interstitial', req.path) ? V.maintenanceInterstitial(tenant, html) : html;
+    faults.consume('interstitial', req.path) ? V.maintenanceInterstitial(html) : html;
 
   /* --------------------------------------------------------------- auth */
 
@@ -251,28 +251,51 @@ export function createCoreBankApp(tenantId: string): CoreBankApp {
     res.send(V.subAccountDonePage(tenant, m, acctNo));
   });
 
-  /* ------------------------------------------------------ funds transfer */
+  /* -------------------------------------------------- update member details
 
-  app.get('/member/:id/transfer', requireSession, (req, res) => {
+     A screen that genuinely writes to the member record, reachable by a human
+     from the member detail page and by the automation through the
+     `update_member_details` capability. Both doors call `updateMember()`, so a
+     change made either way is immediately visible in the other — which is the
+     point of having both: a demo where the automation writes to a store the
+     website cannot see would prove nothing about driving a real console.
+
+     Classified `mutating` rather than `irreversible`: the previous values can
+     be typed back. That distinction is the reason the risk model has three
+     classes rather than two.                                                 */
+
+  app.get('/member/:id/update', requireSession, (req, res) => {
     const m = loadMember(req, res);
     if (!m) return;
-    res.send(V.transferPage(tenant, m));
+    res.send(withInterstitial(req, V.memberUpdateFormPage(tenant, m)));
   });
 
-  /**
-   * The server-side backstop for the one irreversible act in this app.
-   *
-   * Transfers never post here. The policy layer (`FUNDS_TRANSFER` in
-   * config/policy.json) is what *should* stop the automation, at the button;
-   * this handler is the second line, for anything that got past it. It answers
-   * with a page that names itself as a deliberate refusal rather than the
-   * generic system-error page, so a human who clicks through by hand is not
-   * shown what looks like a crash.
-   */
-  app.post('/member/:id/transfer', requireSession, (req, res) => {
+  app.post('/member/:id/update', requireSession, (req, res) => {
     const m = loadMember(req, res);
     if (!m) return;
-    res.status(403).send(V.transferBlockedPage(tenant, m));
+
+    const email = String(req.body['ctl00$ContentPlaceHolder1$txtEmail'] ?? '').trim();
+    const phone = String(req.body['ctl00$ContentPlaceHolder1$txtPhone'] ?? '').trim();
+    const address = String(req.body['ctl00$ContentPlaceHolder1$txtAddr'] ?? '').trim();
+
+    // Business-rule rejections, phrased with the same "Please correct the
+    // following" banner every other form uses — so the product-wide
+    // `validation_error` condition classifies them without a per-capability
+    // rule, which is the whole argument for authoring conditions per product.
+    const errors: string[] = [];
+    if (!email) errors.push('E-mail is required.');
+    else if (!/^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$/.test(email)) errors.push('E-mail is not a valid address.');
+    if (!phone) errors.push('Phone is required.');
+    else if (!/^[0-9()+\-.\s]{7,20}$/.test(phone)) errors.push('Phone must be a valid telephone number.');
+    if (address.length > 60) errors.push('Mailing Address must be 60 characters or fewer.');
+
+    if (errors.length) {
+      res.send(V.memberUpdateFormPage(tenant, m, errors, { email, phone, address }));
+      return;
+    }
+
+    const updated = updateMember(m.id, { email, phone, address });
+    res.send(V.memberUpdateDonePage(tenant, updated ?? m));
   });
 
   /* ------------------------------------------------------- admin (test) */

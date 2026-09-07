@@ -1,0 +1,11 @@
+{
+  "status": "business_outcome",
+  "capability": "get_balance@1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "runId": "business-supervisor-required",
+  "evidence": "evidence/meridian/replay-business-supervisor-required",
+  "durationMs": 2296,
+  "code": "SUPERVISOR_OVERRIDE_REQUIRED",
+  "message": "The signed-on operator is not entitled to perform this restricted function. A supervisor must carry it out.\n"
+}

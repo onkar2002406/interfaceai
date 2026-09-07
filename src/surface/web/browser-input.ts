@@ -106,7 +106,7 @@ export async function typeIntoNode(
  * Sets a listbox/combobox value via the platform's semantic action.
  * See the note at the top of this file for why this one is not coordinate-driven.
  */
-export async function selectInNode(cdp: CDPSession, page: Page, node: ElementNode, value: string): Promise<void> {
+export async function selectInNode(cdp: CDPSession, node: ElementNode, value: string): Promise<void> {
   const handle = handleOf(node);
   if (!handle) {
     throw new NotActionableError(`cannot set a value on "${node.name || node.role}" — no live handle`);

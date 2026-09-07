@@ -30,7 +30,19 @@ export async function connectToOperatorConsole(opts: { port?: number; waitMs?: n
     waitMs: opts.waitMs ?? 10 * 60 * 1000,
   });
 
-  const consoleServer = await startOperatorConsole(broker, opts.port);
+  // The console is per-run (see above), so its preferred port is often already
+  // held by another one — the control panel starts a console of its own, and the
+  // demo script is meant to be run alongside it. Falling back to an OS-assigned
+  // port keeps that working; the URL is printed and linked, never assumed.
+  const consoleServer = await startOperatorConsole(broker, opts.port).catch(async (err: NodeJS.ErrnoException) => {
+    if (err.code !== 'EADDRINUSE') throw err;
+    const fallback = await startOperatorConsole(broker, 0);
+    console.log(
+      `\n  Operator console port ${opts.port ?? process.env.OPERATOR_PORT ?? 4100} is already in use ` +
+        `(another run or the control panel).\n  This run's console is at ${fallback.url} instead.\n`,
+    );
+    return fallback;
+  });
 
   broker.onChange(() => {
     const open = broker.list();

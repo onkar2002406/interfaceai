@@ -1,0 +1,11 @@
+{
+  "status": "business_outcome",
+  "capability": "get_balance@1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "runId": "business-validation-rejected",
+  "evidence": "evidence/meridian/replay-business-validation-rejected",
+  "durationMs": 4147,
+  "code": "VALIDATION_ERROR",
+  "message": "The application rejected the submitted transaction."
+}

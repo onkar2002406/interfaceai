@@ -1,0 +1,342 @@
+# Find a member by last name
+#
+# Searches member inquiry by last name, opens the matching member record, and
+# returns that member's number and full name.
+#
+# Reviewed by a human before `approval: approved` is set. Approval is what
+# permits unattended replay of any step marked risk: irreversible.
+#
+# Values below are parameter REFERENCES ({{name}}), never captured data.
+
+apiVersion: capability.interface.ai/v1
+kind: Capability
+metadata:
+  id: cap_member_inquiry
+  name: member_inquiry
+  version: 1.0.0
+  title: Find a member by last name
+  summary: >
+    Searches member inquiry by last name, opens the matching member record, and returns
+    that member's number and full name.
+  createdAt: 2026-09-04T11:50:41.531Z
+  app:
+    product: meridian-core
+    productVersion: 4.2.1
+    tenant: meridian
+    entryPoint: /
+  approval: draft
+  provenance:
+    discoveryRunId: ece7ec7b
+    model: groq:openai/gpt-oss-120b
+    surfaceKind: web
+    traceRef: evidence/runs/discovery-ece7ec7b/trace.json
+    traceSha256: 6f2560e960a065ce27c3684b7cf46320ccb212a34f64a986cbd7160af05abc79
+spec:
+  inputs:
+    - name: lastName
+      type: string
+      description: The member's last name to search for.
+      required: true
+      pattern: ^.{1,40}$
+      sensitivity: pii
+      example: Hoxxer
+  outputs:
+    - name: memberNumber
+      type: string
+      description: Member number displayed on the member record screen
+      sensitivity: pii
+      from:
+        afterStep: s5
+        target:
+          description: the memberNumber value on the final screen
+          role: StaticText
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER RECORD
+          anchors:
+            - relation: proximateLabel
+              text: Member No.
+            - relation: nearHeading
+              text: MEMBER RECORD
+          hints:
+            boundsAtRecord:
+              x: 401
+              y: 100
+              width: 41.96875
+              height: 13
+            proximateLabels:
+              - Member No.
+        transform: trim
+    - name: memberFullName
+      type: string
+      description: Member full name displayed on the member record screen
+      sensitivity: pii
+      from:
+        afterStep: s5
+        target:
+          description: the memberFullName value on the final screen
+          role: StaticText
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER RECORD
+          anchors:
+            - relation: proximateLabel
+              text: Name
+            - relation: nearHeading
+              text: MEMBER RECORD
+          hints:
+            boundsAtRecord:
+              x: 808.546875
+              y: 100
+              width: 79
+              height: 13
+            proximateLabels:
+              - Name
+        transform: trim
+  preconditions:
+    authState: authenticated
+    describe: An operator session must already exist. Sign-on is the runtime's responsibility, not part
+      of this flow.
+  steps:
+    - id: s1
+      intent: Click the Member Inquiry link to open the member inquiry search screen
+      action:
+        type: click
+        target:
+          description: Click the Member Inquiry link to open the member inquiry search screen
+          role: link
+          name: Member Inquiry
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+          anchors: []
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 353.03125
+              y: 42
+              width: 88.125
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members(?:[?#]|$) and "MEMBER INQUIRY / SELECTION" is on screen
+        all:
+          - kind: urlMatches
+            pattern: /members(?:[?#]|$)
+          - kind: textPresent
+            text: MEMBER INQUIRY / SELECTION
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s2
+      intent: Select 'Last Name' in the Search by dropdown to enable searching by last name
+      action:
+        type: select
+        target:
+          description: Select 'Last Name' in the Search by dropdown to enable searching by last name
+          role: combobox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: proximateLabel
+              text: Search by
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: select
+            boundsAtRecord:
+              x: 364.28125
+              y: 115
+              width: 113
+              height: 15
+            proximateLabels:
+              - Search by
+        value: Last Name
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s3
+      intent: Enter last name '{{lastName}}' into the Value textbox for member search
+      action:
+        type: type
+        target:
+          description: Enter last name '{{lastName}}' into the Value textbox for member search
+          role: textbox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: proximateLabel
+              text: Value
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 364.28125
+              y: 141
+              width: 212
+              height: 13
+            proximateLabels:
+              - Value
+        value: "{{lastName}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s4
+      intent: Click the Search button to perform the member lookup by last name
+      action:
+        type: click
+        target:
+          description: Click the Search button to perform the member lookup by last name
+          role: button
+          name: Search
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 600.890625
+              y: 141
+              width: 38.078125
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members(?:[?#]|$)
+        all:
+          - kind: urlMatches
+            pattern: /members(?:[?#]|$)
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s5
+      intent: Click the Select link for the {{lastName}} record to open the member detail screen
+      action:
+        type: click
+        target:
+          description: Click the Select link for the {{lastName}} record to open the member detail screen
+          role: link
+          name: Select
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 890.484375
+              y: 214
+              width: 33.71875
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members/[0-9]+(?:[?#]|$) and "MEMBER RECORD" is on screen
+        all:
+          - kind: urlMatches
+            pattern: /members/[0-9]+(?:[?#]|$)
+          - kind: textPresent
+            text: MEMBER RECORD
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+  successCheckpoint:
+    describe: the flow reached the screen that answers the goal, with every declared value visible on it
+    all:
+      - kind: textPresent
+        text: MEMBER RECORD
+      - kind: elementPresent
+        target:
+          description: the memberNumber value on the final screen
+          role: StaticText
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER RECORD
+          anchors:
+            - relation: proximateLabel
+              text: Member No.
+            - relation: nearHeading
+              text: MEMBER RECORD
+          hints:
+            boundsAtRecord:
+              x: 401
+              y: 100
+              width: 41.96875
+              height: 13
+            proximateLabels:
+              - Member No.
+      - kind: elementPresent
+        target:
+          description: the memberFullName value on the final screen
+          role: StaticText
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER RECORD
+          anchors:
+            - relation: proximateLabel
+              text: Name
+            - relation: nearHeading
+              text: MEMBER RECORD
+          hints:
+            boundsAtRecord:
+              x: 808.546875
+              y: 100
+              width: 79
+              height: 13
+            proximateLabels:
+              - Name
+    any: []
+    timeoutMs: 10000
+    pollMs: 250
+  outcomes:
+    business:
+      - code: MEMBER_NOT_FOUND
+        meaning: No member record matches the supplied identifier.
+        outputsAvailable: false
+      - code: SUPERVISOR_OVERRIDE_REQUIRED
+        meaning: >
+          The signed-on operator is not entitled to perform this restricted function. A supervisor
+          must carry it out.
+        outputsAvailable: false
+      - code: VALIDATION_ERROR
+        meaning: The application rejected the submitted transaction.
+        outputsAvailable: false
+  escalation:
+    onUnrecovered: escalate
+    onAmbiguous: escalate
+    onIrreversible: require_approval
+overrides: {}

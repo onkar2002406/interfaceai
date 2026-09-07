@@ -1,0 +1,239 @@
+/*
+ * One stylesheet, no framework.
+ *
+ * The palette and the semantics are carried over from the original single-file
+ * panel deliberately: the four result arms have four fixed colours, and a
+ * business outcome is *not* the failure colour. That is the most important
+ * visual decision in the whole interface — a panel that renders
+ * SUPERVISOR_OVERRIDE_REQUIRED in red has undone the distinction the engine
+ * exists to make, before anyone reads a word.
+ */
+
+:root {
+  --bg: #f6f7f9;
+  --card: #fff;
+  --ink: #16181d;
+  --muted: #6b7280;
+  --line: #dfe3e8;
+  --accent: #2563eb;
+  --ok: #15803d;
+  --ok-bg: #f0fdf4;
+  --business: #b45309;
+  --business-bg: #fffbeb;
+  --escalated: #6d28d9;
+  --escalated-bg: #f5f3ff;
+  --fail: #b91c1c;
+  --fail-bg: #fef2f2;
+  --risk: #b45309;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #101216;
+    --card: #181b21;
+    --ink: #e7e9ee;
+    --muted: #9aa1ad;
+    --line: #2a2f38;
+    --accent: #60a5fa;
+    --ok: #4ade80;
+    --ok-bg: #0d2016;
+    --business: #fbbf24;
+    --business-bg: #241c07;
+    --escalated: #c4b5fd;
+    --escalated-bg: #1b1630;
+    --fail: #f87171;
+    --fail-bg: #260f0f;
+    --risk: #fbbf24;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+h1, h2, h3 { line-height: 1.25; }
+h2 { font-size: 1.05rem; margin: 0 0 .6rem; }
+h3 { font-size: .95rem; margin: 0 0 .35rem; }
+a { color: var(--accent); }
+.mono { font-family: var(--mono); font-size: .86em; }
+.hint { color: var(--muted); font-size: .86em; }
+.why { color: var(--muted); margin: .3rem 0 0; }
+.sec { margin-top: 1.25rem; }
+
+/* ------------------------------------------------------------------ shell */
+
+header.top {
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  padding: .7rem 1.1rem; border-bottom: 1px solid var(--line); background: var(--card);
+}
+header.top h1 { font-size: 1rem; margin: 0; }
+header.top .spacer { flex: 1; }
+
+.layout { display: flex; align-items: flex-start; gap: 1.1rem; padding: 1.1rem; }
+.rail { width: 330px; flex: 0 0 330px; }
+.main { flex: 1; min-width: 0; }
+
+.tabs { display: flex; gap: .3rem; flex-wrap: wrap; margin-bottom: .9rem; }
+.tabs button {
+  border: 1px solid var(--line); background: var(--card); color: var(--muted);
+  padding: .38rem .8rem; border-radius: 5px; cursor: pointer; font: inherit;
+}
+.tabs button.on { color: var(--ink); border-color: var(--accent); font-weight: 600; }
+
+/* ------------------------------------------------------------------ cards */
+
+.card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 6px; padding: .7rem .8rem; margin-bottom: .55rem;
+}
+.card.clickable { cursor: pointer; }
+.card.clickable:hover { border-color: var(--accent); }
+.card.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.card h3 { font-family: var(--mono); font-size: .9rem; }
+
+.tag {
+  display: inline-block; font-size: .72rem; padding: .05rem .4rem; border-radius: 3px;
+  border: 1px solid var(--line); color: var(--muted); margin: .25rem .25rem 0 0;
+}
+.tag.risk { color: var(--risk); border-color: var(--risk); }
+.tag.safe { color: var(--ok); border-color: var(--ok); }
+.tag.draft { color: var(--muted); }
+
+/* ------------------------------------------------------------------ forms */
+
+label { display: block; margin: .65rem 0 .2rem; font-weight: 600; font-size: .87rem; }
+label .hint { font-weight: 400; display: block; }
+input[type="text"], textarea, select {
+  width: 100%; padding: .4rem .5rem; font: inherit;
+  border: 1px solid var(--line); border-radius: 4px;
+  background: var(--card); color: var(--ink);
+}
+textarea { resize: vertical; font-family: inherit; }
+input[type="checkbox"] { width: auto; margin-right: .4rem; }
+
+button.go {
+  background: var(--accent); color: #fff; border: 0; border-radius: 5px;
+  padding: .45rem 1rem; font: inherit; font-weight: 600; cursor: pointer;
+}
+button.go:disabled { opacity: .5; cursor: not-allowed; }
+button.mini {
+  background: var(--card); color: var(--muted); border: 1px solid var(--line);
+  border-radius: 4px; padding: .25rem .55rem; font: inherit; font-size: .85em; cursor: pointer;
+}
+button.mini:hover:not(:disabled) { color: var(--ink); border-color: var(--accent); }
+button.mini:disabled { opacity: .45; cursor: not-allowed; }
+.row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin-top: .8rem; }
+
+/* ----------------------------------------------------------------- tables */
+
+table.kv { width: 100%; border-collapse: collapse; margin-bottom: .6rem; }
+table.kv th, table.kv td {
+  text-align: left; padding: .3rem .45rem; border-bottom: 1px solid var(--line);
+  vertical-align: top; font-size: .87rem;
+}
+table.kv th { color: var(--muted); font-weight: 600; font-size: .78rem; text-transform: uppercase; }
+
+pre {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 4px;
+  padding: .5rem .6rem; overflow-x: auto; font-family: var(--mono); font-size: .82rem; margin: .4rem 0;
+}
+
+/* ------------------------------------------------------------- step logs */
+
+.steps {
+  border: 1px solid var(--line); border-radius: 5px; background: var(--card);
+  padding: .5rem .6rem; max-height: 15rem; overflow-y: auto;
+  font-family: var(--mono); font-size: .78rem;
+}
+.steps .k { color: var(--accent); }
+.steps:empty::before { content: "Waiting for the first step…"; color: var(--muted); font-family: system-ui; }
+
+/* ------------------------------------------------------------- verdicts */
+
+.verdict { border: 1px solid var(--line); border-left-width: 4px; border-radius: 5px; padding: .7rem .85rem; margin-top: .9rem; }
+.verdict h3 { margin-top: 0; }
+.verdict.success   { border-left-color: var(--ok);        background: var(--ok-bg); }
+.verdict.business  { border-left-color: var(--business);  background: var(--business-bg); }
+.verdict.escalated { border-left-color: var(--escalated); background: var(--escalated-bg); }
+.verdict.failed    { border-left-color: var(--fail);      background: var(--fail-bg); }
+
+.banner {
+  border: 1px solid var(--escalated); border-left-width: 4px; background: var(--escalated-bg);
+  border-radius: 5px; padding: .7rem .85rem; margin: .8rem 0;
+}
+
+.badge { font-size: .78rem; padding: .1rem .45rem; border-radius: 3px; border: 1px solid var(--line); color: var(--muted); }
+.badge.warn { color: var(--business); border-color: var(--business); }
+.badge.bad { color: var(--fail); border-color: var(--fail); }
+.badge.good { color: var(--ok); border-color: var(--ok); }
+
+/* ------------------------------------------------------------------ chat */
+
+.chatlog {
+  border: 1px solid var(--line); border-radius: 6px; background: var(--card);
+  padding: .75rem; height: 26rem; overflow-y: auto;
+}
+.chatlog:empty::before { content: "No messages yet."; color: var(--muted); }
+.msg { margin-bottom: .8rem; }
+.msg .who { font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.msg .body { white-space: pre-wrap; }
+.msg.user .body { font-weight: 500; }
+.msg.pending .body { color: var(--muted); font-style: italic; }
+
+.action {
+  border: 1px solid var(--line); border-radius: 5px; margin: .5rem 0;
+  background: var(--bg); overflow: hidden;
+}
+.action > summary { cursor: pointer; padding: .4rem .55rem; font-size: .85rem; list-style: none; }
+.action > summary::-webkit-details-marker { display: none; }
+.action > summary::before { content: "▸ "; color: var(--muted); }
+.action[open] > summary::before { content: "▾ "; }
+.action .inner { padding: 0 .55rem .55rem; }
+.action .label { font-family: var(--mono); }
+
+.suggest { display: flex; gap: .35rem; flex-wrap: wrap; margin-top: .5rem; }
+.suggest button {
+  border: 1px dashed var(--line); background: transparent; color: var(--muted);
+  border-radius: 20px; padding: .22rem .7rem; font: inherit; font-size: .82em; cursor: pointer;
+}
+.suggest button:hover { color: var(--ink); border-color: var(--accent); border-style: solid; }
+
+/* ----------------------------------------------------------------- modal */
+
+.backdrop {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, .55);
+  display: flex; align-items: center; justify-content: center; padding: 1.2rem; z-index: 40;
+}
+.modal {
+  background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+  width: min(1180px, 100%); max-height: 94vh; overflow: auto; padding: 1rem 1.15rem;
+}
+.modal header { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: .6rem; }
+.modal header h2 { margin: 0; }
+.modal .close { margin-left: auto; }
+
+.stage { background: #0b0d11; border: 1px solid var(--line); border-radius: 6px; padding: .4rem; }
+.stage canvas { display: block; width: 100%; height: auto; cursor: default; }
+.stage canvas.live { cursor: crosshair; outline: 2px solid var(--ok); outline-offset: -2px; }
+
+.state { font-family: var(--mono); font-size: .78rem; padding: .1rem .45rem; border-radius: 3px; border: 1px solid var(--line); }
+.state.HUMAN { color: var(--ok); border-color: var(--ok); }
+.state.PENDING_HUMAN { color: var(--business); border-color: var(--business); }
+.state.RESUMING { color: var(--accent); border-color: var(--accent); }
+
+.log {
+  font-family: var(--mono); font-size: .76rem; background: var(--bg);
+  border: 1px solid var(--line); border-radius: 4px; padding: .4rem .5rem;
+  max-height: 8rem; overflow-y: auto; margin-top: .5rem;
+}
+
+.grid2 { display: grid; grid-template-columns: 1fr 320px; gap: 1rem; align-items: start; }
+@media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } .layout { flex-direction: column; } .rail { width: 100%; flex: 1 1 auto; } }
+
+.shot { max-width: 100%; border: 1px solid var(--line); border-radius: 4px; margin: .4rem 0; }

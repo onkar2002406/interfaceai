@@ -1,0 +1,377 @@
+product: meridian-core
+description: >
+  MERIDIAN CORE — Cornerstone Financial Systems' member services platform, the
+  back-office console credit-union staff use to look up members, read shares and
+  balances, post transfers, open shares, update member details and place account
+  holds. Server-rendered HTML on a table-based layout with no test IDs, no
+  <label for> on any input, and a per-transaction hidden token carried inside
+  each form. There is no API; the UI is the only way in.
+
+# ---------------------------------------------------------------------------
+# The chat front door, for this product's customer base.
+#
+# MERIDIAN's caller is a teller or a supervisor at a credit union on the hosted
+# vendor platform. They talk about SHARES rather than "accounts", identify them
+# by a compound share id (`103001-MMKT-11`), and the recorded set is much wider
+# than CoreBank's: inquiry, balance, transfer, open share, hold, update details.
+#
+# Different console, different vocabulary, different customer — so a different
+# set of openers. Reusing CoreBank's would offer a five-digit member number that
+# this product does not use, and a "sub-account" that it does not have.
+#
+# Real MERIDIAN identifiers, because a share id like "share 01" does not exist
+# here and the model would have to invent one. The balances behind them move —
+# it is a shared instance — but the ids are stable.
+#
+# Four openers, one per arm of the result contract:
+#   1. success           — an existing share on an existing member
+#   2. business outcome  — 999999 is nobody: MEMBER_NOT_FOUND
+#   3. business outcome  — a hold is supervisor-gated, so a teller identity gets
+#                          SUPERVISOR_OVERRIDE_REQUIRED rather than an error
+#   4. escalated         — a transfer ends at Post Transfer, which chat cannot
+#                          authorise, so it stops for a human
+# ---------------------------------------------------------------------------
+chat:
+  audience: >
+    Tellers and supervisors at a credit union on MERIDIAN CORE. They work from
+    a member record and act on individual SHARES: read a balance, move money
+    between two shares, open a new share, place a hold, update contact details.
+    Members are identified by a six-digit member number and shares by a
+    compound share id such as 103001-MMKT-11. Placing a hold is entitlement-
+    gated, so the same request legitimately answers differently for a teller
+    and for a supervisor.
+  suggestions:
+    - What is the balance of share 103001-MMKT-11 for member 103001?
+    - Look up member 999999
+    - Place a FRAUD hold on share 103001-MMKT-10 for member 103001
+    - Transfer $1.00 from share 103001-MMKT-11 to share 103001-MMKT-10 for member 103001
+
+# The guardrails this product is replayed under. Naming them here makes
+# `--profile config/apps/meridian-core.yaml` the single switch that points the
+# engine at a different target — origins, routes and risk rules travel with the
+# product rather than having to be remembered as a second flag.
+policy: config/policy.meridian.json
+
+# ---------------------------------------------------------------------------
+# Product-wide runtime conditions.
+#
+# Evaluated after EVERY step of EVERY capability recorded against this product,
+# in the order written here. The classifier takes the FIRST match, so the order
+# encodes the taxonomy:
+#
+#   business  -> a legitimate answer the caller asked for
+#   recover   -> something we know how to fix, bounded
+#   fail      -> something we know is fatal, diagnosed rather than timed out
+#
+# Every detector below is a string a human reads off the screen, captured from
+# the live application. None of them is a selector, a status code or a URL:
+# the same signal works on a screenshot-only or desktop surface, and it survives
+# the vendor restructuring their markup.
+#
+# MERIDIAN can be made to produce any of these on demand — per request with
+# `?inject=<kind>`, globally from the System Settings screen, or randomly via a
+# configurable error rate. See `src/target/faults.ts` for how the harness arms
+# them without the automation being able to reach those controls itself.
+# ---------------------------------------------------------------------------
+conditions:
+  # ---- business outcomes: real answers, not failures ----------------------
+  - id: member_not_found
+    description: >
+      No member record matches the supplied identifier. The canonical example of
+      an outcome that must not be reported as an error — the caller asked a
+      question and this is the answer.
+
+      Served naturally for an unknown member number, and by `?inject=notfound`
+      (HTTP 404) on any route.
+    when:
+      kind: textPresent
+      text: RECORD NOT FOUND
+    then:
+      kind: business
+      code: MEMBER_NOT_FOUND
+      message: No member record matches the supplied identifier.
+
+  - id: member_search_no_results
+    description: >
+      The same answer as `member_not_found`, reached the other way. Opening an
+      unknown member's record directly gives the application's RECORD NOT FOUND
+      screen; searching for one returns the inquiry form with this line instead.
+      A caller does not care which route the vendor chose to express it, so both
+      detectors map to the one outcome code — which is why the catalog
+      deduplicates outcomes before advertising them.
+
+      Note it cannot fire on an unused search form: the phrase only appears once
+      a search has been run and matched nothing.
+    when:
+      kind: textPresent
+      text: No member records matched your search
+    then:
+      kind: business
+      code: MEMBER_NOT_FOUND
+      message: No member record matches the supplied identifier.
+
+  - id: supervisor_required
+    description: >
+      The signed-on operator lacks the entitlement for a restricted function.
+      A teller attempting Place Account Hold hits this naturally (HTTP 403); it
+      is also what `?inject=permission` produces.
+
+      This is deliberately a BUSINESS outcome and not a failure. Nothing is
+      broken: the application answered the question "may this operator do this?"
+      and the answer was no. A calling agent needs to route the work to someone
+      with the entitlement, which it can only do if it is told an answer rather
+      than handed an exception.
+    when:
+      kind: textPresent
+      text: SUPERVISOR OVERRIDE REQUIRED
+    then:
+      kind: business
+      code: SUPERVISOR_OVERRIDE_REQUIRED
+      message: >
+        The signed-on operator is not entitled to perform this restricted
+        function. A supervisor must carry it out.
+
+  - id: transaction_rejected
+    description: >
+      The application refused the submitted transaction outright — its own
+      rejection page. Produced by `?inject=validation` (HTTP 400).
+    when:
+      kind: textPresent
+      text: TRANSACTION REJECTED
+    then:
+      kind: business
+      code: VALIDATION_ERROR
+      message: The application rejected the submitted transaction.
+
+  - id: transaction_not_validated
+    description: >
+      The form-level rejection that MERIDIAN produces for real business-rule
+      violations, listing each reason: an overdraw, a source share on HOLD, a
+      destination that is the same as the source, a malformed e-mail or phone on
+      the update screen.
+
+      Distinct from `transaction_rejected` above because it arrives with HTTP
+      200 on the form page rather than as the app's rejection screen — same
+      classification, different surface. Both map to VALIDATION_ERROR, which is
+      the point: the caller does not care which one the vendor chose.
+    when:
+      kind: textPresent
+      text: The transaction could not be validated
+    then:
+      kind: business
+      code: VALIDATION_ERROR
+      message: >
+        The application rejected the submitted values against its business
+        rules. The on-screen list names each reason.
+
+  # ---- recoverable conditions: bounded, then re-verified ------------------
+  - id: session_expired
+    description: >
+      The session ended and the application served its "session ended" screen
+      (HTTP 440). Note this is a genuine session loss, not a cosmetic one: the
+      same response clears the session cookie, so every subsequent request also
+      fails. That is exactly why `reauthenticate` reports `restartFlow` and the
+      executor restarts a read-only flow from its entry point rather than
+      continuing into the middle of a flow whose server-side state is gone.
+
+      Detected by the words on the screen rather than by the status code,
+      because that is what is true regardless of how we arrived — and because
+      the same message is what a natural idle timeout produces.
+
+      Recoverable exactly once. A second expiry inside one run means something is
+      wrong with the credentials or the session policy, and retrying would loop.
+    when:
+      kind: textPresent
+      text: YOUR SESSION HAS TIMED OUT
+    then:
+      kind: recover
+      action:
+        handler: reauthenticate
+        maxAttempts: 1
+
+  - id: session_bounced_to_signon
+    description: >
+      The other way a lost session shows up: a request made with no valid
+      session at all is redirected to the sign-on screen, so the flow finds
+      itself looking at OPERATOR SIGN ON rather than at the screen it asked for.
+      Same cause, same remedy, different screen — so it is a second detector
+      rather than a second handler.
+    when:
+      kind: textPresent
+      text: OPERATOR SIGN ON
+    then:
+      kind: recover
+      action:
+        handler: reauthenticate
+        maxAttempts: 1
+
+  - id: maintenance_interstitial
+    description: >
+      An unscheduled maintenance window replaced the page we asked for
+      (HTTP 503). Note this is a whole replacement PAGE, not an overlay drawn on
+      top of the screen we wanted: its "Continue" link goes to the main menu, so
+      dismissing it would clear the condition and lose our place in the flow at
+      the same time.
+
+      The right response is therefore to ask for the page again, which is what
+      `retry_request` does — the interstitial is transient by construction and
+      the second request returns the real screen.
+    when:
+      kind: textPresent
+      text: SCHEDULED MAINTENANCE IN PROGRESS
+    then:
+      kind: recover
+      action:
+        handler: retry_request
+        waitMs: 1200
+        maxAttempts: 2
+
+  # ---- hard failures: diagnosed, not merely timed out --------------------
+  - id: application_error
+    description: >
+      The application returned its own error screen (HTTP 500). Retrying will not
+      help. Stop, and surface the on-screen ERR- reference so the failure can be
+      traced in the vendor's logs — a diagnosis someone on call can act on,
+      rather than a checkpoint timeout that says only "the page never arrived".
+    when:
+      kind: textPresent
+      text: APPLICATION ERROR
+    then:
+      kind: fail
+      errorClass: surface_error
+      message: >
+        MERIDIAN returned its application error screen. The ERR- reference shown
+        on the page identifies this failure in the vendor's logs.
+
+# ---------------------------------------------------------------------------
+# Re-authentication.
+#
+# Field targets only — credentials are read from the environment at the moment
+# they are needed and are never written to disk, never logged, and never placed
+# in a capability artifact. That is why no capability here records a sign-on
+# flow: signing on is a PRECONDITION the runtime satisfies, which is what lets
+# the same artifact replay under any operator identity.
+#
+# The Operator ID and Password boxes carry no <label for> and no accessible
+# name — their caption is a plain <td> sitting to their left. They are located
+# by that caption, recovered geometrically from the accessibility tree, which is
+# how a human finds them too.
+# ---------------------------------------------------------------------------
+auth:
+  loginPath: /signon
+  credentialEnv:
+    user: MERIDIAN_TELLER_OPERATOR
+    password: MERIDIAN_TELLER_PASSWORD
+
+  operatorField:
+    description: the Operator ID box on the sign-on screen
+    role: textbox
+    anchors:
+      - relation: proximateLabel
+        text: Operator ID
+
+  passwordField:
+    description: the Password box on the sign-on screen
+    role: textbox
+    anchors:
+      - relation: proximateLabel
+        text: Password
+
+  submitTarget:
+    description: the Sign On button
+    role: button
+    name: Sign On
+
+  successCheckpoint:
+    describe: the sign-on screen is no longer displayed
+    all:
+      - kind: textAbsent
+        text: OPERATOR SIGN ON
+    timeoutMs: 8000
+
+# ---------------------------------------------------------------------------
+# Operator identities.
+#
+# Which OPERATOR is signed on, as distinct from which INSTALL is being driven.
+# MERIDIAN gates Place Account Hold on the operator's role, so the same
+# capability has to be runnable as a teller and as a supervisor — and the answer
+# it returns differs, legitimately, in each case.
+#
+# Modelling that as a tenant would have been wrong: a tenant is an institution
+# with its own base URL and its own staff directory. These two share both.
+#
+# Names only, as everywhere else. Values live in .env, which is gitignored.
+# ---------------------------------------------------------------------------
+identities:
+  teller:
+    user: MERIDIAN_TELLER_OPERATOR
+    password: MERIDIAN_TELLER_PASSWORD
+  supervisor:
+    user: MERIDIAN_SUPERVISOR_OPERATOR
+    password: MERIDIAN_SUPERVISOR_PASSWORD
+
+# ---------------------------------------------------------------------------
+# How the harness arms MERIDIAN's runtime faults.
+#
+# `request_inject` rewrites a matching request in flight to carry `?inject=<kind>`,
+# from inside the browser session the run already owns. Three reasons that beats
+# driving the System Settings screen:
+#
+#   - it is SESSION-SCOPED, so it cannot disturb anyone else using this shared,
+#     public demo instance;
+#   - it is one-shot, so there is no global switch left armed if a run crashes;
+#   - it fires on the exact request you want — the `post` submission mid-flow,
+#     not merely the entry navigation.
+#
+# /settings is on the policy DENY list precisely so the automation cannot reach
+# its own test hooks. The harness may arm faults; the agent may not.
+# ---------------------------------------------------------------------------
+faults:
+  strategy: request_inject
+  # Which request each fault should be attached to, and it matters: the fault is
+  # one-shot, so the route decides WHICH request in the flow carries it. Left
+  # untargeted it would fire on whichever request arrives first — in practice the
+  # sign-on bounce — which tests "sign-on is broken" rather than "the session
+  # expired mid-flow".
+  #
+  # `/members/**` is every member-scoped request and deliberately excludes the
+  # search itself (`/members?by=…`), so a fault lands on the record screen rather
+  # than on the inquiry form. For a posting flow, narrow the route to the step
+  # the scenario is about — `/members/*/transfer/post` to fail the commit rather
+  # than the screen three clicks earlier.
+  routes:
+    validation: /members/**
+    notfound: /members/**
+    permission: /members/**
+    timeout: /members/**
+    maintenance: /members/**
+    server: /members/**
+
+    # The same kinds, aimed at the COMMIT rather than at the lookup.
+    #
+    # Acting on the note above, now that there are posting capabilities to aim
+    # them at. With the broad routes a posting scenario fails three screens
+    # before it reaches anything irreversible, which demonstrates the inquiry
+    # error path a seventh time rather than the posting error path once. These
+    # ask the question that actually matters: what happens when the transfer is
+    # rejected *at the moment of posting*, after a human has authorised it and
+    # the review screen has already been agreed.
+    #
+    # Named per flow rather than per kind because the route differs per flow, and
+    # one shared `*/post` glob would fire on whichever posting screen the run
+    # reached first — which in a multi-step demo is not the one you meant.
+    validation_on_transfer_post: /members/*/transfer/post
+    server_on_transfer_post: /members/*/transfer/post
+    permission_on_hold_post: /members/*/hold/post
+    validation_on_open_share_post: /members/*/open-share/post
+
+# ---------------------------------------------------------------------------
+# Tenants. One install here — this is a hosted demo, not a fleet — but the seam
+# is unchanged: pointing at a second MERIDIAN institution is an entry in this
+# list, not an engineering project.
+# ---------------------------------------------------------------------------
+tenants:
+  - id: meridian
+    label: MERIDIAN CORE (hosted demo)
+    baseUrl: https://web-sample.interface-hiring.com
+    productVersion: 4.2.1

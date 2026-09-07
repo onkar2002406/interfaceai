@@ -1,0 +1,44 @@
+{"at":"2026-09-06T21:02:44.419Z","seq":1,"kind":"replay_start","detail":{"capability":"get_balance@1.0.0","tenant":"meridian","identity":"teller","product":"meridian-core v4.2.1","baseUrl":"https://web-sample.interface-hiring.com","approval":"draft","irreversibleAuthorized":false,"params":{"memberId":"[pii:e9881aaa…3001]","shareId":"[pii:b0d59d8f…KT-5]"},"overrides":0}}
+{"at":"2026-09-06T21:02:44.749Z","seq":2,"kind":"fault_armed","detail":{"kind":"timeout","route":"/members/**","times":1,"note":"armed by the harness on this browser session only; the agent loop cannot reach it"}}
+{"at":"2026-09-06T21:02:44.750Z","seq":3,"kind":"navigate_entry","detail":{"url":"https://web-sample.interface-hiring.com/"}}
+{"at":"2026-09-06T21:02:45.051Z","seq":4,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:02:45.233Z","seq":5,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:02:45.413Z","seq":6,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:45.630Z","seq":7,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:45.880Z","seq":8,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:46.077Z","seq":9,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:02:46.077Z","seq":10,"kind":"auth_precondition","detail":{"ok":true,"identity":"teller","note":"signed on and returned to the entry point"}}
+{"at":"2026-09-06T21:02:46.078Z","seq":11,"kind":"step_start","detail":{"step":"s1","index":1,"of":4,"intent":"Click the Member Inquiry link to start searching for a member record","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:02:46.209Z","seq":12,"kind":"surface_action","detail":{"action":"click","target":"Member Inquiry","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:46.258Z","seq":13,"kind":"step_ok","detail":{"step":"s1","durationMs":180,"score":1,"via":"name:normalized","checkpoint":"the route matches /members(?:[?#]|$) and \"MEMBER INQUIRY / SELECTION\" is on screen"}}
+{"at":"2026-09-06T21:02:46.259Z","seq":14,"kind":"step_start","detail":{"step":"s2","index":2,"of":4,"intent":"Enter member number {{memberId}} into the Value field to search for the member record","action":"type","risk":"mutating","value":"{{memberId}}"}}
+{"at":"2026-09-06T21:02:46.416Z","seq":15,"kind":"surface_action","detail":{"action":"type","target":"Value","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:46.453Z","seq":16,"kind":"step_ok","detail":{"step":"s2","durationMs":194,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:46.454Z","seq":17,"kind":"step_start","detail":{"step":"s3","index":3,"of":4,"intent":"Click the Search button to retrieve the member record for member number {{memberId}}","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:02:46.619Z","seq":18,"kind":"surface_action","detail":{"action":"click","target":"Search","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:46.758Z","seq":19,"kind":"step_ok","detail":{"step":"s3","durationMs":304,"score":1,"via":"name:normalized","checkpoint":"the route matches /members(?:[?#]|$)"}}
+{"at":"2026-09-06T21:02:46.759Z","seq":20,"kind":"step_start","detail":{"step":"s4","index":4,"of":4,"intent":"Click the Select link for member {{memberId}} to open the member record","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:02:47.125Z","seq":21,"kind":"surface_fault_injected","detail":{"url":"https://web-sample.interface-hiring.com/members/103001","kind":"timeout","remaining":0}}
+{"at":"2026-09-06T21:02:47.206Z","seq":22,"kind":"surface_action","detail":{"action":"click","target":"Select","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:47.224Z","seq":23,"kind":"recovery_attempt","detail":{"condition":"session_expired","handler":"reauthenticate","attempt":1,"why":"found \"YOUR SESSION HAS TIMED OUT\""}}
+{"at":"2026-09-06T21:02:47.308Z","seq":24,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:02:47.506Z","seq":25,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:47.693Z","seq":26,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:47.904Z","seq":27,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:48.008Z","seq":28,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:02:48.009Z","seq":29,"kind":"recovery_result","detail":{"condition":"session_expired","ok":true,"note":"re-authenticated as a new session; flow position was lost and must be re-established from the entry point"}}
+{"at":"2026-09-06T21:02:48.009Z","seq":30,"kind":"flow_restart","detail":{"reason":"session_expired","note":"re-authenticated as a new session; flow position was lost and must be re-established from the entry point","atStep":"s4","attempt":1}}
+{"at":"2026-09-06T21:02:48.154Z","seq":31,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:02:48.154Z","seq":32,"kind":"step_start","detail":{"step":"s1","index":1,"of":4,"intent":"Click the Member Inquiry link to start searching for a member record","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:02:48.272Z","seq":33,"kind":"surface_action","detail":{"action":"click","target":"Member Inquiry","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:48.311Z","seq":34,"kind":"step_ok","detail":{"step":"s1","durationMs":157,"score":1,"via":"name:normalized","checkpoint":"the route matches /members(?:[?#]|$) and \"MEMBER INQUIRY / SELECTION\" is on screen"}}
+{"at":"2026-09-06T21:02:48.312Z","seq":35,"kind":"step_start","detail":{"step":"s2","index":2,"of":4,"intent":"Enter member number {{memberId}} into the Value field to search for the member record","action":"type","risk":"mutating","value":"{{memberId}}"}}
+{"at":"2026-09-06T21:02:48.442Z","seq":36,"kind":"surface_action","detail":{"action":"type","target":"Value","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:48.480Z","seq":37,"kind":"step_ok","detail":{"step":"s2","durationMs":168,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:48.480Z","seq":38,"kind":"step_start","detail":{"step":"s3","index":3,"of":4,"intent":"Click the Search button to retrieve the member record for member number {{memberId}}","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:02:48.604Z","seq":39,"kind":"surface_action","detail":{"action":"click","target":"Search","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:48.650Z","seq":40,"kind":"step_ok","detail":{"step":"s3","durationMs":170,"score":1,"via":"name:normalized","checkpoint":"the route matches /members(?:[?#]|$)"}}
+{"at":"2026-09-06T21:02:48.651Z","seq":41,"kind":"step_start","detail":{"step":"s4","index":4,"of":4,"intent":"Click the Select link for member {{memberId}} to open the member record","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:02:48.774Z","seq":42,"kind":"surface_action","detail":{"action":"click","target":"Select","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:48.938Z","seq":43,"kind":"step_ok","detail":{"step":"s4","durationMs":287,"score":1,"via":"name:normalized","checkpoint":"the route matches /members/[0-9]+(?:[?#]|$) and \"MEMBER RECORD\" is on screen"}}
+{"at":"2026-09-06T21:02:49.079Z","seq":44,"kind":"replay_success","detail":{"outputs":{"shareBalance":"[declared-sensitive]","shareStatus":"[declared-sensitive]"},"durationMs":4660,"driftSignals":0}}

@@ -1,0 +1,295 @@
+{
+  "url": "https://web-sample.interface-hiring.com/members/103001/open-share/review",
+  "title": "Confirm New Share - Meridian Core",
+  "frames": [
+    "main"
+  ],
+  "elements": [
+    {
+      "role": "StaticText",
+      "name": "MERIDIAN CORE",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Member Services Platform v4.2.1",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Main Menu",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "·",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Member Inquiry",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "·",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "System Settings",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "·",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Sign Off",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "heading",
+      "name": "CONFIRM NEW SHARE",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "OPR TELLER1 | BR MAIN-001 | 09/06/2026 21:03:18 | SID 5A0FA585",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "F3",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "=Sign Off",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "F5",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "=Main Menu",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "F7",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "=Member Inquiry",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "F12",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "=Cancel",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Cornerstone Financial Systems™",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Main Menu",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Member Inquiry",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "System Settings",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Sign Off",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "CONFIRM NEW SHARE",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "button",
+      "name": "Open Share",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Cancel",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Open Share",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Cancel",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Member:",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "103001 - Vaughan, Dorothy",
+      "proximateLabels": [
+        "Member"
+      ],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Share Type:",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "S0001 - Regular Shares",
+      "proximateLabels": [
+        "Share Type"
+      ],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Initial Deposit:",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "$5.00",
+      "proximateLabels": [
+        "Initial Deposit"
+      ],
+      "framePath": [
+        "main"
+      ]
+    }
+  ]
+}

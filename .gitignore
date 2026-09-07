@@ -6,19 +6,19 @@
 # personal notes — submission email, interview prep, demo rehearsal.
 # Not part of the deliverable.
 SUBMISSION-NOTES.md
-EVALUATION-MAP.md
-DEMO-GUIDE.md
-DEMO-GUIDE*.pdf
 
 # dependencies / build
 node_modules/
 dist/
 *.tsbuildinfo
+# the React panel's build output. `npm run panel` rebuilds it; committing a
+# bundle is how a repo ends up with one that disagrees with its own source.
+src/panel/ui-dist/
 
 # runtime output that is NOT curated evidence
 evidence/_scratch/
-# ad-hoc runs started from the control panel. Real evidence, same format, but
-# the committed set is the curated one that `npm run evidence` regenerates.
+# ad-hoc runs, from the control panel and from the CLI. Real evidence, same
+# format, but the committed set is the curated one `npm run evidence` regenerates.
 evidence/runs/
 .playwright/
 test-results/

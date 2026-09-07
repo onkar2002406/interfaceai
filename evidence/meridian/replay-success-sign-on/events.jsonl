@@ -1,0 +1,13 @@
+{"at":"2026-09-06T21:03:04.137Z","seq":1,"kind":"replay_start","detail":{"capability":"sign_on@1.0.0","tenant":"meridian","identity":"teller","product":"meridian-core v4.2.1","baseUrl":"https://web-sample.interface-hiring.com","approval":"draft","irreversibleAuthorized":false,"params":{},"overrides":0}}
+{"at":"2026-09-06T21:03:04.434Z","seq":2,"kind":"navigate_entry","detail":{"url":"https://web-sample.interface-hiring.com/signon"}}
+{"at":"2026-09-06T21:03:04.650Z","seq":3,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:03:04.651Z","seq":4,"kind":"step_start","detail":{"step":"s1","index":1,"of":3,"intent":"Enter the configured operator ID into the Operator ID box","action":"type","risk":"mutating","value":"{{__operator}}"}}
+{"at":"2026-09-06T21:03:04.853Z","seq":5,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:03:04.896Z","seq":6,"kind":"step_ok","detail":{"step":"s1","durationMs":245,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:03:04.897Z","seq":7,"kind":"step_start","detail":{"step":"s2","index":2,"of":3,"intent":"Enter the configured password into the Password box","action":"type","risk":"mutating","value":"{{__password}}"}}
+{"at":"2026-09-06T21:03:05.073Z","seq":8,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:03:05.115Z","seq":9,"kind":"step_ok","detail":{"step":"s2","durationMs":218,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:03:05.116Z","seq":10,"kind":"step_start","detail":{"step":"s3","index":3,"of":3,"intent":"Click Sign On to establish the operator session","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:03:05.315Z","seq":11,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:03:05.355Z","seq":12,"kind":"step_ok","detail":{"step":"s3","durationMs":239,"score":1,"via":"name:normalized","checkpoint":"the sign-on screen is gone and the main menu is displayed"}}
+{"at":"2026-09-06T21:03:05.384Z","seq":13,"kind":"replay_success","detail":{"outputs":{"signedOnAs":"[declared-sensitive]"},"durationMs":1247,"driftSignals":0}}

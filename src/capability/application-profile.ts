@@ -49,9 +49,88 @@ export const TenantSchema = z.object({
 });
 export type TenantProfile = z.infer<typeof TenantSchema>;
 
+/**
+ * How the harness makes a product produce a runtime fault on demand.
+ *
+ * Declared per product because it is a property of the vendor's build, and it is
+ * the one thing about a target that the *automation itself* must never be able
+ * to reach — a system that can arm its own faults cannot be trusted to report
+ * them. Every strategy here is driven from outside the agent loop, and the
+ * routes each fault attaches to are named rather than left to chance: an
+ * untargeted session fault fires on whichever request arrives first, which
+ * tests "sign-on is broken" instead of "the session expired mid-flow".
+ */
+export const FaultConfigSchema = z.discriminatedUnion('strategy', [
+  /**
+   * The product exposes an admin endpoint that arms a fault for the next N
+   * matching requests. Used by the bundled CoreBank app.
+   */
+  z.object({
+    strategy: z.literal('admin_endpoint'),
+    path: z.string().default('/_admin/fault'),
+    routes: z.record(z.string(), z.string()).default({}),
+  }),
+  /**
+   * The product honours a query parameter on any request. The harness rewrites
+   * one in-flight request from inside the browser session the run already owns,
+   * which keeps the fault session-scoped (it cannot disturb anyone else on a
+   * shared install), one-shot (nothing is left armed if a run crashes), and
+   * precisely placed (it can fire on a mid-flow `post` rather than only on the
+   * entry navigation).
+   */
+  z.object({
+    strategy: z.literal('request_inject'),
+    param: z.string().default('inject'),
+    routes: z.record(z.string(), z.string()).default({}),
+  }),
+]);
+export type FaultConfig = z.infer<typeof FaultConfigSchema>;
+
+/**
+ * What the chat front door says about *this* product before anyone types.
+ *
+ * The openers used to be a constant in the React pane, which was fine while
+ * there was one panel and wrong the moment there were two: a CoreBank operator
+ * was offered MERIDIAN share ids that do not exist on their console, so the
+ * first thing the demo did was ask a model to invent an identifier.
+ *
+ * They belong here rather than being derived from the capability list because a
+ * good opener is not "the name of a capability" — it is a sentence a member of
+ * *this* institution's staff would actually say, carrying identifiers that exist
+ * in *this* product's data. That is knowledge about the customer base, which is
+ * exactly what a product profile is for. The set is deliberately chosen to walk
+ * the four arms of the result contract, so whichever panel you open, the first
+ * four clicks show success, a business outcome, an entitlement refusal and an
+ * irreversible action stopping for a human.
+ */
+export const ChatProfileSchema = z
+  .object({
+    /** Who uses this console and what they ask it for. Goes into the system prompt. */
+    audience: z.string().optional(),
+    /** Openers offered on an empty transcript. Empty is legal — the pane just shows none. */
+    suggestions: z.array(z.string()).default([]),
+  })
+  .default({ suggestions: [] });
+export type ChatProfile = z.infer<typeof ChatProfileSchema>;
+
 export const AppProfileSchema = z.object({
   product: z.string(),
   description: z.string(),
+
+  /** Front-door copy for this product: who the caller is, and what to offer them. */
+  chat: ChatProfileSchema,
+
+  /**
+   * The guardrails this product is replayed under, as a path to a policy file.
+   *
+   * Origins, route allowlist and risk rules are all statements about a specific
+   * product, so they travel with it. Naming the policy here is what makes
+   * `--profile <app>.yaml` the single switch for pointing the engine at a
+   * different target, instead of two flags that can be forgotten independently
+   * — and forgetting the policy flag would silently run the new target under
+   * the old target's containment boundary.
+   */
+  policy: z.string().optional(),
 
   /**
    * Product-wide runtime conditions, evaluated after EVERY step of EVERY
@@ -60,6 +139,9 @@ export const AppProfileSchema = z.object({
    * classifier takes the first match.
    */
   conditions: z.array(ConditionSchema),
+
+  /** How the harness arms this product's runtime faults, if it can at all. */
+  faults: FaultConfigSchema.optional(),
 
   /** Used by the `reauthenticate` recovery handler. Field targets only. */
   auth: z.object({
@@ -71,6 +153,24 @@ export const AppProfileSchema = z.object({
     /** Product-wide default. A tenant may point at its own pair instead. */
     credentialEnv: CredentialEnvSchema,
   }),
+
+  /**
+   * Named operator identities — WHO is signed on, as distinct from WHICH
+   * install is being driven.
+   *
+   * These are different questions and conflating them was tempting, because
+   * `credentialEnv` already hangs off the tenant. But a tenant is an
+   * institution with its own base URL and its own staff directory, whereas a
+   * teller and a supervisor at the same institution share both and differ only
+   * in entitlement. Products that gate a function on the operator's role — a
+   * supervisor-only account hold, say — need the *same capability* runnable
+   * under either identity, returning a legitimately different answer in each
+   * case. Modelling that as two tenants would say "institution" where it means
+   * "operator", and would make the run report lie about where the work happened.
+   *
+   * Names only, as everywhere else in this file.
+   */
+  identities: z.record(z.string(), CredentialEnvSchema).default({}),
 
   tenants: z.array(TenantSchema),
 });
@@ -92,15 +192,45 @@ export function tenantOf(profile: AppProfile, tenantId: string): TenantProfile {
 }
 
 /**
- * Which credentials this tenant signs on with — its own if it declares a pair,
- * otherwise the product-wide default.
+ * Which credentials this run signs on with.
  *
- * The same specialisation rule as conditions: tenant overrides product. That is
- * what keeps a capability portable. The artifact never names an operator; it
- * declares that it needs a session, and the runtime decides whose.
+ * Specialisation runs most-specific-first, the same rule as conditions:
+ *
+ *   identity (who the caller asked to act as)
+ *     -> tenant (this institution's own staff directory)
+ *       -> product default
+ *
+ * That ordering is what keeps a capability portable. The artifact never names an
+ * operator; it declares that it needs an authenticated session, and the runtime
+ * decides whose. The same recorded steps therefore replay as a teller and as a
+ * supervisor, and any difference in the result is the application's answer about
+ * entitlement rather than a difference in the recording.
  */
-export function credentialEnvFor(profile: AppProfile, tenant: TenantProfile): CredentialEnv {
+export function credentialEnvFor(
+  profile: AppProfile,
+  tenant: TenantProfile,
+  identity?: string,
+): CredentialEnv {
+  if (identity !== undefined) {
+    const named = profile.identities[identity];
+    if (!named) {
+      const known = Object.keys(profile.identities);
+      throw new Error(
+        `Identity "${identity}" is not configured for product "${profile.product}". ` +
+          `Known identities: ${known.length ? known.join(', ') : '(none declared)'}.`,
+      );
+    }
+    return named;
+  }
   return tenant.credentialEnv ?? profile.auth.credentialEnv;
+}
+
+/**
+ * Where this profile's guardrails live. Falls back to the shared default so a
+ * profile that predates the `policy` field keeps working unchanged.
+ */
+export function policyPathFor(profile: AppProfile, fallback: string): string {
+  return profile.policy ?? fallback;
 }
 
 /**

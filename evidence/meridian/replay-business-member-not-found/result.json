@@ -1,0 +1,71 @@
+{
+  "status": "business_outcome",
+  "code": "MEMBER_NOT_FOUND",
+  "message": "No member record matches the supplied identifier.",
+  "conditionId": "member_search_no_results",
+  "atStep": "s3",
+  "runId": "business-member-not-found",
+  "capability": "get_balance",
+  "capabilityVersion": "1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "product": "meridian-core",
+  "startedAt": "2026-09-06T21:02:30.442Z",
+  "durationMs": 2352,
+  "steps": [
+    {
+      "stepId": "s1",
+      "intent": "Click the Member Inquiry link to start searching for a member record",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:02:32.179Z",
+      "durationMs": 215,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Member Inquiry"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members(?:[?#]|$) and \"MEMBER INQUIRY / SELECTION\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter member number {{memberId}} into the Value field to search for the member record",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:02:32.395Z",
+      "durationMs": 211,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s3",
+      "intent": "Click the Search button to retrieve the member record for member number {{memberId}}",
+      "actionType": "click",
+      "status": "business",
+      "startedAt": "2026-09-06T21:02:32.606Z",
+      "durationMs": 187,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Search"
+      }
+    }
+  ],
+  "driftSignals": [],
+  "appliedOverrides": [],
+  "evidenceDir": "evidence/meridian/replay-business-member-not-found",
+  "blockedNavigations": []
+}

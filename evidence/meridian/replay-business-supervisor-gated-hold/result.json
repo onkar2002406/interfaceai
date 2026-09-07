@@ -1,0 +1,111 @@
+{
+  "status": "business_outcome",
+  "code": "SUPERVISOR_OVERRIDE_REQUIRED",
+  "message": "The signed-on operator is not entitled to perform this restricted function. A supervisor must carry it out.\n",
+  "conditionId": "supervisor_required",
+  "atStep": "s5",
+  "runId": "business-supervisor-gated-hold",
+  "capability": "place_account_hold",
+  "capabilityVersion": "1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "product": "meridian-core",
+  "startedAt": "2026-09-06T21:03:00.867Z",
+  "durationMs": 3195,
+  "steps": [
+    {
+      "stepId": "s1",
+      "intent": "Click the 'Member Inquiry / Selection' link to start member search",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:02.569Z",
+      "durationMs": 156,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Member Inquiry / Selection"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members(?:[?#]|$) and \"MEMBER INQUIRY / SELECTION\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s2",
+      "intent": "Type the member number {{memberId}} into the Value textbox to search for the member",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:02.725Z",
+      "durationMs": 191,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s3",
+      "intent": "Click the Search button to find the member with number {{memberId}}",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:02.917Z",
+      "durationMs": 188,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Search"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members(?:[?#]|$)",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s4",
+      "intent": "Click the 'Select' link for the matching member row to open the member details",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:03.105Z",
+      "durationMs": 255,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Select"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members/[0-9]+(?:[?#]|$) and \"MEMBER RECORD\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s5",
+      "intent": "Click the 'Place Account Hold' link to start the hold process",
+      "actionType": "click",
+      "status": "business",
+      "startedAt": "2026-09-06T21:03:03.361Z",
+      "durationMs": 702,
+      "recoveries": [],
+      "resolution": {
+        "score": 0.997,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Place Account Hold"
+      }
+    }
+  ],
+  "driftSignals": [],
+  "appliedOverrides": [],
+  "evidenceDir": "evidence/meridian/replay-business-supervisor-gated-hold",
+  "blockedNavigations": []
+}

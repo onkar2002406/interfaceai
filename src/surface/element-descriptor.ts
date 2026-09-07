@@ -27,6 +27,7 @@
  */
 
 import { z } from 'zod';
+import { interpolate } from '../capability/templating.js';
 import type { ElementNode } from './types.js';
 
 export const NameMatchSchema = z.enum(['exact', 'normalized', 'contains', 'regex']);
@@ -127,6 +128,9 @@ export function normalizeName(s: string): string {
  * numbers, amounts, dates, reference codes. Useless as identity — they are
  * exactly what changes between one invocation and the next.
  */
+/** Roles whose content is data, so their own text can never be their identity. */
+const CELL_ROLES = new Set(['cell', 'gridcell', 'rowheader']);
+
 function looksLikeRecordData(text: string): boolean {
   const t = text.trim();
   if (!t) return true;
@@ -140,8 +144,13 @@ function looksLikeRecordData(text: string): boolean {
 export function captureDescriptor(node: ElementNode, intent?: string): ElementDescriptor {
   const anchors: Anchor[] = [];
 
-  // An unnamed control's identity is the caption beside it.
-  if (!node.name.trim() && node.proximateLabels.length > 0) {
+  // An unnamed control's identity is the caption beside it — and so is a
+  // read-only value's. "The text to the right of 'Confirmation:'" is how a
+  // person reads a legacy label/value table, and it is the only durable handle
+  // on a value that is different on every single run.
+  const identifiedByCaption =
+    node.proximateLabels.length > 0 && (!node.name.trim() || node.role === 'StaticText');
+  if (identifiedByCaption) {
     anchors.push({ relation: 'proximateLabel', text: node.proximateLabels[0]! });
   }
 
@@ -150,7 +159,14 @@ export function captureDescriptor(node: ElementNode, intent?: string): ElementDe
   // contents. This is the difference between a capability that reads "the
   // savings balance" and one that reads "the cell containing $8,412.55", which
   // would work exactly once, for the member it was recorded against.
-  const isDataCell = Boolean(node.context.columnHeader);
+  //
+  // EVERY cell, not just one under a column header. A single-row label/value
+  // table ("Confirmation: | CN480196") has no header row, so keying on
+  // `columnHeader` alone let the cell's own text become its name — which is the
+  // precise failure this rule exists to prevent, and the worst possible place
+  // for it, since a confirmation number is different on every single run.
+  // A caption-identified value is data for the same reason.
+  const isDataCell = CELL_ROLES.has(node.role) || identifiedByCaption;
 
   if (node.context.columnHeader) {
     anchors.push({ relation: 'underColumn', text: node.context.columnHeader });
@@ -190,6 +206,48 @@ export function captureDescriptor(node: ElementNode, intent?: string): ElementDe
   if (node.name.trim() && !isDataCell) descriptor.name = node.name.trim();
 
   return descriptor;
+}
+
+/* -------------------------------------------------------- parameterisation */
+
+/**
+ * Resolves `{{param}}` references inside a descriptor against the invocation's
+ * arguments.
+ *
+ * Why a descriptor needs parameters at all: some applications key their tables
+ * by *category* and some key them by *record identifier*. "The Current Balance
+ * cell in the Savings row" is portable — every member has a Savings row — so a
+ * captured literal works. "The Balance cell in the 101555-S0001-5 row" is not:
+ * that share belongs to one member, and on a real install the same member may
+ * have a dozen rows of the same type, so falling back to the category makes the
+ * match ambiguous rather than portable.
+ *
+ * The schema already had exactly this mechanism for step *values*
+ * (`type {{amount}} into the Amount box`); this extends it to *identity*
+ * (`read the cell in the row containing {{shareId}}`). Deliberately the same
+ * `{{name}}` syntax and the same `interpolate()` implementation, so a reviewer
+ * reads one convention, and deliberately confined to `name` and anchor text —
+ * the fields that say *which control*. Roles, scopes and ordinals are structural
+ * and are never parameterised.
+ *
+ * Unresolved references are left intact by `interpolate()`, so a missing
+ * argument surfaces as a resolution failure naming the literal `{{shareId}}` it
+ * looked for, rather than as a silent match on the wrong row.
+ */
+export function interpolateDescriptor(
+  d: ElementDescriptor,
+  params: Record<string, unknown>,
+): ElementDescriptor {
+  const refs = (s: string): boolean => s.includes('{{');
+  const touchesName = d.name !== undefined && refs(d.name);
+  const touchesAnchor = d.anchors.some((a) => refs(a.text));
+  if (!touchesName && !touchesAnchor) return d;
+
+  return {
+    ...d,
+    ...(d.name !== undefined ? { name: interpolate(d.name, params) } : {}),
+    anchors: d.anchors.map((a) => ({ ...a, text: interpolate(a.text, params) })),
+  };
 }
 
 /** Human-readable one-liner, used for artifact review and escalation context. */

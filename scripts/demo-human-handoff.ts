@@ -150,7 +150,6 @@ console.log(`[operator] claimed control as "${OPERATOR}" -> ${claim.status === 2
 // 4. Do the work by hand: find the button on screen and click its pixels,
 //    exactly as a person moving a mouse over the canvas would.
 const surface = attached.sink.surfaceFor(id) as PlaywrightSurface;
-const token = attached.sink.operatorToken(id);
 const obs = await surface.observe();
 const found = resolveDescriptor(
   {

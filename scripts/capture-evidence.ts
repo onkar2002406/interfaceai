@@ -125,6 +125,7 @@ async function runDiscovery(provider: LlmProvider, slug: string): Promise<{
       authority,
       recorder,
       allowedOrigins: policy.config.origins,
+      allowedActions: policy.config.actions,
       maxSteps: 20,
     });
     return { trace, recorder };
@@ -183,7 +184,24 @@ function finishDiscovery(trace: Awaited<ReturnType<typeof discover>>, recorder: 
 
   if (trace.outcome.kind === 'success') {
     const capability = compile({ trace, profile, traceRef, name: 'discovered_member_savings' });
-    store.save(capability);
+    /**
+     * Compiled into the run's own evidence directory, not into `capabilities/`.
+     *
+     * The flow it discovers is the savings lookup, which `capabilities/
+     * lookup_member_savings_balance@1.0.0.yaml` already covers — hand-authored,
+     * reviewed, approved, with the First Valley overrides on it. Saving this one
+     * beside it put two cards in the CoreBank panel's rail that do the same
+     * thing, one of them a permanent draft nobody would ever approve because the
+     * approved one is better. A catalog that advertises the same flow twice is
+     * lying about what the system can do.
+     *
+     * It is still written, and still regenerated on every `npm run evidence`,
+     * because it is the artifact under discussion: what the compiler produced
+     * from a live model's trace, next to the transcript that produced it. It is
+     * evidence of a discovery run rather than a capability on offer, so it lives
+     * where the rest of that run's evidence lives.
+     */
+    new CapabilityStore(recorder.dir).save(capability);
     recorder.finish(trace, renderDiscoverySummary(trace, capability));
     compiledNote = `compiled ${capability.metadata.name}@${capability.metadata.version} (${capability.metadata.approval})`;
   } else {
@@ -357,9 +375,10 @@ function writeIndex(): void {
     lines.push(`> Reason: ${liveFailureReason ?? 'no live attempt was made'}`);
     lines.push('>');
     lines.push('> Fix that, then re-run `npm run evidence` to replace this with a genuine');
-    lines.push('> LLM-driven run. The compiled capability');
-    lines.push('> `capabilities/discovered_member_savings@1.0.0.yaml` is regenerated at the same');
-    lines.push('> time, and its `metadata.provenance.model` field records which produced it.');
+    lines.push('> LLM-driven run. The compiled artifact');
+    lines.push('> `discovery-lookup-savings-balance/discovered_member_savings@1.0.0.yaml` is');
+    lines.push('> regenerated at the same time, and its `metadata.provenance.model` field');
+    lines.push('> records which produced it.');
     lines.push('');
   } else {
     lines.push('The discovery run below was produced by a **live language model** driving the');

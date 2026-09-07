@@ -1,0 +1,176 @@
+{
+  "status": "escalated",
+  "interventionId": "int_fe9ad303",
+  "reason": "irreversible step requires an approved artifact and explicit invocation authorisation (OPEN_SHARE)",
+  "atStep": "s9",
+  "resolution": "unattended",
+  "runId": "escalated-irreversible-open-share",
+  "capability": "open_new_share",
+  "capabilityVersion": "1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "product": "meridian-core",
+  "startedAt": "2026-09-06T21:03:13.760Z",
+  "durationMs": 5796,
+  "steps": [
+    {
+      "stepId": "s1",
+      "intent": "Click the 'Member Inquiry / Selection' link to start member search",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:15.716Z",
+      "durationMs": 321,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Member Inquiry / Selection"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members(?:[?#]|$) and \"MEMBER INQUIRY / SELECTION\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter member number {{memberId}} into the Value textbox for member search",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:16.038Z",
+      "durationMs": 347,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s3",
+      "intent": "Click the Search button to find member {{memberId}}",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:16.386Z",
+      "durationMs": 425,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Search"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members(?:[?#]|$)",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s4",
+      "intent": "Click the Select link for member {{memberId}} to open member details",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:16.812Z",
+      "durationMs": 555,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Select"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members/[0-9]+(?:[?#]|$) and \"MEMBER RECORD\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s5",
+      "intent": "Click the 'Open New Share' link to start creating a new share for the member",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:17.368Z",
+      "durationMs": 881,
+      "recoveries": [],
+      "resolution": {
+        "score": 0.997,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Open New Share"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members/[0-9]+/open-share(?:[?#]|$) and \"OPEN NEW SHARE\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s6",
+      "intent": "Select {{shareType}} - Money Market in the Share Type dropdown",
+      "actionType": "select",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:18.250Z",
+      "durationMs": 321,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s7",
+      "intent": "Enter the initial deposit amount of {{deposit}} into the Initial Deposit textbox",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:18.572Z",
+      "durationMs": 215,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s8",
+      "intent": "Click the Continue button to proceed to the share confirmation screen",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:18.787Z",
+      "durationMs": 239,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Continue"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members/[0-9]+/open-share/review(?:[?#]|$) and \"CONFIRM NEW SHARE\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s9",
+      "intent": "Click Open Share to create the share shown on the confirmation screen",
+      "actionType": "click",
+      "status": "escalated",
+      "startedAt": "2026-09-06T21:03:19.026Z",
+      "durationMs": 530,
+      "recoveries": [],
+      "note": "irreversible step requires an approved artifact and explicit invocation authorisation (OPEN_SHARE)"
+    }
+  ],
+  "driftSignals": [],
+  "appliedOverrides": [],
+  "evidenceDir": "evidence/meridian/replay-escalated-irreversible-open-share",
+  "blockedNavigations": []
+}

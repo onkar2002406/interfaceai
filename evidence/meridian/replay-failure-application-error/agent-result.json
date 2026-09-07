@@ -1,0 +1,19 @@
+{
+  "status": "failed",
+  "capability": "get_balance@1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "runId": "failure-application-error",
+  "evidence": "evidence/meridian/replay-failure-application-error",
+  "durationMs": 3006,
+  "error": {
+    "class": "surface_error",
+    "stepId": "s4",
+    "stepIntent": "Click the Select link for member {{memberId}} to open the member record",
+    "expected": "the route matches /members/[0-9]+(?:[?#]|$) and \"MEMBER RECORD\" is on screen",
+    "observed": "found \"APPLICATION ERROR\"",
+    "attempts": 1,
+    "recoveriesTried": [],
+    "message": "MERIDIAN returned its application error screen. The ERR- reference shown on the page identifies this failure in the vendor's logs.\n"
+  }
+}

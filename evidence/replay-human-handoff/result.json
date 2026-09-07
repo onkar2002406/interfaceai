@@ -1,23 +1,23 @@
 {
   "status": "success",
   "outputs": {
-    "newAccountNumber": "[pii:1602b6d6…0003]"
+    "newAccountNumber": "[pii:6d8a823c…0011]"
   },
   "runId": "human-handoff",
   "capability": "open_sub_account",
   "capabilityVersion": "1.0.0",
   "tenant": "base",
   "product": "corebank-servicing",
-  "startedAt": "2026-09-02T05:48:42.968Z",
-  "durationMs": 4746,
+  "startedAt": "2026-09-02T12:50:27.096Z",
+  "durationMs": 7920,
   "steps": [
     {
       "stepId": "s1",
       "intent": "Open the member search screen from the left-hand menu.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-09-02T05:48:44.321Z",
-      "durationMs": 404,
+      "startedAt": "2026-09-02T12:50:30.600Z",
+      "durationMs": 453,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -36,8 +36,8 @@
       "intent": "Type the member identifier into the search field.",
       "actionType": "type",
       "status": "ok",
-      "startedAt": "2026-09-02T05:48:44.726Z",
-      "durationMs": 139,
+      "startedAt": "2026-09-02T12:50:31.054Z",
+      "durationMs": 175,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -51,8 +51,8 @@
       "intent": "Submit the search and land on the member's detail screen.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-09-02T05:48:44.865Z",
-      "durationMs": 295,
+      "startedAt": "2026-09-02T12:50:31.230Z",
+      "durationMs": 288,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -71,8 +71,8 @@
       "intent": "Open the new sub-account form for this member.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-09-02T05:48:45.161Z",
-      "durationMs": 256,
+      "startedAt": "2026-09-02T12:50:31.519Z",
+      "durationMs": 325,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -91,8 +91,8 @@
       "intent": "Choose the share account product to open.",
       "actionType": "select",
       "status": "ok",
-      "startedAt": "2026-09-02T05:48:45.418Z",
-      "durationMs": 76,
+      "startedAt": "2026-09-02T12:50:31.845Z",
+      "durationMs": 117,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -106,8 +106,8 @@
       "intent": "Enter the opening deposit amount.",
       "actionType": "type",
       "status": "ok",
-      "startedAt": "2026-09-02T05:48:45.494Z",
-      "durationMs": 175,
+      "startedAt": "2026-09-02T12:50:31.963Z",
+      "durationMs": 225,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -121,8 +121,8 @@
       "intent": "Enter the member-facing nickname for the account.",
       "actionType": "type",
       "status": "ok",
-      "startedAt": "2026-09-02T05:48:45.669Z",
-      "durationMs": 183,
+      "startedAt": "2026-09-02T12:50:32.188Z",
+      "durationMs": 214,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -136,8 +136,8 @@
       "intent": "Submit the form for review, without committing anything yet.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-09-02T05:48:45.852Z",
-      "durationMs": 72,
+      "startedAt": "2026-09-02T12:50:32.404Z",
+      "durationMs": 198,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -156,8 +156,8 @@
       "intent": "Commit the application and open the account.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-09-02T05:48:45.925Z",
-      "durationMs": 1752,
+      "startedAt": "2026-09-02T12:50:32.603Z",
+      "durationMs": 2366,
       "recoveries": [],
       "note": "completed by operator: Submitted the application manually after supervisor approval (ticket OPS-4471)."
     }

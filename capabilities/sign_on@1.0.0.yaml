@@ -1,0 +1,219 @@
+# Sign on to MERIDIAN CORE
+#
+# Establishes an authenticated operator session and reports who is signed on.
+#
+# ---------------------------------------------------------------------------
+# Why this one is hand-authored, and why it takes no credentials
+# ---------------------------------------------------------------------------
+#
+# Discovery could not have recorded this even in principle. The loop navigates
+# to the entry point and calls `ensureAuthenticated()` BEFORE the model is given
+# its first observation — so by the time an agent can see anything, sign-on has
+# already happened and the screen it would need to record is gone. Every other
+# MERIDIAN capability is recorded from inside an existing session for exactly
+# that reason.
+#
+# So the steps below are transcribed from the same `auth:` block in
+# `config/apps/meridian-core.yaml` that the engine itself uses: the same
+# proximateLabel anchors for the two unnamed input boxes, the same Sign On
+# button, the same success checkpoint. That is deliberate — if the vendor moves
+# the sign-on screen, the profile is what has to change, and this artifact was
+# written to agree with it rather than to be a second opinion about it.
+#
+# **It takes no username and no password as inputs, and it never will.** The
+# operator identity is chosen per invocation (`--identity teller`), and the
+# credentials for it are resolved from environment variables named in the
+# profile. Accepting a password as a capability input would put it in the
+# invocation arguments — which is the object an LLM fills in, the object the
+# chat endpoint composes, and the object written to the evidence log. The
+# redaction layer would mask it there, but the right answer is for it never to
+# reach that object at all.
+#
+# Values below are parameter REFERENCES ({{name}}), never captured data.
+
+apiVersion: capability.interface.ai/v1
+kind: Capability
+metadata:
+  id: cap_sign_on
+  name: sign_on
+  version: 1.0.0
+  title: Sign on to MERIDIAN CORE
+  summary: >
+    Establishes an authenticated MERIDIAN CORE operator session using the credentials
+    configured for the selected identity, and returns the operator the application
+    reports as signed on. Takes no credentials as arguments — they are resolved from
+    the environment, never from the caller.
+  createdAt: 2026-09-05T00:00:00.000Z
+  app:
+    product: meridian-core
+    productVersion: 4.2.1
+    tenant: meridian
+    entryPoint: /signon
+  approval: draft
+  provenance:
+    discoveryRunId: none
+    model: none
+    surfaceKind: web
+    traceRef: config/apps/meridian-core.yaml#auth
+    traceSha256: '0000000000000000000000000000000000000000000000000000000000000000'
+    handCompleted: >
+      Authored in full, not recorded. The discovery loop authenticates before the
+      model receives its first observation, so the sign-on screen is never visible
+      to an agent. Transcribed from the auth block of the product profile, which is
+      what the engine itself uses to sign on.
+spec:
+  inputs: []
+  outputs:
+    - name: signedOnAs
+      type: string
+      description: >
+        The operator MERIDIAN reports as signed on, as shown on the main menu —
+        the answer to "whose entitlements is this session running under".
+      sensitivity: pii
+      from:
+        afterStep: s3
+        target:
+          # MERIDIAN renders this as ONE line — "Signed on as S. VISOR
+          # (SUPERVISOR)" — not as a caption beside a value. A proximateLabel
+          # anchor therefore has nothing to point at, and matching on it returns
+          # three equally-scored lines of the menu footer. The line is its own
+          # label, so it is matched by containment instead.
+          description: the "Signed on as" line on the main menu
+          role: StaticText
+          name: Signed on as
+          nameMatch: contains
+          scope:
+            framePath:
+              - main
+            heading: MAIN MENU
+          anchors:
+            - relation: nearHeading
+              text: MAIN MENU
+          hints:
+            proximateLabels: []
+        transform: trim
+
+  preconditions:
+    authState: anonymous
+    describe: >
+      No operator session. This is the one MERIDIAN capability that does not
+      require an authenticated session, because it is the one that creates it.
+
+  steps:
+    - id: s1
+      intent: Enter the configured operator ID into the Operator ID box
+      action:
+        type: type
+        # The sign-on inputs have no `label for` and no accessible name — the box
+        # is located by the caption sitting next to it, recovered geometrically.
+        target:
+          description: the Operator ID box on the sign-on screen
+          role: textbox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: OPERATOR SIGN ON
+          anchors:
+            - relation: proximateLabel
+              text: Operator ID
+          hints:
+            domHint: input
+            proximateLabels:
+              - Operator ID
+        # Resolved by the engine from the identity's environment variables. It is
+        # not a parameter reference: there is no input for a caller to supply.
+        value: '{{__operator}}'
+      guard:
+        risk: mutating
+        note: Types the operator id configured for the selected identity.
+      conditions: []
+      optional: false
+
+    - id: s2
+      intent: Enter the configured password into the Password box
+      action:
+        type: type
+        target:
+          description: the Password box on the sign-on screen
+          role: textbox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: OPERATOR SIGN ON
+          anchors:
+            - relation: proximateLabel
+              text: Password
+          hints:
+            domHint: input
+            proximateLabels:
+              - Password
+        value: '{{__password}}'
+      guard:
+        risk: mutating
+        note: >
+          The value is declared `secret` and is never written to evidence — not
+          masked, not hashed, not written.
+      conditions: []
+      optional: false
+
+    - id: s3
+      intent: Click Sign On to establish the operator session
+      action:
+        type: click
+        target:
+          description: the Sign On button
+          role: button
+          name: Sign On
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: OPERATOR SIGN ON
+          anchors:
+            - relation: nearHeading
+              text: OPERATOR SIGN ON
+          hints:
+            proximateLabels: []
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the sign-on screen is gone and the main menu is displayed
+        all:
+          - kind: textAbsent
+            text: OPERATOR SIGN ON
+          - kind: textPresent
+            text: MAIN MENU
+        any: []
+        timeoutMs: 8000
+        pollMs: 250
+      conditions: []
+      optional: false
+
+  successCheckpoint:
+    describe: an authenticated operator session exists and the main menu is displayed
+    all:
+      - kind: textAbsent
+        text: OPERATOR SIGN ON
+      - kind: textPresent
+        text: MAIN MENU
+    any: []
+    timeoutMs: 8000
+    pollMs: 250
+
+  outcomes:
+    business:
+      # Sign-on has one business answer of its own: the credentials were refused.
+      # It is an answer, not a failure — the caller asked whether this operator
+      # can get in, and the application said no.
+      - code: VALIDATION_ERROR
+        meaning: The application rejected the submitted transaction.
+        outputsAvailable: false
+
+  escalation:
+    onUnrecovered: escalate
+    onAmbiguous: escalate
+    onIrreversible: require_approval
+
+overrides: {}

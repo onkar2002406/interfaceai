@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "capability": "get_balance@1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "runId": "success-balance",
+  "evidence": "evidence/meridian/replay-success-balance",
+  "durationMs": 4000,
+  "outputs": {
+    "shareBalance": 123,
+    "shareStatus": "OPEN"
+  }
+}

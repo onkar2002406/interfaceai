@@ -35,6 +35,30 @@ export interface DecideRequest {
   /** Prior turns, so the model can see what it already tried. */
   history: Array<{ turn: ModelTurn; result: string }>;
   tools: ToolDefinition[];
+  /**
+   * What to say when the model answers in prose instead of calling a tool.
+   *
+   * Overridable because the seam now has two callers with different tool sets:
+   * discovery, whose escape hatches are `finish` and `give_up`, and the chatbot,
+   * whose escape hatch is `reply_to_user`. A nudge that names the wrong tools is
+   * worse than no nudge — it tells the model to call something that does not
+   * exist. Defaulted, so the common case stays a one-line request.
+   */
+  nudge?: string;
+  /**
+   * A tool to *force* on the final attempt, when nudging has not worked.
+   *
+   * `tool_choice: "required"` is precisely what some hosts reject with a 400
+   * when the model answers in prose; naming one specific function instead
+   * usually succeeds where "required" fails, because the host no longer has to
+   * decide anything.
+   *
+   * Only safe when there is a tool that cannot fabricate a result. The chatbot
+   * sets `reply_to_user`: worst case the model talks to the person instead of
+   * dying. Discovery deliberately sets nothing — forcing `finish` would invent
+   * an outcome the run never reached, which is far worse than failing.
+   */
+  forceToolOnLastAttempt?: string;
 }
 
 export interface LlmProvider {

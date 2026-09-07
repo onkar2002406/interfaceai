@@ -1,0 +1,496 @@
+# Place a hold on a member share
+#
+# Places a {{reason}} hold on share {{shareId}} of member {{memberId}}, annotated with {{notes}}, reviewing it and then APPLYING it. Restricted to supervisors — a teller receives SUPERVISOR_OVERRIDE_REQUIRED. The applying step is irreversible and requires explicit authorisation; without it the run stops for a human having applied nothing.
+#
+# Reviewed by a human before `approval: approved` is set. Approval is what
+# permits unattended replay of any step marked risk: irreversible.
+#
+# Values below are parameter REFERENCES ({{name}}), never captured data.
+
+apiVersion: capability.interface.ai/v1
+kind: Capability
+metadata:
+  id: cap_place_account_hold
+  name: place_account_hold
+  version: 1.0.0
+  title: Place a hold on a member share
+  summary: Places a {{reason}} hold on share {{shareId}} of member {{memberId}}, annotated with
+    {{notes}}, reviewing it and then APPLYING it. Restricted to supervisors — a teller receives
+    SUPERVISOR_OVERRIDE_REQUIRED. The applying step is irreversible and requires explicit
+    authorisation; without it the run stops for a human having applied nothing.
+  createdAt: 2026-09-05T13:50:53.255Z
+  app:
+    product: meridian-core
+    productVersion: 4.2.1
+    tenant: meridian
+    entryPoint: /
+  approval: draft
+  provenance:
+    discoveryRunId: d26480a5
+    model: groq:openai/gpt-oss-120b
+    surfaceKind: web
+    traceRef: evidence/runs/discovery-d26480a5/trace.json
+    traceSha256: 7bdf24014883dbd27c253eee40c035a0bd0eed5b777ffa4e19c606d3d13f9bf3
+    handCompleted: "step s9 (Apply Hold) was authored by a person, not recorded: policy refuses
+      irreversible actions during discovery, so the agent recorded up to the review screen and
+      stopped. See scripts/complete-posting-steps.ts. step s7a (Notes) was authored by a person, not
+      recorded: the discovery goal did not mention this field, so the model never typed into it. The
+      control is on MERIDIAN's own screen. See scripts/add-form-fields.ts."
+spec:
+  inputs:
+    - name: memberId
+      type: string
+      description: Type the member number {{memberId}} into the Value textbox to search for the member.
+      required: true
+      pattern: ^[0-9]{1,9}$
+      sensitivity: pii
+    - name: shareId
+      type: string
+      description: Select the share '{{shareId}} - Money Market' from the Share dropdown.
+      required: true
+      pattern: ^.{1,40}$
+      sensitivity: pii
+    - name: reason
+      type: string
+      description: Select {{reason}} in the Reason dropdown as required.
+      required: true
+      pattern: ^.{1,40}$
+      sensitivity: pii
+    - name: notes
+      type: string
+      description: Free-text note explaining the hold, 120 characters or fewer.
+      required: true
+      pattern: ^.{1,120}$
+      sensitivity: pii
+  outputs:
+    - name: share
+      type: string
+      description: Share displayed on confirmation screen
+      sensitivity: pii
+      from:
+        afterStep: s8
+        target:
+          description: the share value on the final screen
+          role: StaticText
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: CONFIRM ACCOUNT HOLD
+          anchors:
+            - relation: proximateLabel
+              text: Share
+            - relation: nearHeading
+              text: CONFIRM ACCOUNT HOLD
+          hints:
+            boundsAtRecord:
+              x: 352.265625
+              y: 160
+              width: 190
+              height: 13
+            proximateLabels:
+              - Share
+        transform: trim
+    - name: reason
+      type: string
+      description: Reason displayed on confirmation screen
+      sensitivity: pii
+      from:
+        afterStep: s8
+        target:
+          description: the reason value on the final screen
+          role: StaticText
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: CONFIRM ACCOUNT HOLD
+          anchors:
+            - relation: proximateLabel
+              text: Reason
+            - relation: nearHeading
+              text: CONFIRM ACCOUNT HOLD
+          hints:
+            boundsAtRecord:
+              x: 352.265625
+              y: 179
+              width: 39
+              height: 13
+            proximateLabels:
+              - Reason
+        transform: trim
+  preconditions:
+    authState: authenticated
+    describe: An operator session must already exist. Sign-on is the runtime's responsibility, not part
+      of this flow.
+  steps:
+    - id: s1
+      intent: Click the 'Member Inquiry / Selection' link to start member search
+      action:
+        type: click
+        target:
+          description: Click the 'Member Inquiry / Selection' link to start member search
+          role: link
+          name: Member Inquiry / Selection
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MAIN MENU
+          anchors:
+            - relation: nearHeading
+              text: MAIN MENU
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 324.875
+              y: 125
+              width: 151.21875
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members(?:[?#]|$) and "MEMBER INQUIRY / SELECTION" is on screen
+        all:
+          - kind: urlMatches
+            pattern: /members(?:[?#]|$)
+          - kind: textPresent
+            text: MEMBER INQUIRY / SELECTION
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s2
+      intent: Type the member number {{memberId}} into the Value textbox to search for the member
+      action:
+        type: type
+        target:
+          description: Type the member number {{memberId}} into the Value textbox to search for the member
+          role: textbox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: proximateLabel
+              text: Value
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 364.28125
+              y: 141
+              width: 212
+              height: 13
+            proximateLabels:
+              - Value
+        value: "{{memberId}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s3
+      intent: Click the Search button to find the member with number {{memberId}}
+      action:
+        type: click
+        target:
+          description: Click the Search button to find the member with number {{memberId}}
+          role: button
+          name: Search
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 600.890625
+              y: 141
+              width: 38.078125
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members(?:[?#]|$)
+        all:
+          - kind: urlMatches
+            pattern: /members(?:[?#]|$)
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s4
+      intent: Click the 'Select' link for the matching member row to open the member details
+      action:
+        type: click
+        target:
+          description: Click the 'Select' link for the matching member row to open the member details
+          role: link
+          name: Select
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 899.421875
+              y: 214
+              width: 33.71875
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members/[0-9]+(?:[?#]|$) and "MEMBER RECORD" is on screen
+        all:
+          - kind: urlMatches
+            pattern: /members/[0-9]+(?:[?#]|$)
+          - kind: textPresent
+            text: MEMBER RECORD
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s5
+      intent: Click the 'Place Account Hold' link to start the hold process
+      action:
+        type: click
+        target:
+          description: Click the 'Place Account Hold' link to start the hold process
+          role: link
+          name: Place Account Hold
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER RECORD
+          anchors:
+            - relation: nearHeading
+              text: MEMBER RECORD
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 664.40625
+              y: 479
+              width: 105.015625
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members/[0-9]+/hold(?:[?#]|$) and "PLACE ACCOUNT HOLD" is on screen
+        all:
+          - kind: urlMatches
+            pattern: /members/[0-9]+/hold(?:[?#]|$)
+          - kind: textPresent
+            text: PLACE ACCOUNT HOLD
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s6
+      intent: Select the share '{{shareId}} - Money Market' from the Share dropdown
+      action:
+        type: select
+        target:
+          description: Select the share '{{shareId}} - Money Market' from the Share dropdown
+          role: combobox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: PLACE ACCOUNT HOLD
+          anchors:
+            - relation: proximateLabel
+              text: Share
+            - relation: nearHeading
+              text: PLACE ACCOUNT HOLD
+          hints:
+            domHint: select
+            boundsAtRecord:
+              x: 394.46875
+              y: 128
+              width: 256
+              height: 15
+            proximateLabels:
+              - Share
+        value: "{{shareId}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s7
+      intent: Select {{reason}} in the Reason dropdown as required
+      action:
+        type: select
+        target:
+          description: Select {{reason}} in the Reason dropdown as required
+          role: combobox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: PLACE ACCOUNT HOLD
+          anchors:
+            - relation: proximateLabel
+              text: Reason Code
+            - relation: nearHeading
+              text: PLACE ACCOUNT HOLD
+          hints:
+            domHint: select
+            boundsAtRecord:
+              x: 394.46875
+              y: 153
+              width: 194
+              height: 15
+            proximateLabels:
+              - Reason Code
+        value: "{{reason}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s7a
+      intent: Enter {{notes}} into the Notes textbox
+      action:
+        type: type
+        target:
+          description: the Notes textbox on the PLACE ACCOUNT HOLD screen
+          role: textbox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: PLACE ACCOUNT HOLD
+          anchors:
+            - relation: proximateLabel
+              text: Notes
+            - relation: nearHeading
+              text: PLACE ACCOUNT HOLD
+          hints:
+            domHint: input
+            proximateLabels:
+              - Notes
+        value: "{{notes}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s8
+      intent: Click the Continue button to proceed to the confirmation screen
+      action:
+        type: click
+        target:
+          description: Click the Continue button to proceed to the confirmation screen
+          role: button
+          name: Continue
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: PLACE ACCOUNT HOLD
+          anchors:
+            - relation: nearHeading
+              text: PLACE ACCOUNT HOLD
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 401.46875
+              y: 215
+              width: 49.15625
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members/[0-9]+/hold/review(?:[?#]|$) and "CONFIRM ACCOUNT HOLD" is on
+          screen
+        all:
+          - kind: urlMatches
+            pattern: /members/[0-9]+/hold/review(?:[?#]|$)
+          - kind: textPresent
+            text: CONFIRM ACCOUNT HOLD
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s9
+      intent: Click Apply Hold to place the hold shown on the confirmation screen
+      action:
+        type: click
+        target:
+          description: the Apply Hold control on the CONFIRM ACCOUNT HOLD screen
+          role: button
+          name: Apply Hold
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: CONFIRM ACCOUNT HOLD
+          anchors:
+            - relation: nearHeading
+              text: CONFIRM ACCOUNT HOLD
+          hints:
+            proximateLabels: []
+      guard:
+        risk: irreversible
+        note: Restricts the member from using the share. MERIDIAN labels the review screen IRREVERSIBLE
+          ACTION. A teller is refused this outright (SUPERVISOR_OVERRIDE_REQUIRED); a supervisor
+          still needs explicit authorisation, or the run stops for a human here.
+      checkpoint:
+        describe: the hold was applied and the application confirmed it
+        all:
+          - kind: urlMatches
+            pattern: /members/[^/]+/hold/post
+        any:
+          - kind: textPresent
+            text: HOLD APPLIED
+          - kind: textPresent
+            text: Confirmation
+        timeoutMs: 15000
+        pollMs: 250
+      conditions: []
+      optional: false
+  successCheckpoint:
+    describe: the place account hold was posted and the application confirmed it
+    all:
+      - kind: urlMatches
+        pattern: /members/[^/]+/hold/post
+    any:
+      - kind: textPresent
+        text: HOLD APPLIED
+      - kind: textPresent
+        text: Confirmation
+    timeoutMs: 15000
+    pollMs: 250
+  outcomes:
+    business:
+      - code: MEMBER_NOT_FOUND
+        meaning: No member record matches the supplied identifier.
+        outputsAvailable: false
+      - code: SUPERVISOR_OVERRIDE_REQUIRED
+        meaning: >
+          The signed-on operator is not entitled to perform this restricted function. A supervisor
+          must carry it out.
+        outputsAvailable: false
+      - code: VALIDATION_ERROR
+        meaning: The application rejected the submitted transaction.
+        outputsAvailable: false
+  escalation:
+    onUnrecovered: escalate
+    onAmbiguous: escalate
+    onIrreversible: require_approval
+overrides: {}

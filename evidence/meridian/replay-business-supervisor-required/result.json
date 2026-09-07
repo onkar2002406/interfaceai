@@ -1,0 +1,91 @@
+{
+  "status": "business_outcome",
+  "code": "SUPERVISOR_OVERRIDE_REQUIRED",
+  "message": "The signed-on operator is not entitled to perform this restricted function. A supervisor must carry it out.\n",
+  "conditionId": "supervisor_required",
+  "atStep": "s4",
+  "runId": "business-supervisor-required",
+  "capability": "get_balance",
+  "capabilityVersion": "1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "product": "meridian-core",
+  "startedAt": "2026-09-06T21:02:32.880Z",
+  "durationMs": 2296,
+  "steps": [
+    {
+      "stepId": "s1",
+      "intent": "Click the Member Inquiry link to start searching for a member record",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:02:34.357Z",
+      "durationMs": 241,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Member Inquiry"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members(?:[?#]|$) and \"MEMBER INQUIRY / SELECTION\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter member number {{memberId}} into the Value field to search for the member record",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:02:34.598Z",
+      "durationMs": 204,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s3",
+      "intent": "Click the Search button to retrieve the member record for member number {{memberId}}",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:02:34.802Z",
+      "durationMs": 199,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Search"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members(?:[?#]|$)",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s4",
+      "intent": "Click the Select link for member {{memberId}} to open the member record",
+      "actionType": "click",
+      "status": "business",
+      "startedAt": "2026-09-06T21:02:35.002Z",
+      "durationMs": 174,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Select"
+      }
+    }
+  ],
+  "driftSignals": [],
+  "appliedOverrides": [],
+  "evidenceDir": "evidence/meridian/replay-business-supervisor-required",
+  "blockedNavigations": []
+}

@@ -1,0 +1,74 @@
+# Full local stack: MongoDB run store + CoreBank target/panel + MERIDIAN panel.
+#
+#   docker compose up --build            # everything
+#   docker compose up --build corebank   # Mongo + CoreBank only
+#   docker compose up --build meridian   # Mongo + MERIDIAN panel only
+#   docker compose down                  # stop
+#   docker compose down -v               # stop and wipe the Mongo volume
+#
+# Ports on the host after `up`:
+#   4000 / 4001 / 4002  CoreBank tenant instances (base / firstvalley / harborcu)
+#   4200               CoreBank control panel        -> http://localhost:4200
+#   4100               CoreBank operator console
+#   4300               MERIDIAN control panel        -> http://localhost:4300
+#   4101               MERIDIAN operator console
+#   27017              MongoDB
+#
+# Credentials come from .env (copy .env.example -> .env first). A model key is
+# only needed for the Chat front door and `discover`; replay and the panel work
+# without one.
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  corebank:
+    build: .
+    command: ["bash", "docker/start.sh", "corebank"]
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PANEL_PORT: "4200"
+      OPERATOR_PORT: "4100"
+      # Talk to the Mongo container, not localhost. Overrides whatever .env says.
+      MONGODB_URI: "mongodb://mongo:27017/interface"
+      MONGODB_DB: "interface"
+    ports:
+      - "4000:4000"
+      - "4001:4001"
+      - "4002:4002"
+      - "4100:4100"
+      - "4200:4200"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  meridian:
+    build: .
+    command: ["bash", "docker/start.sh", "meridian"]
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PANEL_PORT: "4300"
+      OPERATOR_PORT: "4101"
+      MONGODB_URI: "mongodb://mongo:27017/interface"
+      MONGODB_DB: "interface"
+    ports:
+      - "4300:4300"
+      - "4101:4101"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo-data:

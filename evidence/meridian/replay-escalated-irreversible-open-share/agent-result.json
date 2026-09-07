@@ -1,0 +1,13 @@
+{
+  "status": "escalated",
+  "capability": "open_new_share@1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "runId": "escalated-irreversible-open-share",
+  "evidence": "evidence/meridian/replay-escalated-irreversible-open-share",
+  "durationMs": 5796,
+  "resolution": "unattended",
+  "reason": "irreversible step requires an approved artifact and explicit invocation authorisation (OPEN_SHARE)",
+  "atStep": "s9",
+  "interventionId": "int_fe9ad303"
+}

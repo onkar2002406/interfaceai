@@ -152,7 +152,8 @@ ${error ? `<div class="err">${esc(error)}</div>` : ''}
   <tr>
     <td align="right" nowrap><font color="#333">${esc(t.labels.memberIdField)}:</font></td>
     <td><input type="text" name="ctl00$ContentPlaceHolder1$txtMbrId"
-               id="ctl00_ContentPlaceHolder1_txtMbrId" size="16" maxlength="9"></td>
+               id="ctl00_ContentPlaceHolder1_txtMbrId" size="16" maxlength="9"
+               value="${esc(value)}"></td>
     <td><input type="submit" name="ctl00$ContentPlaceHolder1$btnFind" value="${esc(t.labels.searchButton)}"></td>
   </tr>
 </table>
@@ -240,6 +241,9 @@ export function memberDetailPage(t: TenantConfig, m: Member): string {
   <tr><td align="right"><font color="#333">SSN:</font></td><td>${esc(m.ssn)}</td>
       <td>&nbsp;</td>
       <td align="right"><font color="#333">E-mail:</font></td><td>${esc(m.email)}</td></tr>
+  <tr><td align="right"><font color="#333">Phone:</font></td><td>${esc(m.phone)}</td>
+      <td>&nbsp;</td>
+      <td align="right"><font color="#333">Mailing Address:</font></td><td>${esc(m.address)}</td></tr>
 </table>
 
 <div class="note"><font size="2"><b>${esc(t.labels.accountsHeading)}</b></font></div>
@@ -252,7 +256,7 @@ export function memberDetailPage(t: TenantConfig, m: Member): string {
   <font size="2">
     <a href="/member/${esc(m.id)}/subaccount">${esc(t.labels.openSubAccountLink)}</a>
     &nbsp;|&nbsp;
-    <a href="/member/${esc(m.id)}/transfer">Funds Transfer</a>
+    <a href="/member/${esc(m.id)}/update">Update Member Details</a>
     &nbsp;|&nbsp;
     <a href="/search">${esc(t.labels.searchNavLink)}</a>
   </font>
@@ -353,56 +357,95 @@ export function subAccountDonePage(t: TenantConfig, m: Member, acctNo: string): 
   );
 }
 
-export function transferPage(t: TenantConfig, m: Member): string {
+/* -------------------------------------------------- update member details */
+
+export interface MemberUpdateValues {
+  email?: string;
+  phone?: string;
+  address?: string;
+}
+
+/**
+ * The screen that writes to the member record.
+ *
+ * Two things about its markup are deliberate, because they are what make it a
+ * fair test of the locator model rather than a friendly form:
+ *
+ *   - **No `<label for>` on any input.** The caption is a plain `<td>` sitting
+ *     to the left, exactly as in the search screen and exactly as in the real
+ *     applications this stands in for. Every field here has to be found by the
+ *     caption a human reads beside it, recovered geometrically.
+ *   - **Generated ASP.NET names.** `ctl00$ContentPlaceHolder1$txtEmail` is the
+ *     name a real WebForms page would emit, and it is not something a person
+ *     would ever type — so a recording that leant on it would be recording the
+ *     vendor's build number, not the flow.
+ *
+ * The fields are pre-filled with the current values. That matters for the
+ * "mutating, not irreversible" classification: a person or an operator can read
+ * what the record said before they change it, and can type it back.
+ */
+export function memberUpdateFormPage(
+  t: TenantConfig,
+  m: Member,
+  errors: string[] = [],
+  v: MemberUpdateValues = {},
+): string {
+  const email = v.email ?? m.email;
+  const phone = v.phone ?? m.phone;
+  const address = v.address ?? m.address;
+
   return chrome(
     t,
-    'Funds Transfer',
+    'Update Member Details',
     `
-<div class="note"><font size="2"><b>Funds Transfer</b> &#8212; Member ${esc(m.id)}</font></div>
-<div class="note"><font color="#a00">Transfers post immediately and cannot be reversed by staff.</font></div>
-<form method="POST" action="/member/${esc(m.id)}/transfer">
+<div class="note"><font size="2"><b>Update Member Details</b> &#8212; ${esc(t.labels.memberIdField)} ${esc(m.id)}</font></div>
+${
+  errors.length
+    ? `<div class="err">Please correct the following:<ul>${errors
+        .map((e) => `<li>${esc(e)}</li>`)
+        .join('')}</ul></div>`
+    : ''
+}
+<form method="POST" action="/member/${esc(m.id)}/update">
 <table class="form" border="0" cellspacing="0">
-  <tr><td align="right"><font color="#333">From Account:</font></td>
-      <td><select name="from" id="ctl00_ddlFrom">
-        ${m.accounts.map((a) => `<option value="${esc(a.number)}">${esc(a.type)} ${esc(a.number)}</option>`).join('')}
-      </select></td></tr>
-  <tr><td align="right"><font color="#333">Amount:</font></td>
-      <td><input type="text" name="amount" id="ctl00_txtAmt" size="12"></td></tr>
-  <tr><td>&nbsp;</td><td><input type="submit" name="ctl00$btnPost" value="Post Transfer"></td></tr>
+  <tr><td align="right"><font color="#333">E-mail:</font></td>
+      <td><input type="text" name="ctl00$ContentPlaceHolder1$txtEmail"
+                 id="ctl00_ContentPlaceHolder1_txtEmail" size="34" value="${esc(email)}"></td></tr>
+  <tr><td align="right"><font color="#333">Phone:</font></td>
+      <td><input type="text" name="ctl00$ContentPlaceHolder1$txtPhone"
+                 id="ctl00_ContentPlaceHolder1_txtPhone" size="24" value="${esc(phone)}"></td></tr>
+  <tr><td align="right"><font color="#333">Mailing Address:</font></td>
+      <td><input type="text" name="ctl00$ContentPlaceHolder1$txtAddr"
+                 id="ctl00_ContentPlaceHolder1_txtAddr" size="44" value="${esc(address)}"></td></tr>
+  <tr><td>&nbsp;</td>
+      <td><input type="submit" name="ctl00$ContentPlaceHolder1$btnSave" value="Save Changes">
+          &nbsp;<a href="/member/${esc(m.id)}">Cancel</a></td></tr>
 </table>
 </form>`,
   );
 }
 
 /**
- * What a posted transfer actually hits.
+ * The confirmation, showing the values now on the record.
  *
- * This install never moves money — deliberately. `/member/*​/transfer` is the
- * one maximally irreversible act in the app, and it exists so the policy layer
- * has something real to refuse: `FUNDS_TRANSFER` in config/policy.json stops the
- * automation at the Post Transfer button, before this handler is ever reached.
- *
- * This page is the server-side backstop behind that policy — defence in depth,
- * for the case where something slipped past the guardrail. It used to render the
- * generic system-error page, which was wrong in a way worth fixing: a refusal
- * that is indistinguishable from a crash teaches a reviewer (and a classifier)
- * the wrong thing. A deliberate control should say so.
+ * It echoes what was saved rather than saying "done", so the capability has
+ * something to assert against and a person has something to read. A success
+ * screen that shows no data cannot be checkpointed on anything but its own
+ * wording.
  */
-export function transferBlockedPage(t: TenantConfig, m: Member): string {
+export function memberUpdateDonePage(t: TenantConfig, m: Member): string {
   return chrome(
     t,
-    'Transfer Not Posted',
+    'Member Details Updated',
     `
-<div class="note"><font size="2" color="#a00"><b>Transfer not posted</b></font></div>
-<div class="note">
-  <p><font size="2">This is a demonstration install. Funds transfer is disabled at the
-     server, so <b>no money moved and no record was written</b>.</font></p>
-  <p><font size="2">Reaching this screen from automation means a guardrail was
-     bypassed: posting a transfer is classified <b>irreversible</b> and must be
-     stopped for human authorisation before the button is pressed.</font></p>
-  <p><font size="1" color="#666">Reference: TRANSFER-BLOCKED &#183; member ${esc(m.id)}
-     &#183; ${esc(t.institutionName)}</font></p>
-</div>
+<div class="note"><font size="2"><b>Member details updated</b></font></div>
+<div class="note"><font size="2">${esc(t.labels.memberIdField)}: <b>${esc(m.id)}</b></font></div>
+<table class="grid" cellspacing="0">
+  <tr><th>Field</th><th>Value On Record</th></tr>
+  <tr><td>E-mail</td><td>${esc(m.email)}</td></tr>
+  <tr><td>Phone</td><td>${esc(m.phone)}</td></tr>
+  <tr><td>Mailing Address</td><td>${esc(m.address)}</td></tr>
+</table>
 <div class="note"><font size="2"><a href="/member/${esc(m.id)}">Back to Member Detail</a></font></div>`,
   );
 }
@@ -429,7 +472,7 @@ export function appErrorPage(t: TenantConfig, ref: string): string {
  * would see (the heading text plus a dismiss button), which is exactly the
  * signal that ports to a desktop or screenshot-only surface.
  */
-export function maintenanceInterstitial(t: TenantConfig, inner: string): string {
+export function maintenanceInterstitial(inner: string): string {
   return inner.replace(
     '</body>',
     `<div class="modal"><div class="modalbox">
