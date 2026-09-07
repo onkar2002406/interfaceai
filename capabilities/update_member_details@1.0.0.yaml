@@ -1,0 +1,326 @@
+# Update a member's contact details
+#
+# HAND-AUTHORED reference artifact for the CoreBank Servicing Console.
+#
+# This is the capability that proves the automation writes to the same store the
+# website does. A person can edit these three fields by clicking through
+# http://localhost:4000/member/10001/update; this capability drives the same
+# screen, and either change is immediately visible to the other. An automation
+# that wrote somewhere the website could not read would prove nothing about
+# driving a real console.
+#
+# Note what it is NOT. Saving contact details is classified `mutating`, not
+# `irreversible`: the previous values are on the form and can be typed back. It
+# therefore replays unattended without the two-gate authorisation dance — which
+# is the point of having three risk classes rather than two. Compare
+# `open_sub_account@1.0.0`, whose last step creates a record that cannot be
+# un-created and which stops for a human unless explicitly authorised.
+
+apiVersion: capability.interface.ai/v1
+kind: Capability
+
+metadata:
+  id: cap_update_member_details
+  name: update_member_details
+  version: 1.0.0
+  title: Update a member's contact details
+  summary: >
+    Finds a member by identifier and writes new e-mail, phone and mailing
+    address onto their record. Every value the flow overwrites is displayed on
+    the form before it is changed, so the edit is reversible by hand.
+  createdAt: '2026-09-07T00:00:00.000Z'
+
+  app:
+    product: corebank-servicing
+    productVersion: '8.2'
+    tenant: base
+    entryPoint: /
+
+  # Reviewed, and nothing in it is irreversible, so it is safe to run unattended.
+  approval: approved
+  approvedBy: hand-authored reference artifact
+  approvedAt: '2026-09-07T00:00:00.000Z'
+
+  provenance:
+    discoveryRunId: hand-authored
+    model: none
+    surfaceKind: web
+    traceRef: '(none — written by hand)'
+    traceSha256: '0000000000000000000000000000000000000000000000000000000000000000'
+
+spec:
+  preconditions:
+    authState: authenticated
+    describe: >
+      An operator session must already exist. The capability contains no sign-on
+      steps and no credentials — the runtime establishes the session from the
+      product profile, which is what lets the same flow run under any operator
+      identity and at any of the three institutions.
+
+  inputs:
+    - name: memberId
+      type: string
+      description: The member identifier whose record should be updated.
+      required: true
+      pattern: '^[0-9]{1,9}$'
+      sensitivity: pii
+      example: '10001'
+
+    - name: email
+      type: string
+      description: New e-mail address for the member. The application rejects a malformed one.
+      required: true
+      sensitivity: pii
+      example: 'dana.whitfield@example.invalid'
+
+    - name: phone
+      type: string
+      description: New telephone number, in whatever format the institution prints it.
+      required: true
+      sensitivity: pii
+      example: '(503) 555-0142'
+
+    - name: address
+      type: string
+      description: New mailing address, 60 characters or fewer.
+      required: true
+      sensitivity: pii
+      example: '118 Alder Court, Riverside'
+
+  outputs:
+    # Read back off the confirmation screen rather than echoed from the inputs.
+    # Returning the caller's own arguments would prove nothing: the point of the
+    # output contract is that the *application* says what it now holds.
+    - name: savedEmail
+      type: string
+      description: The e-mail address now on the member record, as the application reports it.
+      sensitivity: pii
+      from:
+        afterStep: s8
+        transform: trim
+        target:
+          description: the Value On Record cell of the E-mail row on the confirmation screen
+          role: cell
+          anchors:
+            - relation: underColumn
+              text: Value On Record
+            - relation: inRowWith
+              text: E-mail
+
+    - name: savedPhone
+      type: string
+      description: The phone number now on the member record.
+      sensitivity: pii
+      from:
+        afterStep: s8
+        transform: trim
+        target:
+          description: the Value On Record cell of the Phone row on the confirmation screen
+          role: cell
+          anchors:
+            - relation: underColumn
+              text: Value On Record
+            - relation: inRowWith
+              text: Phone
+
+  steps:
+    - id: s1
+      intent: Open the member search screen from the left-hand menu.
+      action:
+        type: click
+        target:
+          description: the member search link in the navigation frame
+          role: link
+          name: Member Search
+          nameMatch: normalized
+          scope:
+            framePath: [main, navFrame]
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the member search screen is loaded in the content frame
+        all:
+          - kind: urlMatches
+            pattern: /search$
+        timeoutMs: 8000
+
+    - id: s2
+      intent: Type the member identifier into the search field.
+      action:
+        type: type
+        value: '{{memberId}}'
+        target:
+          # No `name`: this input has no accessible name. Its identity is the
+          # caption a human reads beside it.
+          description: the member identifier box on the search form
+          role: textbox
+          anchors:
+            - relation: proximateLabel
+              text: Member ID
+          scope:
+            framePath: [main, contentFrame]
+      guard:
+        risk: mutating
+        note: Client-side only until the form is submitted.
+
+    - id: s3
+      intent: Submit the search and land on the member's detail screen.
+      action:
+        type: click
+        target:
+          description: the search submit button
+          role: button
+          name: Search
+          nameMatch: normalized
+          scope:
+            framePath: [main, contentFrame]
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the member detail screen for the requested member is displayed
+        all:
+          - kind: urlMatches
+            pattern: '/member/[0-9]+$'
+          - kind: textPresent
+            text: Member Detail
+        timeoutMs: 12000
+        pollMs: 250
+
+    - id: s4
+      intent: Open the update form for this member.
+      action:
+        type: click
+        target:
+          description: the Update Member Details link on the member detail screen
+          role: link
+          name: Update Member Details
+          nameMatch: contains
+          scope:
+            framePath: [main, contentFrame]
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the update form is displayed
+        all:
+          - kind: urlMatches
+            pattern: '/member/[0-9]+/update$'
+          - kind: textPresent
+            text: Update Member Details
+        timeoutMs: 8000
+
+    - id: s5
+      intent: Replace the e-mail address on file.
+      action:
+        type: type
+        value: '{{email}}'
+        target:
+          description: the E-mail box on the update form
+          role: textbox
+          anchors:
+            - relation: proximateLabel
+              text: E-mail
+          scope:
+            framePath: [main, contentFrame]
+      guard:
+        risk: mutating
+        note: Client-side only until Save Changes is pressed.
+
+    - id: s6
+      intent: Replace the phone number on file.
+      action:
+        type: type
+        value: '{{phone}}'
+        target:
+          description: the Phone box on the update form
+          role: textbox
+          anchors:
+            - relation: proximateLabel
+              text: Phone
+          scope:
+            framePath: [main, contentFrame]
+      guard:
+        risk: mutating
+
+    - id: s7
+      intent: Replace the mailing address and commit the change.
+      action:
+        type: type
+        value: '{{address}}'
+        target:
+          description: the Mailing Address box on the update form
+          role: textbox
+          anchors:
+            - relation: proximateLabel
+              text: Mailing Address
+          scope:
+            framePath: [main, contentFrame]
+      guard:
+        risk: mutating
+
+    - id: s8
+      intent: Save the changes to the member record.
+      action:
+        type: click
+        target:
+          description: the Save Changes button on the update form
+          role: button
+          name: Save Changes
+          nameMatch: normalized
+          scope:
+            framePath: [main, contentFrame]
+      guard:
+        risk: mutating
+        note: >
+          This is the write. It is mutating rather than irreversible because the
+          form displayed every previous value and a person can type them back —
+          which is precisely the distinction policy encodes, and the reason this
+          capability replays unattended where `open_sub_account` does not.
+      checkpoint:
+        describe: the confirmation screen reports the record was updated
+        all:
+          - kind: textPresent
+            text: Member details updated
+        timeoutMs: 12000
+        pollMs: 250
+
+  successCheckpoint:
+    describe: the confirmation screen is displayed with the values now on the record
+    all:
+      - kind: textPresent
+        text: Member details updated
+    timeoutMs: 8000
+
+  outcomes:
+    business:
+      - code: MEMBER_NOT_FOUND
+        meaning: >
+          No member matches the supplied identifier. A complete and correct
+          answer to the question asked, not a malfunction.
+        outputsAvailable: false
+      - code: PERMISSION_DENIED
+        meaning: >
+          The member record is restricted and the signed-on operator lacks the
+          entitlement to view or amend it.
+        outputsAvailable: false
+      - code: VALIDATION_ERROR
+        meaning: >
+          The application rejected one or more of the submitted values against
+          its own rules — a malformed e-mail address, a malformed telephone
+          number, or an address over the length limit. The on-screen list names
+          each reason. Nothing was written.
+        outputsAvailable: false
+
+  escalation:
+    onUnrecovered: escalate
+    onAmbiguous: escalate
+    onIrreversible: require_approval
+
+# No per-tenant patches are needed.
+#
+# First Valley relabels the *navigation* and *search* controls, which is why
+# `lookup_member_savings_balance` carries two patches — but it does not relabel
+# anything on this flow. Harbor runs a different product version with a
+# reordered accounts table and a mandatory privacy interstitial, neither of
+# which this flow touches; the interstitial is absorbed by a condition on the
+# tenant in the product profile, inherited here for free.
+overrides: {}

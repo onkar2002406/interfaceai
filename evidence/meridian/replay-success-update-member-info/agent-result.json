@@ -1,0 +1,10 @@
+{
+  "status": "success",
+  "capability": "update_member_info@1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "runId": "success-update-member-info",
+  "evidence": "evidence/meridian/replay-success-update-member-info",
+  "durationMs": 5052,
+  "outputs": {}
+}

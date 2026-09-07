@@ -39,7 +39,7 @@
  */
 
 import { z } from 'zod';
-import { ElementDescriptorSchema } from '../surface/element-descriptor.js';
+import { ElementDescriptorSchema, interpolateDescriptor } from '../surface/element-descriptor.js';
 import { RiskClassSchema } from '../policy/guardrails.js';
 import { SensitivitySchema } from '../policy/redaction.js';
 
@@ -112,6 +112,26 @@ export const RecoveryActionSchema = z.discriminatedUnion('handler', [
     handler: z.literal('wait_retry'),
     waitMs: z.number().int().positive().default(2000),
     maxAttempts: z.number().int().positive().default(3),
+  }),
+  /**
+   * Ask for the current page again.
+   *
+   * For the case `dismiss_dialog` cannot handle: an interstitial that is a whole
+   * replacement *page* rather than an overlay drawn over the screen we wanted.
+   * Dismissing one of those navigates somewhere (a menu, a landing page), which
+   * clears the condition and loses our place in the flow in the same motion;
+   * `navigate_back` is no better, because it returns to the page *before* the
+   * step that failed, leaving the step's checkpoint unmet.
+   *
+   * Re-issuing the request is the response that matches what actually happened:
+   * a transient fault stood in for the page, so ask for the page again.
+   * Bounded like every other handler, and it takes no argument beyond a wait —
+   * there is nothing here for a recording to smuggle behaviour into.
+   */
+  z.object({
+    handler: z.literal('retry_request'),
+    waitMs: z.number().int().nonnegative().default(1500),
+    maxAttempts: z.number().int().positive().default(2),
   }),
   z.object({
     handler: z.literal('reauthenticate'),
@@ -261,6 +281,23 @@ export const MetadataSchema = z.object({
     surfaceKind: z.enum(['web', 'desktop']),
     traceRef: z.string(),
     traceSha256: z.string(),
+    /**
+     * What a person added to this artifact after the recording, and why.
+     *
+     * Some steps cannot be discovered even in principle. Policy refuses every
+     * irreversible action while `mode === 'discovery'`, so an agent recording a
+     * funds transfer gets as far as the review screen and stops — which is
+     * correct behaviour, not a gap to route around. The posting step is then
+     * authored by a person who knows what it does.
+     *
+     * That makes such an artifact part-recorded and part-authored, and this
+     * field is where it says so. A provenance block that named a discovery run
+     * and a model while quietly omitting that its most consequential step was
+     * hand-written would be the most misleading thing in the repository: the
+     * whole point of pointing at a trace is that a reviewer can check the
+     * artifact against what actually happened.
+     */
+    handCompleted: z.string().optional(),
   }),
 });
 export type CapabilityMetadata = z.infer<typeof MetadataSchema>;
@@ -335,20 +372,36 @@ export function parseCapability(raw: unknown): Capability {
   return CapabilitySchema.parse(raw);
 }
 
-/** `{{memberId}}` -> the supplied value. The only templating the schema allows. */
-export function interpolate(template: string, params: Record<string, unknown>): string {
-  return template.replace(/\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g, (whole, key: string) => {
-    const v = params[key];
-    if (v === undefined || v === null) return whole;
-    return String(v);
-  });
-}
-
-/** Names of parameters a template string references. Used to validate inputs. */
-export function templateRefs(template: string): string[] {
-  return [...template.matchAll(/\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g)].map((m) => m[1]!);
-}
+/**
+ * `{{memberId}}` -> the supplied value. The only templating the schema allows.
+ *
+ * Implemented in `./templating.js` and re-exported here, because the element
+ * descriptor needs the identical substitution and importing it from the schema
+ * would make the two modules circular.
+ */
+export { interpolate, templateRefs } from './templating.js';
 
 export function capabilityRef(c: Capability): string {
   return `${c.metadata.name}@${c.metadata.version}`;
+}
+
+/**
+ * Binds a checkpoint's element predicates to this invocation's arguments.
+ *
+ * A checkpoint is an assertion about the screen, and on an application whose
+ * tables are keyed by record identifier the assertion is necessarily about
+ * *this* record: "the Balance cell in the {{shareId}} row is present". Left
+ * unbound, that descriptor matches no row, degrades to a structural match on
+ * every Balance cell, and the resolver correctly refuses as ambiguous — so the
+ * run fails at the last step having actually succeeded.
+ *
+ * Only `elementPresent` / `elementAbsent` carry descriptors; text and URL
+ * predicates are about the shape of the screen and stay literal.
+ */
+export function interpolateCheckpoint(cp: Checkpoint, params: Record<string, unknown>): Checkpoint {
+  const bind = (p: Predicate): Predicate =>
+    p.kind === 'elementPresent' || p.kind === 'elementAbsent'
+      ? { ...p, target: interpolateDescriptor(p.target, params) }
+      : p;
+  return { ...cp, all: cp.all.map(bind), any: cp.any.map(bind) };
 }

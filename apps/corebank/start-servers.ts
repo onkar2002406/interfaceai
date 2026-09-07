@@ -44,9 +44,11 @@ if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, '
     .then((instances) => {
       for (const i of instances) {
         const t = TENANTS[i.tenantId]!;
-        console.log(`  ${i.baseUrl}  ${t.institutionName} (CoreBank v${t.productVersion})`);
+        console.log(
+          `  ${i.baseUrl}  ${t.institutionName} (CoreBank v${t.productVersion})  operator ${t.operator}`,
+        );
       }
-      console.log('\nSign on with svc.demo / demo1234. Ctrl+C to stop.');
+      console.log('\nEach install has its own operator; passwords are in .env. Ctrl+C to stop.');
     })
     .catch((err) => {
       console.error(err);

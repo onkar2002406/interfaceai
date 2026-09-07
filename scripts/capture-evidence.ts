@@ -125,6 +125,7 @@ async function runDiscovery(provider: LlmProvider, slug: string): Promise<{
       authority,
       recorder,
       allowedOrigins: policy.config.origins,
+      allowedActions: policy.config.actions,
       maxSteps: 20,
     });
     return { trace, recorder };
@@ -183,7 +184,24 @@ function finishDiscovery(trace: Awaited<ReturnType<typeof discover>>, recorder: 
 
   if (trace.outcome.kind === 'success') {
     const capability = compile({ trace, profile, traceRef, name: 'discovered_member_savings' });
-    store.save(capability);
+    /**
+     * Compiled into the run's own evidence directory, not into `capabilities/`.
+     *
+     * The flow it discovers is the savings lookup, which `capabilities/
+     * lookup_member_savings_balance@1.0.0.yaml` already covers — hand-authored,
+     * reviewed, approved, with the First Valley overrides on it. Saving this one
+     * beside it put two cards in the CoreBank panel's rail that do the same
+     * thing, one of them a permanent draft nobody would ever approve because the
+     * approved one is better. A catalog that advertises the same flow twice is
+     * lying about what the system can do.
+     *
+     * It is still written, and still regenerated on every `npm run evidence`,
+     * because it is the artifact under discussion: what the compiler produced
+     * from a live model's trace, next to the transcript that produced it. It is
+     * evidence of a discovery run rather than a capability on offer, so it lives
+     * where the rest of that run's evidence lives.
+     */
+    new CapabilityStore(recorder.dir).save(capability);
     recorder.finish(trace, renderDiscoverySummary(trace, capability));
     compiledNote = `compiled ${capability.metadata.name}@${capability.metadata.version} (${capability.metadata.approval})`;
   } else {
@@ -200,17 +218,54 @@ function finishDiscovery(trace: Awaited<ReturnType<typeof discover>>, recorder: 
 
 /* ---------------------------------------------------------------- driver */
 
+/**
+ * Gets exclusive-enough use of the target application before capturing.
+ *
+ * This matters more than it looks. Several scenarios arm a ONE-SHOT fault
+ * (`times: 1`) and then drive the flow that is supposed to trip it. If anything
+ * else touches the app in between — a browser tab left open on a member page —
+ * that request consumes the fault instead, and the scenario records a success
+ * where the committed evidence claims a failure. That has happened, and it is
+ * silent: every run still passes, the artifact is just quietly wrong.
+ *
+ * So: start our own instances when nothing is listening, and when something is,
+ * refuse if a human is evidently using it. `--reuse-app` overrides for the case
+ * where you know the sessions are yours.
+ */
+async function claimTargetApp(): Promise<void> {
+  const status = await fetch('http://localhost:4000/_admin/status', { signal: AbortSignal.timeout(1500) })
+    .then((r) => (r.ok ? (r.json() as Promise<{ sessions: number }>) : null))
+    .catch(() => null);
+
+  if (!status) {
+    started = await startCoreBank();
+    console.log('Started the target application on ports 4000-4002.\n');
+    return;
+  }
+
+  const force = process.argv.includes('--reuse-app');
+  if (status.sessions > 0 && !force) {
+    throw new Error(
+      `The target application is already running and has ${status.sessions} active session(s) — ` +
+        `something (probably a browser tab) is using it.\n\n` +
+        `Capture arms one-shot faults, so a stray page load can consume a fault and turn a\n` +
+        `failure scenario into a false success. Stop the running app (Ctrl+C in its terminal)\n` +
+        `and re-run, or pass --reuse-app if you are certain those sessions are inert.`,
+    );
+  }
+
+  // Known baseline: clear any half-armed fault and stale sessions from earlier runs.
+  await Promise.all(
+    [4000, 4001, 4002].map((p) =>
+      fetch(`http://localhost:${p}/_admin/reset`, { method: 'POST' }).catch(() => {}),
+    ),
+  );
+  console.log('Using the already-running target application (faults and sessions reset).\n');
+}
+
 let started: RunningInstance[] = [];
 try {
-  const alive = await fetch('http://localhost:4000/_admin/status', { signal: AbortSignal.timeout(1500) })
-    .then((r) => r.ok)
-    .catch(() => false);
-  if (!alive) {
-    started = await startCoreBank();
-    console.log('Started the target application.\n');
-  } else {
-    console.log('Using the already-running target application.\n');
-  }
+  await claimTargetApp();
 
   console.log('Discovery');
   await discoveryCase();
@@ -320,9 +375,10 @@ function writeIndex(): void {
     lines.push(`> Reason: ${liveFailureReason ?? 'no live attempt was made'}`);
     lines.push('>');
     lines.push('> Fix that, then re-run `npm run evidence` to replace this with a genuine');
-    lines.push('> LLM-driven run. The compiled capability');
-    lines.push('> `capabilities/discovered_member_savings@1.0.0.yaml` is regenerated at the same');
-    lines.push('> time, and its `metadata.provenance.model` field records which produced it.');
+    lines.push('> LLM-driven run. The compiled artifact');
+    lines.push('> `discovery-lookup-savings-balance/discovered_member_savings@1.0.0.yaml` is');
+    lines.push('> regenerated at the same time, and its `metadata.provenance.model` field');
+    lines.push('> records which produced it.');
     lines.push('');
   } else {
     lines.push('The discovery run below was produced by a **live language model** driving the');
@@ -368,7 +424,7 @@ function writeIndex(): void {
   }
 
   lines.push('');
-  lines.push('The human-handoff run is captured by `scripts/demo-handoff.ts`, which stands');
+  lines.push('The human-handoff run is captured by `scripts/demo-human-handoff.ts`, which stands');
   lines.push('in for the *person* only — the console, the screencast, the control tokens and');
   lines.push('the resume verification in that run are all the real ones.');
   writeFileSync(join(EVIDENCE, 'README.md'), `${lines.join('\n')}\n`, 'utf8');

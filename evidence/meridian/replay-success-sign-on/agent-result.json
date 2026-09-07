@@ -1,0 +1,12 @@
+{
+  "status": "success",
+  "capability": "sign_on@1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "runId": "success-sign-on",
+  "evidence": "evidence/meridian/replay-success-sign-on",
+  "durationMs": 1247,
+  "outputs": {
+    "signedOnAs": "Signed on as J. TELLER (TELLER)"
+  }
+}

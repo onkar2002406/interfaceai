@@ -1,0 +1,44 @@
+{"at":"2026-09-06T21:02:52.333Z","seq":1,"kind":"replay_start","detail":{"capability":"funds_transfer@1.0.0","tenant":"meridian","identity":"teller","product":"meridian-core v4.2.1","baseUrl":"https://web-sample.interface-hiring.com","approval":"draft","irreversibleAuthorized":false,"params":{"memberId":"[pii:e9881aaa…3001]","fromShare":"[pii:b0d59d8f…KT-5]","toShare":"[pii:9dcae401…KT-7]","amount":"[pii:433ee4c7…1.00]","memo":"[pii:a4532cc7…ture]"},"overrides":0}}
+{"at":"2026-09-06T21:02:52.686Z","seq":2,"kind":"navigate_entry","detail":{"url":"https://web-sample.interface-hiring.com/"}}
+{"at":"2026-09-06T21:02:52.991Z","seq":3,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:02:53.162Z","seq":4,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:02:53.330Z","seq":5,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:53.518Z","seq":6,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:53.736Z","seq":7,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:53.928Z","seq":8,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:02:53.929Z","seq":9,"kind":"auth_precondition","detail":{"ok":true,"identity":"teller","note":"signed on and returned to the entry point"}}
+{"at":"2026-09-06T21:02:53.930Z","seq":10,"kind":"step_start","detail":{"step":"s1","index":1,"of":11,"intent":"Click the 'Member Inquiry / Selection' link to start member lookup","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:02:54.075Z","seq":11,"kind":"surface_action","detail":{"action":"click","target":"Member Inquiry / Selection","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:54.155Z","seq":12,"kind":"step_ok","detail":{"step":"s1","durationMs":225,"score":1,"via":"name:normalized","checkpoint":"the route matches /members(?:[?#]|$) and \"MEMBER INQUIRY / SELECTION\" is on screen"}}
+{"at":"2026-09-06T21:02:54.155Z","seq":13,"kind":"step_start","detail":{"step":"s2","index":2,"of":11,"intent":"Enter member number {{memberId}} into the Value textbox for member search","action":"type","risk":"mutating","value":"{{memberId}}"}}
+{"at":"2026-09-06T21:02:54.323Z","seq":14,"kind":"surface_action","detail":{"action":"type","target":"Value","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:54.372Z","seq":15,"kind":"step_ok","detail":{"step":"s2","durationMs":217,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:54.372Z","seq":16,"kind":"step_start","detail":{"step":"s3","index":3,"of":11,"intent":"Click the Search button to find member {{memberId}}","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:02:54.509Z","seq":17,"kind":"surface_action","detail":{"action":"click","target":"Search","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:54.568Z","seq":18,"kind":"step_ok","detail":{"step":"s3","durationMs":196,"score":1,"via":"name:normalized","checkpoint":"the route matches /members(?:[?#]|$)"}}
+{"at":"2026-09-06T21:02:54.569Z","seq":19,"kind":"step_start","detail":{"step":"s4","index":4,"of":11,"intent":"Click the 'Select' link for member {{memberId}} to open member details","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:02:54.708Z","seq":20,"kind":"surface_action","detail":{"action":"click","target":"Select","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:54.874Z","seq":21,"kind":"step_ok","detail":{"step":"s4","durationMs":305,"score":1,"via":"name:normalized","checkpoint":"the route matches /members/[0-9]+(?:[?#]|$) and \"MEMBER RECORD\" is on screen"}}
+{"at":"2026-09-06T21:02:54.874Z","seq":22,"kind":"step_start","detail":{"step":"s5","index":5,"of":11,"intent":"Click the 'Funds Transfer' link to start a new transfer for member {{memberId}}","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:02:55.164Z","seq":23,"kind":"surface_action","detail":{"action":"click","target":"Funds Transfer","risk":"safe","score":0.997,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:55.749Z","seq":24,"kind":"step_ok","detail":{"step":"s5","durationMs":875,"score":0.997,"via":"name:normalized","checkpoint":"the route matches /members/[0-9]+/transfer(?:[?#]|$) and \"FUNDS TRANSFER\" is on screen"}}
+{"at":"2026-09-06T21:02:55.750Z","seq":25,"kind":"step_start","detail":{"step":"s6","index":6,"of":11,"intent":"Select {{fromShare}} in the From Share dropdown","action":"select","risk":"mutating","value":"{{fromShare}}"}}
+{"at":"2026-09-06T21:02:56.300Z","seq":26,"kind":"surface_action","detail":{"action":"select","target":"From Share","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:56.831Z","seq":27,"kind":"step_ok","detail":{"step":"s6","durationMs":1081,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:56.832Z","seq":28,"kind":"step_start","detail":{"step":"s7","index":7,"of":11,"intent":"Select {{toShare}} in the To Share dropdown","action":"select","risk":"mutating","value":"{{toShare}}"}}
+{"at":"2026-09-06T21:02:57.343Z","seq":29,"kind":"surface_action","detail":{"action":"select","target":"To Share","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:57.846Z","seq":30,"kind":"step_ok","detail":{"step":"s7","durationMs":1014,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:57.847Z","seq":31,"kind":"step_start","detail":{"step":"s8","index":8,"of":11,"intent":"Enter transfer amount {{amount}} into the Amount textbox","action":"type","risk":"mutating","value":"{{amount}}"}}
+{"at":"2026-09-06T21:02:58.386Z","seq":32,"kind":"surface_action","detail":{"action":"type","target":"$","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:58.822Z","seq":33,"kind":"step_ok","detail":{"step":"s8","durationMs":975,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:58.823Z","seq":34,"kind":"step_start","detail":{"step":"s8a","index":9,"of":11,"intent":"Enter {{memo}} into the Memo textbox","action":"type","risk":"mutating","value":"{{memo}}"}}
+{"at":"2026-09-06T21:02:59.550Z","seq":35,"kind":"surface_action","detail":{"action":"type","target":"Memo","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:03:00.000Z","seq":36,"kind":"step_ok","detail":{"step":"s8a","durationMs":1177,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:03:00.001Z","seq":37,"kind":"step_start","detail":{"step":"s9","index":10,"of":11,"intent":"Click the Continue button to go to the transfer confirmation screen","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:03:00.539Z","seq":38,"kind":"surface_action","detail":{"action":"click","target":"Continue","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:03:00.577Z","seq":39,"kind":"step_ok","detail":{"step":"s9","durationMs":576,"score":1,"via":"name:normalized","checkpoint":"the route matches /members/[0-9]+/transfer/review(?:[?#]|$) and \"CONFIRM FUNDS TRANSFER\" is on screen"}}
+{"at":"2026-09-06T21:03:00.578Z","seq":40,"kind":"step_start","detail":{"step":"s10","index":11,"of":11,"intent":"Click Post Transfer to commit the transfer shown on the confirmation screen","action":"click","risk":"irreversible"}}
+{"at":"2026-09-06T21:03:00.613Z","seq":41,"kind":"surface_policy_denied","detail":{"action":"click","url":"https://web-sample.interface-hiring.com/members/103001/transfer/review","risk":"irreversible","rule":"FUNDS_TRANSFER","reason":"irreversible step requires an approved artifact and explicit invocation authorisation (FUNDS_TRANSFER)"}}
+{"at":"2026-09-06T21:03:00.700Z","seq":42,"kind":"screenshot","detail":{"file":"evidence/meridian/replay-escalated-irreversible-transfer/escalation-s10.png"}}
+{"at":"2026-09-06T21:03:00.752Z","seq":43,"kind":"escalation_raised","detail":{"interventionId":"int_efdf4677","step":"s10","reasonClass":"policy_irreversible","reason":"irreversible step requires an approved artifact and explicit invocation authorisation (FUNDS_TRANSFER)","resumeContract":"the transfer was posted and the application confirmed it","screenshot":"evidence/meridian/replay-escalated-irreversible-transfer/escalation-s10.png"}}
+{"at":"2026-09-06T21:03:00.753Z","seq":44,"kind":"escalation_resolved","detail":{"interventionId":"int_efdf4677","resolution":"unattended","reason":"intervention int_efdf4677 required a human operator but no operator console is attached. Re-run with --operator to start one and take control of the live session.","humanActions":0}}

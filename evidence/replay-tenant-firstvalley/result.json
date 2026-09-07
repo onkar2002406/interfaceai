@@ -2,23 +2,23 @@
   "status": "success",
   "outputs": {
     "savingsBalance": 8412.55,
-    "savingsAccountNumber": "[pii:23a0ee6c…7735]"
+    "savingsAccountNumber": "[pii:230c34d1…7735]"
   },
   "runId": "tenant-firstvalley",
   "capability": "lookup_member_savings_balance",
   "capabilityVersion": "1.0.0",
   "tenant": "firstvalley",
   "product": "corebank-servicing",
-  "startedAt": "2026-08-24T01:54:37.527Z",
-  "durationMs": 2722,
+  "startedAt": "2026-09-02T05:36:34.016Z",
+  "durationMs": 1890,
   "steps": [
     {
       "stepId": "s1",
       "intent": "Open the member search screen from the left-hand menu.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-08-24T01:54:39.405Z",
-      "durationMs": 414,
+      "startedAt": "2026-09-02T05:36:35.011Z",
+      "durationMs": 418,
       "recoveries": [],
       "resolution": {
         "score": 1,
@@ -37,8 +37,8 @@
       "intent": "Type the member identifier into the search field.",
       "actionType": "type",
       "status": "ok",
-      "startedAt": "2026-08-24T01:54:39.819Z",
-      "durationMs": 142,
+      "startedAt": "2026-09-02T05:36:35.430Z",
+      "durationMs": 148,
       "recoveries": [],
       "resolution": {
         "score": 0.571,
@@ -52,8 +52,8 @@
       "intent": "Submit the search and land on the member's detail screen.",
       "actionType": "click",
       "status": "ok",
-      "startedAt": "2026-08-24T01:54:39.961Z",
-      "durationMs": 251,
+      "startedAt": "2026-09-02T05:36:35.578Z",
+      "durationMs": 296,
       "recoveries": [],
       "resolution": {
         "score": 1,

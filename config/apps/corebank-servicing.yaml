@@ -1,9 +1,44 @@
 product: corebank-servicing
+policy: config/policy.json
 description: >
   CoreBank Servicing Console — the back-office application staff use to look up
-  members, view share accounts, open sub-accounts and post transfers. Deployed
-  to many institutions from the same vendor build, configured and branded per
-  institution.
+  members, view share accounts, amend a member's contact details and open
+  sub-accounts. Deployed to many institutions from the same vendor build,
+  configured and branded per institution.
+
+# ---------------------------------------------------------------------------
+# The chat front door, for this product's customer base.
+#
+# CoreBank's caller is a branch or back-office clerk at a small credit union.
+# They work member-by-member and talk about MEMBER NUMBERS and SHARE ACCOUNTS,
+# and the two flows recorded for them are a savings-balance lookup and opening
+# a sub-account.
+#
+# The identifiers below are real rows in this product's seeded data
+# (`apps/corebank/seed-data.ts`). That matters: an opener naming a member who
+# does not exist turns a demonstration of the system into a demonstration of a
+# model guessing an identifier.
+#
+# Four openers, one per arm of the result contract:
+#   1. success           — member 10001 has an open Savings share
+#   2. business outcome  — 99999 is nobody: MEMBER_NOT_FOUND
+#   3. business outcome  — 10007 is `restricted: true`: PERMISSION_DENIED
+#   4. escalated         — opening a sub-account ends in an irreversible step,
+#                          which chat cannot authorise, so it stops for a human
+# ---------------------------------------------------------------------------
+chat:
+  audience: >
+    Back-office and branch staff at a credit union running the CoreBank
+    Servicing Console. They work one member at a time: look a member up by
+    member number, read the balance on a share account, amend the contact
+    details on file, open a sub-account. Members are identified by a five-digit
+    member number; share accounts by a ten-digit account number the console
+    prints in full.
+  suggestions:
+    - What is the savings balance for member 10001?
+    - Look up member 99999
+    - What is the savings balance for member 10007?
+    - Open a Savings sub-account for member 10002 with a $100.00 initial deposit, nicknamed Vacation Fund
 
 # ---------------------------------------------------------------------------
 # Product-wide runtime conditions.
@@ -107,6 +142,27 @@ conditions:
         reference identifies the failure in the vendor's logs.
 
 # ---------------------------------------------------------------------------
+# How the harness arms this product's runtime faults.
+#
+# CoreBank is a local app we own, so it can afford the simple mechanism: an
+# admin endpoint that arms a fault for the next matching request. The route each
+# fault attaches to matters — left untargeted, a session fault fires on
+# whichever request arrives first (in practice the sign-on bounce), which tests
+# "sign-on is broken" rather than "the session expired mid-flow".
+#
+# /_admin/** is on the policy DENY list precisely so the automation cannot reach
+# its own test hooks. The harness may arm faults; the agent may not.
+# ---------------------------------------------------------------------------
+faults:
+  strategy: admin_endpoint
+  path: /_admin/fault
+  routes:
+    slow: /member/*
+    app_error: /member/*
+    session: /member/*
+    interstitial: /search
+
+# ---------------------------------------------------------------------------
 # Re-authentication. Field targets only — credentials come from the environment
 # at run time and are never written to disk or into an artifact.
 # ---------------------------------------------------------------------------
@@ -156,11 +212,19 @@ tenants:
     label: First Valley Credit Union
     baseUrl: http://localhost:4001
     productVersion: '8.2'
+    # Its own staff directory, so its own operator. Names only — the values are
+    # supplied by the environment at run time.
+    credentialEnv:
+      user: COREBANK_OPERATOR_FIRSTVALLEY
+      password: COREBANK_PASSWORD_FIRSTVALLEY
 
   - id: harborcu
     label: Harbor Credit Union
     baseUrl: http://localhost:4002
     productVersion: '9.0'
+    credentialEnv:
+      user: COREBANK_OPERATOR_HARBORCU
+      password: COREBANK_PASSWORD_HARBORCU
     extraConditions:
       - id: privacy_acknowledgement
         description: >

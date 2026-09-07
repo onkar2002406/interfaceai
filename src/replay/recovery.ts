@@ -19,6 +19,7 @@
  */
 
 import type { RecoveryAction } from '../capability/schema.js';
+import { credentialEnvFor } from '../capability/application-profile.js';
 import type { AppProfile, TenantProfile } from '../capability/application-profile.js';
 import type { Surface } from '../surface/types.js';
 import type { ControlToken } from '../escalation/control-authority.js';
@@ -31,6 +32,11 @@ export interface RecoveryContext {
   tenant: TenantProfile;
   /** Where the run was when the condition fired, so we can come back to it. */
   returnUrl: string;
+  /**
+   * Which operator to sign on as, when the profile declares named identities.
+   * Unset means "whatever this tenant's default is" — the original behaviour.
+   */
+  identity?: string;
 }
 
 export interface RecoveryResult {
@@ -74,6 +80,20 @@ export async function runRecovery(action: RecoveryAction, ctx: RecoveryContext):
       await sleep(action.waitMs);
       return { ok: true, note: `waited ${action.waitMs}ms for the surface to settle` };
 
+    case 'retry_request': {
+      // Deliberately the CURRENT location, not `returnUrl`. The interstitial was
+      // served in place of the page we asked for and at that page's own address,
+      // so asking again is asking for the right thing. `returnUrl` is where we
+      // were *before* the step, and going there would undo the step instead of
+      // completing it.
+      const url = await ctx.surface.location();
+      if (action.waitMs > 0) await sleep(action.waitMs);
+      const res = await ctx.surface.act({ type: 'navigate', url }, ctx.token());
+      return res.ok
+        ? { ok: true, note: `re-requested ${url} after ${action.waitMs}ms` }
+        : { ok: false, note: `could not re-request ${url}: ${res.error?.message ?? 'unknown'}` };
+    }
+
     case 'dismiss_dialog': {
       const res = await ctx.surface.act(
         { type: 'click', target: { kind: 'descriptor', descriptor: action.dismissTarget } },
@@ -98,15 +118,19 @@ export async function runRecovery(action: RecoveryAction, ctx: RecoveryContext):
 
 async function reauthenticate(ctx: RecoveryContext): Promise<RecoveryResult> {
   const { auth } = ctx.profile;
-  const user = process.env[auth.credentialEnv.user];
-  const password = process.env[auth.credentialEnv.password];
+  // Whose session this is, is a property of the invocation and the tenant —
+  // never of the capability.
+  const credentialEnv = credentialEnvFor(ctx.profile, ctx.tenant, ctx.identity);
+  const user = process.env[credentialEnv.user];
+  const password = process.env[credentialEnv.password];
 
   if (!user || !password) {
+    const who = ctx.identity ? `${ctx.identity} on ${ctx.tenant.id}` : ctx.tenant.id;
     return {
       ok: false,
       note:
-        `cannot re-authenticate: ${auth.credentialEnv.user} / ${auth.credentialEnv.password} are not set ` +
-        `in the environment (credentials are never stored in the profile or the artifact)`,
+        `cannot re-authenticate as ${who}: ${credentialEnv.user} / ${credentialEnv.password} ` +
+        `are not set in the environment (credentials are never stored in the profile or the artifact)`,
     };
   }
 

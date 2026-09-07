@@ -14,11 +14,9 @@ import express, { type Express, type Request, type Response, type NextFunction }
 import { randomUUID } from 'node:crypto';
 import { getTenant, type TenantConfig } from './tenants.js';
 import { FaultController, FAULT_MODES, type FaultMode } from './fault-injection.js';
-import { findMember, OPENED_SUBACCOUNTS, type Member } from './seed-data.js';
+import { findMember, updateMember, OPENED_SUBACCOUNTS, type Member } from './seed-data.js';
 import * as V from './pages.js';
 
-const VALID_OPERATOR = 'svc.demo';
-const VALID_PASSWORD = 'demo1234';
 const MIN_OPENING_DEPOSIT = 25;
 const SLOW_FAULT_MS = 6000;
 
@@ -86,7 +84,7 @@ export function createCoreBankApp(tenantId: string): CoreBankApp {
 
   /** Applies the surprise-overlay fault to any content page. */
   const withInterstitial = (req: Request, html: string): string =>
-    faults.consume('interstitial', req.path) ? V.maintenanceInterstitial(tenant, html) : html;
+    faults.consume('interstitial', req.path) ? V.maintenanceInterstitial(html) : html;
 
   /* --------------------------------------------------------------- auth */
 
@@ -98,7 +96,9 @@ export function createCoreBankApp(tenantId: string): CoreBankApp {
   app.post('/login', (req, res) => {
     const operator = String(req.body['ctl00$txtOperator'] ?? '').trim();
     const password = String(req.body['ctl00$txtPwd'] ?? '');
-    if (operator !== VALID_OPERATOR || password !== VALID_PASSWORD) {
+    // Each institution authenticates against its own directory, so an operator
+    // valid at one tenant is rejected at the next.
+    if (operator !== tenant.operator || password !== tenant.password) {
       res.status(200).send(V.loginPage(tenant, 'Invalid operator ID or password.'));
       return;
     }
@@ -251,23 +251,51 @@ export function createCoreBankApp(tenantId: string): CoreBankApp {
     res.send(V.subAccountDonePage(tenant, m, acctNo));
   });
 
-  /* ------------------------------------------------------ funds transfer */
+  /* -------------------------------------------------- update member details
 
-  app.get('/member/:id/transfer', requireSession, (req, res) => {
+     A screen that genuinely writes to the member record, reachable by a human
+     from the member detail page and by the automation through the
+     `update_member_details` capability. Both doors call `updateMember()`, so a
+     change made either way is immediately visible in the other — which is the
+     point of having both: a demo where the automation writes to a store the
+     website cannot see would prove nothing about driving a real console.
+
+     Classified `mutating` rather than `irreversible`: the previous values can
+     be typed back. That distinction is the reason the risk model has three
+     classes rather than two.                                                 */
+
+  app.get('/member/:id/update', requireSession, (req, res) => {
     const m = loadMember(req, res);
     if (!m) return;
-    res.send(V.transferPage(tenant, m));
+    res.send(withInterstitial(req, V.memberUpdateFormPage(tenant, m)));
   });
 
-  app.post('/member/:id/transfer', requireSession, (req, res) => {
+  app.post('/member/:id/update', requireSession, (req, res) => {
     const m = loadMember(req, res);
     if (!m) return;
-    res.send(
-      V.appErrorPage(
-        tenant,
-        'TRANSFER-BLOCKED: this demo install does not post transfers. The automation layer should never have reached here unattended.',
-      ),
-    );
+
+    const email = String(req.body['ctl00$ContentPlaceHolder1$txtEmail'] ?? '').trim();
+    const phone = String(req.body['ctl00$ContentPlaceHolder1$txtPhone'] ?? '').trim();
+    const address = String(req.body['ctl00$ContentPlaceHolder1$txtAddr'] ?? '').trim();
+
+    // Business-rule rejections, phrased with the same "Please correct the
+    // following" banner every other form uses — so the product-wide
+    // `validation_error` condition classifies them without a per-capability
+    // rule, which is the whole argument for authoring conditions per product.
+    const errors: string[] = [];
+    if (!email) errors.push('E-mail is required.');
+    else if (!/^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$/.test(email)) errors.push('E-mail is not a valid address.');
+    if (!phone) errors.push('Phone is required.');
+    else if (!/^[0-9()+\-.\s]{7,20}$/.test(phone)) errors.push('Phone must be a valid telephone number.');
+    if (address.length > 60) errors.push('Mailing Address must be 60 characters or fewer.');
+
+    if (errors.length) {
+      res.send(V.memberUpdateFormPage(tenant, m, errors, { email, phone, address }));
+      return;
+    }
+
+    const updated = updateMember(m.id, { email, phone, address });
+    res.send(V.memberUpdateDonePage(tenant, updated ?? m));
   });
 
   /* ------------------------------------------------------- admin (test) */
@@ -312,3 +340,15 @@ export const TENANT_PORTS: Record<string, number> = {
   firstvalley: 4001,
   harborcu: 4002,
 };
+
+/**
+ * Which install answers on a given origin, and therefore which operator can
+ * sign on to it. For dev utilities that get pointed at an arbitrary tenant URL —
+ * the replay engine resolves credentials through the app profile instead.
+ */
+export function tenantForOrigin(origin: string): TenantConfig {
+  const port = Number(new URL(origin).port);
+  const id = Object.keys(TENANT_PORTS).find((k) => TENANT_PORTS[k] === port);
+  if (!id) throw new Error(`No CoreBank tenant runs on port ${port}. Known: ${Object.values(TENANT_PORTS).join(', ')}`);
+  return getTenant(id);
+}

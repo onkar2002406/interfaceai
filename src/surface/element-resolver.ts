@@ -150,7 +150,19 @@ function anchorScore(anchor: Anchor, node: ElementNode): number {
       const cells = (node.context.rowCells ?? []).map(normalizeName);
       if (cells.length === 0) return 0;
       if (cells.includes(want)) return 1;
-      return cells.some((c) => c.includes(want) || want.includes(c)) ? 0.6 : 0;
+      // A row key that merely OVERLAPS is much weaker evidence than one that
+      // matches, and scoring the two close together is the same mistake called
+      // out for `proximateLabel` above — it makes neighbouring rows
+      // indistinguishable and the resolver then refuses a match it should have
+      // made.
+      //
+      // It bites hardest where row keys are hierarchical identifiers, because
+      // one is routinely a prefix of another: asked for share "101555-CERT-4",
+      // the row keyed "101555-CERT" is a substring hit and lands within the
+      // ambiguity margin of the exact one. Categorical keys ("Savings") never
+      // showed this. Weak credit keeps genuine relabels resolvable while
+      // leaving a real gap between "this row" and "a row with a similar name".
+      return cells.some((c) => c.includes(want) || want.includes(c)) ? 0.35 : 0;
     }
     case 'nearHeading': {
       const h = normalizeName(node.context.heading ?? '');

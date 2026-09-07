@@ -9,6 +9,7 @@
 
 import { chromium } from 'playwright';
 import { perceive, readSignals, isInteractive } from '../src/surface/web/accessibility-tree.js';
+import { tenantForOrigin } from '../apps/corebank/server.js';
 
 const url = process.argv[2] ?? 'http://localhost:4000/login';
 const loginFirst = process.argv.includes('--login');
@@ -21,9 +22,12 @@ await cdp.send('Accessibility.enable');
 
 if (loginFirst) {
   const origin = new URL(url).origin;
+  // Sign on as whichever institution answers on this origin — operators are
+  // per-install, so the base tenant's credentials are rejected at :4001/:4002.
+  const tenant = tenantForOrigin(origin);
   await page.goto(`${origin}/login`, { waitUntil: 'domcontentloaded' });
-  await page.locator('#ctl00_txtOperator').fill('svc.demo');
-  await page.locator('#ctl00_txtPwd').fill('demo1234');
+  await page.locator('#ctl00_txtOperator').fill(tenant.operator);
+  await page.locator('#ctl00_txtPwd').fill(tenant.password);
   await page.locator('input[type=submit]').click();
   await page.waitForLoadState('networkidle');
 }

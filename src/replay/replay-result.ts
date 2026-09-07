@@ -122,6 +122,13 @@ export interface ReplayEnvelope {
   capability: string;
   capabilityVersion: string;
   tenant: string;
+  /**
+   * Which operator identity the run signed on as, where the product declares
+   * named identities. Part of the contract because entitlement changes the
+   * answer: SUPERVISOR_OVERRIDE_REQUIRED is only interpretable if the caller
+   * knows who was asking.
+   */
+  identity?: string;
   product: string;
   startedAt: string;
   durationMs: number;

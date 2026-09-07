@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import { containsPii, hashPii, maskValue, redactDeep, redactParams, redactText } from '../src/policy/redaction.js';
 import { Policy, globToRegExp, type PolicyConfig } from '../src/policy/guardrails.js';
 import { ControlAuthority, ControlViolation } from '../src/escalation/control-authority.js';
+import { AGENT_TOOLS, toolsPermittedBy } from '../src/discovery/model-prompt.js';
 
 /* ------------------------------------------------------------- redaction */
 
@@ -153,6 +154,26 @@ describe('allowlist', () => {
   it('refuses an action type that is not permitted at all', () => {
     const d = policy.check({ type: 'press', key: 'Enter' }, { mode: 'replay', url: 'http://localhost:4000/' });
     expect(d.allowed).toBe(false);
+  });
+});
+
+describe('the model is only offered tools policy permits', () => {
+  // A refusal ends a discovery run, so a tool the allowlist forbids is worse
+  // than useless: it is a way for one unlucky turn to abort a flow that would
+  // otherwise have completed.
+  it('withholds a tool whose action type is not on the allowlist', () => {
+    const names = toolsPermittedBy(['click', 'type', 'select']).map((t) => t.name);
+    expect(names).not.toContain('press');
+    expect(names).toEqual(expect.arrayContaining(['click', 'type', 'select']));
+  });
+
+  it('always keeps the tools that end the run rather than act', () => {
+    expect(toolsPermittedBy([]).map((t) => t.name)).toEqual(['finish', 'give_up']);
+  });
+
+  it('offers every acting tool when policy allows them all', () => {
+    const all = AGENT_TOOLS.map((t) => t.name);
+    expect(toolsPermittedBy(all).map((t) => t.name)).toEqual(all);
   });
 });
 

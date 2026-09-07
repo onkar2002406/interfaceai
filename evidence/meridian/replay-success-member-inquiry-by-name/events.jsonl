@@ -1,0 +1,25 @@
+{"at":"2026-09-06T21:03:05.481Z","seq":1,"kind":"replay_start","detail":{"capability":"member_inquiry@1.0.0","tenant":"meridian","identity":"teller","product":"meridian-core v4.2.1","baseUrl":"https://web-sample.interface-hiring.com","approval":"draft","irreversibleAuthorized":false,"params":{"lastName":"[pii:81198583…pper]"},"overrides":0}}
+{"at":"2026-09-06T21:03:05.775Z","seq":2,"kind":"navigate_entry","detail":{"url":"https://web-sample.interface-hiring.com/"}}
+{"at":"2026-09-06T21:03:06.071Z","seq":3,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:03:06.240Z","seq":4,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:03:06.406Z","seq":5,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:03:06.591Z","seq":6,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:03:06.836Z","seq":7,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:03:07.059Z","seq":8,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:03:07.060Z","seq":9,"kind":"auth_precondition","detail":{"ok":true,"identity":"teller","note":"signed on and returned to the entry point"}}
+{"at":"2026-09-06T21:03:07.062Z","seq":10,"kind":"step_start","detail":{"step":"s1","index":1,"of":5,"intent":"Click the Member Inquiry link to open the member inquiry search screen","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:03:07.236Z","seq":11,"kind":"surface_action","detail":{"action":"click","target":"Member Inquiry","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:03:07.336Z","seq":12,"kind":"step_ok","detail":{"step":"s1","durationMs":274,"score":1,"via":"name:normalized","checkpoint":"the route matches /members(?:[?#]|$) and \"MEMBER INQUIRY / SELECTION\" is on screen"}}
+{"at":"2026-09-06T21:03:07.337Z","seq":13,"kind":"step_start","detail":{"step":"s2","index":2,"of":5,"intent":"Select 'Last Name' in the Search by dropdown to enable searching by last name","action":"select","risk":"mutating","value":"Last Name"}}
+{"at":"2026-09-06T21:03:07.420Z","seq":14,"kind":"surface_action","detail":{"action":"select","target":"Search by","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:03:07.489Z","seq":15,"kind":"step_ok","detail":{"step":"s2","durationMs":152,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:03:07.490Z","seq":16,"kind":"step_start","detail":{"step":"s3","index":3,"of":5,"intent":"Enter last name '{{lastName}}' into the Value textbox for member search","action":"type","risk":"mutating","value":"{{lastName}}"}}
+{"at":"2026-09-06T21:03:07.651Z","seq":17,"kind":"surface_action","detail":{"action":"type","target":"Value","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:03:07.764Z","seq":18,"kind":"step_ok","detail":{"step":"s3","durationMs":274,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:03:07.765Z","seq":19,"kind":"step_start","detail":{"step":"s4","index":4,"of":5,"intent":"Click the Search button to perform the member lookup by last name","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:03:08.035Z","seq":20,"kind":"surface_action","detail":{"action":"click","target":"Search","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:03:08.118Z","seq":21,"kind":"step_ok","detail":{"step":"s4","durationMs":353,"score":1,"via":"name:normalized","checkpoint":"the route matches /members(?:[?#]|$)"}}
+{"at":"2026-09-06T21:03:08.119Z","seq":22,"kind":"step_start","detail":{"step":"s5","index":5,"of":5,"intent":"Click the Select link for the {{lastName}} record to open the member detail screen","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:03:08.278Z","seq":23,"kind":"surface_action","detail":{"action":"click","target":"Select","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:03:08.400Z","seq":24,"kind":"step_ok","detail":{"step":"s5","durationMs":281,"score":1,"via":"name:normalized","checkpoint":"the route matches /members/[0-9]+(?:[?#]|$) and \"MEMBER RECORD\" is on screen"}}
+{"at":"2026-09-06T21:03:08.520Z","seq":25,"kind":"replay_success","detail":{"outputs":{"memberNumber":"[declared-sensitive]","memberFullName":"[declared-sensitive]"},"durationMs":3039,"driftSignals":0}}

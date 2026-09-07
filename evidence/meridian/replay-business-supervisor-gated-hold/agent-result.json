@@ -1,0 +1,11 @@
+{
+  "status": "business_outcome",
+  "capability": "place_account_hold@1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "runId": "business-supervisor-gated-hold",
+  "evidence": "evidence/meridian/replay-business-supervisor-gated-hold",
+  "durationMs": 3195,
+  "code": "SUPERVISOR_OVERRIDE_REQUIRED",
+  "message": "The signed-on operator is not entitled to perform this restricted function. A supervisor must carry it out.\n"
+}

@@ -1,7 +1,7 @@
 /**
  * End-to-end demonstration of the human-in-the-loop handoff.
  *
- *   npx tsx scripts/demo-handoff.ts
+ *   npx tsx scripts/demo-human-handoff.ts
  *
  * What is simulated: the *person*. A script stands in for the operator, because
  * a demo that needs someone to click a button is not reproducible evidence.
@@ -22,6 +22,8 @@
 
 import 'dotenv/config';
 import WebSocket from 'ws';
+import { rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { loadAppProfile } from '../src/capability/application-profile.js';
 import { CapabilityStore } from '../src/capability/store.js';
 import { Policy } from '../src/policy/guardrails.js';
@@ -56,7 +58,26 @@ console.log(`\nOperator console listening at ${base}\n`);
 
 // Stable directory name so this lands in curated evidence rather than as one
 // more anonymous run id.
+//
+// Clear it first, the way capture-evidence.ts clears each scenario. Because the
+// name is stable and `events.jsonl` is append-only, a re-run would otherwise
+// leave the previous attempt's screenshots beside this one's and concatenate the
+// two event logs — evidence that describes a run that never happened. That is a
+// worse failure than a missing directory, because it still looks plausible.
+rmSync(join('evidence', 'replay-human-handoff'), { recursive: true, force: true });
 const recorder = new RunRecorder('human-handoff', 'replay');
+
+// This script drives a run against an app it does not start, so say so up front.
+// Without this check the failure surfaces 60 seconds later as "no intervention
+// was raised", which describes the symptom and hides the cause.
+const targetUp = await fetch('http://localhost:4000/_admin/status', { signal: AbortSignal.timeout(1500) })
+  .then((r) => r.ok)
+  .catch(() => false);
+if (!targetUp) {
+  console.error('The target application is not running on http://localhost:4000.');
+  console.error('Start it in another terminal with `npm run app`, then re-run this script.');
+  process.exit(1);
+}
 
 // Start the run. It will reach the irreversible step and park there.
 const runPromise: Promise<ReplayResult> = replay({
@@ -129,7 +150,6 @@ console.log(`[operator] claimed control as "${OPERATOR}" -> ${claim.status === 2
 // 4. Do the work by hand: find the button on screen and click its pixels,
 //    exactly as a person moving a mouse over the canvas would.
 const surface = attached.sink.surfaceFor(id) as PlaywrightSurface;
-const token = attached.sink.operatorToken(id);
 const obs = await surface.observe();
 const found = resolveDescriptor(
   {

@@ -10,8 +10,8 @@
   "entryPoint": "/",
   "model": "openai/gpt-oss-120b",
   "provider": "groq",
-  "startedAt": "2026-08-24T01:53:28.676Z",
-  "finishedAt": "2026-08-24T01:53:35.533Z",
+  "startedAt": "2026-09-02T05:36:05.282Z",
+  "finishedAt": "2026-09-02T05:36:09.743Z",
   "steps": [
     {
       "index": 1,
@@ -63,7 +63,7 @@
         "textSample": "CoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Search\nHome\n\nSigned on as\nsvc.demo\nSign Off\nCoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Search\nMember ID: \nEnter a numeric member identifier."
       },
       "ok": true,
-      "at": "2026-08-24T01:53:32.119Z"
+      "at": "2026-09-02T05:36:07.507Z"
     },
     {
       "index": 2,
@@ -125,18 +125,18 @@
         "textSample": "CoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Search\nHome\n\nSigned on as\nsvc.demo\nSign Off\nCoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Search\nMember ID: \nEnter a numeric member identifier."
       },
       "ok": true,
-      "at": "2026-08-24T01:53:32.947Z"
+      "at": "2026-09-02T05:36:08.253Z"
     },
     {
       "index": 3,
-      "intent": "Click the Search button to retrieve member information",
+      "intent": "Click the Search button to look up member 10001",
       "toolName": "click",
       "arguments": {
         "elementId": "e17",
-        "why": "Click the Search button to retrieve member information"
+        "why": "Click the Search button to look up member 10001"
       },
       "descriptor": {
-        "description": "Click the Search button to retrieve member information",
+        "description": "Click the Search button to look up member 10001",
         "role": "button",
         "nameMatch": "normalized",
         "scope": {
@@ -171,13 +171,13 @@
         "frameUrls": [
           "http://localhost:4000/",
           "http://localhost:4000/nav",
-          "http://localhost:4000/search"
+          "http://localhost:4000/member/10001"
         ],
         "title": "CoreBank Reference Install - Servicing Console",
-        "textSample": "CoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Search\nHome\n\nSigned on as\nsvc.demo\nSign Off\nCoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Search\nMember ID: \nEnter a numeric member identifier."
+        "textSample": "CoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Search\nHome\n\nSigned on as\nsvc.demo\nSign Off\nCoreBank Reference Install  ·  Servicing Console\nCoreBank v8.2\nMember Detail\nMember ID: 10001   Name: Whitfield, Dana\nBranch: Riverside   Member Since: 2014-03-11\nSSN: [pii:94ea83ec…9087]   E-mail: [pii:6e20f373…alid]\nAccounts\nAccount No. Type Current Balance Status Opened\n[pii:230c34d1…7735] Savings $8,412.55 Open 2014-03-11\n[pii:843e4669…7736] Checking $1,290.04 Open 2014-03-11\nOpen Sub-Account  |  Funds Transfer  |  Member Search"
       },
       "ok": true,
-      "at": "2026-08-24T01:53:33.926Z"
+      "at": "2026-09-02T05:36:09.091Z"
     }
   ],
   "outcome": {
@@ -214,8 +214,8 @@
     ]
   },
   "usage": {
-    "promptTokens": 6748,
-    "completionTokens": 469,
+    "promptTokens": 6691,
+    "completionTokens": 465,
     "calls": 4
   }
 }

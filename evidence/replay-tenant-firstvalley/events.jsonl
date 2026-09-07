@@ -1,22 +1,22 @@
-{"at":"2026-08-24T01:54:37.532Z","seq":1,"kind":"replay_start","detail":{"capability":"lookup_member_savings_balance@1.0.0","tenant":"firstvalley","product":"corebank-servicing v8.2","baseUrl":"http://localhost:4001","approval":"approved","irreversibleAuthorized":false,"params":{"memberId":"[pii:6f56cc84…0001]"},"overrides":2}}
-{"at":"2026-08-24T01:54:37.533Z","seq":2,"kind":"override_applied","detail":{"path":"/steps/0/action/target/name","why":"Their menu says \"Find Member\" where the reference install says \"Member Search\". A pure relabel with no behavioural difference.\n"}}
-{"at":"2026-08-24T01:54:37.533Z","seq":3,"kind":"override_applied","detail":{"path":"/steps/2/action/target/name","why":"Their search button is captioned \"Go\". Nothing else about the search form differs.\n"}}
-{"at":"2026-08-24T01:54:37.919Z","seq":4,"kind":"navigate_entry","detail":{"url":"http://localhost:4001/"}}
-{"at":"2026-08-24T01:54:38.181Z","seq":5,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-24T01:54:38.479Z","seq":6,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-24T01:54:38.694Z","seq":7,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-24T01:54:38.877Z","seq":8,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
-{"at":"2026-08-24T01:54:38.915Z","seq":9,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-24T01:54:39.400Z","seq":10,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
-{"at":"2026-08-24T01:54:39.404Z","seq":11,"kind":"auth_precondition","detail":{"ok":true,"note":"signed on and returned to the entry point"}}
-{"at":"2026-08-24T01:54:39.405Z","seq":12,"kind":"step_start","detail":{"step":"s1","index":1,"of":3,"intent":"Open the member search screen from the left-hand menu.","action":"click","risk":"safe"}}
-{"at":"2026-08-24T01:54:39.633Z","seq":13,"kind":"surface_action","detail":{"action":"click","target":"Find Member","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-24T01:54:39.819Z","seq":14,"kind":"step_ok","detail":{"step":"s1","durationMs":414,"score":1,"via":"name:normalized","checkpoint":"the member search screen is loaded in the content frame"}}
-{"at":"2026-08-24T01:54:39.819Z","seq":15,"kind":"step_start","detail":{"step":"s2","index":2,"of":3,"intent":"Type the member identifier into the search field.","action":"type","risk":"mutating","value":"{{memberId}}"}}
-{"at":"2026-08-24T01:54:39.845Z","seq":16,"kind":"surface_drift","detail":{"wanted":"unnamed textbox, labelled \"Member ID\", in frame main/contentFrame","matched":"Member Number","score":0.571,"strategy":"frame"}}
-{"at":"2026-08-24T01:54:39.930Z","seq":17,"kind":"surface_action","detail":{"action":"type","target":"Member Number","risk":"mutating","score":0.571,"strategy":"frame"}}
-{"at":"2026-08-24T01:54:39.961Z","seq":18,"kind":"step_ok","detail":{"step":"s2","durationMs":142,"score":0.571,"via":"frame"}}
-{"at":"2026-08-24T01:54:39.961Z","seq":19,"kind":"step_start","detail":{"step":"s3","index":3,"of":3,"intent":"Submit the search and land on the member's detail screen.","action":"click","risk":"safe"}}
-{"at":"2026-08-24T01:54:40.002Z","seq":20,"kind":"surface_action","detail":{"action":"click","target":"Go","risk":"safe","score":1,"strategy":"name:normalized"}}
-{"at":"2026-08-24T01:54:40.212Z","seq":21,"kind":"step_ok","detail":{"step":"s3","durationMs":251,"score":1,"via":"name:normalized","checkpoint":"the member detail screen for the requested member is displayed"}}
-{"at":"2026-08-24T01:54:40.248Z","seq":22,"kind":"replay_success","detail":{"outputs":{"savingsBalance":"[declared-sensitive]","savingsAccountNumber":"[declared-sensitive]"},"durationMs":2721,"driftSignals":1}}
+{"at":"2026-09-02T05:36:34.017Z","seq":1,"kind":"replay_start","detail":{"capability":"lookup_member_savings_balance@1.0.0","tenant":"firstvalley","product":"corebank-servicing v8.2","baseUrl":"http://localhost:4001","approval":"approved","irreversibleAuthorized":false,"params":{"memberId":"[pii:07ab5c4d…0001]"},"overrides":2}}
+{"at":"2026-09-02T05:36:34.018Z","seq":2,"kind":"override_applied","detail":{"path":"/steps/0/action/target/name","why":"Their menu says \"Find Member\" where the reference install says \"Member Search\". A pure relabel with no behavioural difference.\n"}}
+{"at":"2026-09-02T05:36:34.019Z","seq":3,"kind":"override_applied","detail":{"path":"/steps/2/action/target/name","why":"Their search button is captioned \"Go\". Nothing else about the search form differs.\n"}}
+{"at":"2026-09-02T05:36:34.220Z","seq":4,"kind":"navigate_entry","detail":{"url":"http://localhost:4001/"}}
+{"at":"2026-09-02T05:36:34.240Z","seq":5,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-02T05:36:34.442Z","seq":6,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-02T05:36:34.599Z","seq":7,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-02T05:36:34.788Z","seq":8,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-02T05:36:34.806Z","seq":9,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-02T05:36:35.009Z","seq":10,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-02T05:36:35.011Z","seq":11,"kind":"auth_precondition","detail":{"ok":true,"note":"signed on and returned to the entry point"}}
+{"at":"2026-09-02T05:36:35.011Z","seq":12,"kind":"step_start","detail":{"step":"s1","index":1,"of":3,"intent":"Open the member search screen from the left-hand menu.","action":"click","risk":"safe"}}
+{"at":"2026-09-02T05:36:35.218Z","seq":13,"kind":"surface_action","detail":{"action":"click","target":"Find Member","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-02T05:36:35.429Z","seq":14,"kind":"step_ok","detail":{"step":"s1","durationMs":418,"score":1,"via":"name:normalized","checkpoint":"the member search screen is loaded in the content frame"}}
+{"at":"2026-09-02T05:36:35.430Z","seq":15,"kind":"step_start","detail":{"step":"s2","index":2,"of":3,"intent":"Type the member identifier into the search field.","action":"type","risk":"mutating","value":"{{memberId}}"}}
+{"at":"2026-09-02T05:36:35.464Z","seq":16,"kind":"surface_drift","detail":{"wanted":"unnamed textbox, labelled \"Member ID\", in frame main/contentFrame","matched":"Member Number","score":0.571,"strategy":"frame"}}
+{"at":"2026-09-02T05:36:35.549Z","seq":17,"kind":"surface_action","detail":{"action":"type","target":"Member Number","risk":"mutating","score":0.571,"strategy":"frame"}}
+{"at":"2026-09-02T05:36:35.578Z","seq":18,"kind":"step_ok","detail":{"step":"s2","durationMs":148,"score":0.571,"via":"frame"}}
+{"at":"2026-09-02T05:36:35.578Z","seq":19,"kind":"step_start","detail":{"step":"s3","index":3,"of":3,"intent":"Submit the search and land on the member's detail screen.","action":"click","risk":"safe"}}
+{"at":"2026-09-02T05:36:35.609Z","seq":20,"kind":"surface_action","detail":{"action":"click","target":"Go","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-02T05:36:35.875Z","seq":21,"kind":"step_ok","detail":{"step":"s3","durationMs":296,"score":1,"via":"name:normalized","checkpoint":"the member detail screen for the requested member is displayed"}}
+{"at":"2026-09-02T05:36:35.905Z","seq":22,"kind":"replay_success","detail":{"outputs":{"savingsBalance":"[declared-sensitive]","savingsAccountNumber":"[declared-sensitive]"},"durationMs":1889,"driftSignals":1}}

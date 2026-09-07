@@ -1,0 +1,27 @@
+{"at":"2026-09-06T21:02:39.911Z","seq":1,"kind":"replay_start","detail":{"capability":"get_balance@1.0.0","tenant":"meridian","identity":"teller","product":"meridian-core v4.2.1","baseUrl":"https://web-sample.interface-hiring.com","approval":"draft","irreversibleAuthorized":false,"params":{"memberId":"[pii:e9881aaa…3001]","shareId":"[pii:b0d59d8f…KT-5]"},"overrides":0}}
+{"at":"2026-09-06T21:02:40.483Z","seq":2,"kind":"fault_armed","detail":{"kind":"maintenance","route":"/members/**","times":1,"note":"armed by the harness on this browser session only; the agent loop cannot reach it"}}
+{"at":"2026-09-06T21:02:40.484Z","seq":3,"kind":"navigate_entry","detail":{"url":"https://web-sample.interface-hiring.com/"}}
+{"at":"2026-09-06T21:02:40.811Z","seq":4,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:02:40.961Z","seq":5,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:02:41.161Z","seq":6,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:41.361Z","seq":7,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:41.601Z","seq":8,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:41.829Z","seq":9,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:02:41.834Z","seq":10,"kind":"auth_precondition","detail":{"ok":true,"identity":"teller","note":"signed on and returned to the entry point"}}
+{"at":"2026-09-06T21:02:41.840Z","seq":11,"kind":"step_start","detail":{"step":"s1","index":1,"of":4,"intent":"Click the Member Inquiry link to start searching for a member record","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:02:41.995Z","seq":12,"kind":"surface_action","detail":{"action":"click","target":"Member Inquiry","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:42.053Z","seq":13,"kind":"step_ok","detail":{"step":"s1","durationMs":213,"score":1,"via":"name:normalized","checkpoint":"the route matches /members(?:[?#]|$) and \"MEMBER INQUIRY / SELECTION\" is on screen"}}
+{"at":"2026-09-06T21:02:42.054Z","seq":14,"kind":"step_start","detail":{"step":"s2","index":2,"of":4,"intent":"Enter member number {{memberId}} into the Value field to search for the member record","action":"type","risk":"mutating","value":"{{memberId}}"}}
+{"at":"2026-09-06T21:02:42.208Z","seq":15,"kind":"surface_action","detail":{"action":"type","target":"Value","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:42.252Z","seq":16,"kind":"step_ok","detail":{"step":"s2","durationMs":198,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:02:42.253Z","seq":17,"kind":"step_start","detail":{"step":"s3","index":3,"of":4,"intent":"Click the Search button to retrieve the member record for member number {{memberId}}","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:02:42.385Z","seq":18,"kind":"surface_action","detail":{"action":"click","target":"Search","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:42.449Z","seq":19,"kind":"step_ok","detail":{"step":"s3","durationMs":196,"score":1,"via":"name:normalized","checkpoint":"the route matches /members(?:[?#]|$)"}}
+{"at":"2026-09-06T21:02:42.450Z","seq":20,"kind":"step_start","detail":{"step":"s4","index":4,"of":4,"intent":"Click the Select link for member {{memberId}} to open the member record","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:02:42.509Z","seq":21,"kind":"surface_fault_injected","detail":{"url":"https://web-sample.interface-hiring.com/members/103001","kind":"maintenance","remaining":0}}
+{"at":"2026-09-06T21:02:42.582Z","seq":22,"kind":"surface_action","detail":{"action":"click","target":"Select","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:02:42.603Z","seq":23,"kind":"recovery_attempt","detail":{"condition":"maintenance_interstitial","handler":"retry_request","attempt":1,"why":"found \"SCHEDULED MAINTENANCE IN PROGRESS\""}}
+{"at":"2026-09-06T21:02:43.903Z","seq":24,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:02:43.904Z","seq":25,"kind":"recovery_result","detail":{"condition":"maintenance_interstitial","ok":true,"note":"re-requested https://web-sample.interface-hiring.com/members/103001 after 1200ms"}}
+{"at":"2026-09-06T21:02:44.086Z","seq":26,"kind":"step_ok","detail":{"step":"s4","durationMs":1636,"score":1,"via":"name:normalized","checkpoint":"the route matches /members/[0-9]+(?:[?#]|$) and \"MEMBER RECORD\" is on screen"}}
+{"at":"2026-09-06T21:02:44.296Z","seq":27,"kind":"replay_success","detail":{"outputs":{"shareBalance":"[declared-sensitive]","shareStatus":"[declared-sensitive]"},"durationMs":4386,"driftSignals":0}}

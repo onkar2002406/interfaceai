@@ -6,7 +6,11 @@
  *   npm run discover -- --goal "..."  LLM-driven discovery -> capability artifact
  *   npm run replay   -- --capability  deterministic replay (no model involved)
  *   npm run catalog  -- list          the agent-facing capability catalog
- *   npm run operator                  human-in-the-loop operator console
+ *   npm run panel                     web control panel for all of the above
+ *
+ * The human-in-the-loop operator console is not a separate command: pass
+ * `--operator` to `discover` or `replay` and it is started in-process, so it can
+ * hand a person the live browser session. `npm run handoff` demonstrates it.
  */
 
 import 'dotenv/config';
@@ -15,19 +19,63 @@ import { randomUUID } from 'node:crypto';
 import { resolve as resolvePath } from 'node:path';
 import { startCoreBank } from '../../apps/corebank/start-servers.js';
 import { TENANTS } from '../../apps/corebank/tenants.js';
-import { loadAppProfile, tenantOf } from '../capability/application-profile.js';
+import { loadAppProfile, policyPathFor, tenantOf, type AppProfile } from '../capability/application-profile.js';
 import { CapabilityStore } from '../capability/store.js';
 import { Policy } from '../policy/guardrails.js';
+import { availableFaults, planFault } from '../target/faults.js';
 import { RunRecorder } from '../observability/run-recorder.js';
 import { replay, CapabilityInputError } from '../replay/executor.js';
-import type { ReplayResult } from '../replay/replay-result.js';
-import { createProvider, defaultProviderName, describeProviders } from '../discovery/llm/provider-registry.js';
+import { sliceForAgent } from '../api/contract.js';
+import {
+  createProvider,
+  defaultProviderName,
+  describeChainFor,
+  describeProviders,
+} from '../discovery/llm/provider-registry.js';
+import { SwitchLog } from '../discovery/llm/failover-provider.js';
 import { summarize } from '../replay/replay-result.js';
 import { renderDiscoverySummary, renderReplaySummary } from './run-reports.js';
 
 const DEFAULT_PROFILE = 'config/apps/corebank-servicing.yaml';
 const DEFAULT_POLICY = 'config/policy.json';
 const DEFAULT_CAPABILITIES = 'capabilities';
+
+/**
+ * Loads a product profile together with the guardrails it declares.
+ *
+ * A profile names its own policy file, so `--profile <app>.yaml` is the single
+ * switch that points the engine at a different target. `--policy` still
+ * overrides, but nobody has to remember it — and forgetting it would silently
+ * run a new target under the previous target's containment boundary, which is
+ * the sort of mistake a safety layer must not make possible.
+ */
+function loadTarget(opts: { profile: string; policy?: string }): { profile: AppProfile; policy: Policy } {
+  const profile = loadAppProfile(resolvePath(opts.profile));
+  const policyPath = opts.policy ?? policyPathFor(profile, DEFAULT_POLICY);
+  return { profile, policy: Policy.fromFile(resolvePath(policyPath)) };
+}
+
+/**
+ * Which install to act on when the caller did not say.
+ *
+ * The profile's first tenant, not a hard-coded "base": that name belongs to one
+ * product, and defaulting to it against another turns every command into an
+ * error about a tenant the target has never heard of.
+ */
+function tenantIdFor(profile: AppProfile, requested?: string): string {
+  return requested ?? profile.tenants[0]?.id ?? 'base';
+}
+
+/**
+ * Where an ad-hoc run leaves its evidence.
+ *
+ * Same format and same completeness as the committed set — but a run someone
+ * typed at a prompt is not curated evidence, and dropping it into `evidence/`
+ * beside the curated directories makes the two indistinguishable at a glance and
+ * fills `git status` with noise. The control panel already writes here for the
+ * same reason, and this directory is git-ignored.
+ */
+const AD_HOC_RUNS = 'evidence/runs';
 
 const program = new Command();
 program
@@ -46,9 +94,11 @@ program
     console.log('CoreBank Servicing Console — same vendor product, three institutions:\n');
     for (const i of instances) {
       const t = TENANTS[i.tenantId]!;
-      console.log(`  ${i.baseUrl.padEnd(24)} ${t.institutionName} (CoreBank v${t.productVersion})`);
+      console.log(
+        `  ${i.baseUrl.padEnd(24)} ${t.institutionName.padEnd(28)} CoreBank v${t.productVersion}  operator ${t.operator}`,
+      );
     }
-    console.log('\nSign on with svc.demo / demo1234. Ctrl+C to stop.');
+    console.log('\nEach install has its own operator; passwords are in .env. Ctrl+C to stop.');
   });
 
 /* --------------------------------------------------------------- discover */
@@ -58,7 +108,12 @@ program
   .description('Drive the target application with an LLM to work out how a goal is achieved, then compile the successful run into a capability artifact.')
   .requiredOption('-g, --goal <text>', 'goal in natural language; may use {{param}} references')
   .option('-p, --param <key=value...>', 'value to supply for a {{param}} (repeatable)', collectInputs, {})
-  .option('-t, --tenant <id>', 'tenant to record against', 'base')
+  .option('-t, --tenant <id>', "tenant to record against (default: the profile's first)")
+  .option(
+    '-u, --url <target_url>',
+    "target URL to start from (default: the tenant's base URL). Must be on the policy allowlist.",
+  )
+  .option('--identity <name>', 'operator identity to record as (needed for entitlement-gated flows)')
   .option('--provider <name>', `groq | openai | scripted — ${describeProviders()}`, process.env.LLM_PROVIDER)
   .option('--model <name>', 'override the provider default model')
   .option('--max-steps <n>', 'stop after this many model turns', '20')
@@ -66,30 +121,51 @@ program
   .option('--headful', 'show the browser window', false)
   .option('--operator', 'attach an operator console so a stuck discovery run can escalate', false)
   .option('--profile <path>', 'app profile', DEFAULT_PROFILE)
-  .option('--policy <path>', 'policy config', DEFAULT_POLICY)
+  .option('--policy <path>', 'policy config (defaults to the one the profile names)')
   .option('--capabilities <dir>', 'capability store directory', DEFAULT_CAPABILITIES)
   .action(async (opts) => {
-    const profile = loadAppProfile(resolvePath(opts.profile));
-    const policy = Policy.fromFile(resolvePath(opts.policy));
+    const { profile, policy } = loadTarget(opts);
     const store = new CapabilityStore(resolvePath(opts.capabilities));
-    const tenant = tenantOf(profile, opts.tenant);
+    const tenantId = tenantIdFor(profile, opts.tenant);
+    const tenant = tenantOf(profile, tenantId);
 
     const { discover } = await import('../discovery/loop.js');
     const { compile } = await import('../discovery/trace-compiler.js');
     const { ControlAuthority } = await import('../escalation/control-authority.js');
     const { PlaywrightSurface } = await import('../surface/web/playwright-surface.js');
+    const { resolveEntryUrl, EntryUrlError } = await import('../discovery/entry-url.js');
+
+    // Before the provider is built and long before a browser launches: an
+    // off-allowlist target is a one-line refusal, not a blocked navigation
+    // several seconds into a run.
+    let entryUrl: string;
+    try {
+      entryUrl = resolveEntryUrl(policy, tenant, opts.url);
+    } catch (err) {
+      if (err instanceof EntryUrlError) {
+        console.error(err.message);
+        process.exitCode = 2;
+        return;
+      }
+      throw err;
+    }
 
     // No provider named: use whichever key is actually configured. Defaulting to
     // a provider whose key is missing fails three seconds into a browser launch,
     // which is a needlessly confusing way to say "set your key".
     const providerName = opts.provider ?? defaultProviderName();
+    // Buffered, because the provider is built before the recorder exists and a
+    // failover on the very first call would otherwise go unrecorded.
+    const switchLog = new SwitchLog();
     const provider = createProvider(providerName, {
       ...(opts.model ? { model: opts.model } : {}),
       scriptedParams: opts.param,
+      onSwitch: (s) => switchLog.record(s),
     });
 
     const runId = randomUUID().slice(0, 8);
-    const recorder = new RunRecorder(runId, 'discovery');
+    const recorder = new RunRecorder(runId, 'discovery', AD_HOC_RUNS);
+    switchLog.pipeTo((s) => recorder.event('model_provider_switched', { ...s }));
 
     let attached;
     if (opts.operator) {
@@ -100,8 +176,10 @@ program
 
     console.log(
       `Discovering against ${tenant.label} using ${provider.name}:${provider.model}` +
+        `${describeChainFor(providerName)}` +
         `${provider.supportsVision ? ' (screenshots sent to the model)' : ' (text inventory only)'}`,
     );
+    console.log(`Target: ${entryUrl}`);
     console.log(`Goal: ${opts.goal}\n`);
 
     const authority = new ControlAuthority(runId);
@@ -117,16 +195,19 @@ program
       const trace = await discover({
         goalTemplate: opts.goal,
         params: opts.param,
-        entryUrl: new URL('/', tenant.baseUrl).toString(),
+        entryUrl,
         product: profile.product,
         tenant: tenant.id,
         profile,
         tenantProfile: tenant,
+        ...(opts.identity ? { identity: String(opts.identity) } : {}),
         provider,
         surface,
         authority,
         recorder,
         allowedOrigins: policy.config.origins,
+        allowedActions: policy.config.actions,
+        irreversibleControls: policy.irreversibleControlNames(),
         maxSteps: Number(opts.maxSteps),
         ...(attached ? { sink: attached.sink } : {}),
       });
@@ -167,32 +248,49 @@ program
   .description('Replay a saved capability deterministically. No LLM is involved.')
   .requiredOption('-c, --capability <ref>', 'capability name, name@version, or path to a .yaml')
   .option('-i, --input <key=value...>', 'input parameter (repeatable)', collectInputs, {})
-  .option('-t, --tenant <id>', 'tenant to replay against', 'base')
-  .option('--fault <mode>', 'arm a runtime fault first: slow | interstitial | session | app_error')
+  .option('-t, --tenant <id>', "tenant to replay against (default: the profile's first)")
+  .option('--identity <name>', 'operator identity to sign on as, where the product declares them')
+  .option('--fault <kind>', 'arm a runtime fault for this run (see the profile\'s `faults:` block)')
   .option('--authorize-irreversible', 'explicitly authorise irreversible steps for this invocation', false)
   .option('--headful', 'show the browser window', false)
   .option('--operator', 'attach to a running operator console for escalations', false)
   .option('--profile <path>', 'app profile', DEFAULT_PROFILE)
-  .option('--policy <path>', 'policy config', DEFAULT_POLICY)
+  .option('--policy <path>', 'policy config (defaults to the one the profile names)')
   .option('--capabilities <dir>', 'capability store directory', DEFAULT_CAPABILITIES)
   .action(async (opts) => {
-    const profile = loadAppProfile(resolvePath(opts.profile));
-    const policy = Policy.fromFile(resolvePath(opts.policy));
+    const { profile, policy } = loadTarget(opts);
     const store = new CapabilityStore(resolvePath(opts.capabilities));
     const capability = store.load(opts.capability);
-    const tenant = tenantOf(profile, opts.tenant);
+    const tenantId = tenantIdFor(profile, opts.tenant);
+    const tenant = tenantOf(profile, tenantId);
 
+    // Worked out before anything launches, because the two strategies act at
+    // different moments: one is an HTTP call now, the other is a rewrite rule
+    // handed to the browser session when it starts.
+    let armed;
     if (opts.fault) {
-      await armFault(tenant.baseUrl, opts.fault);
-      console.log(`Armed fault "${opts.fault}" on ${tenant.label} (${tenant.baseUrl})\n`);
+      try {
+        armed = planFault(profile, tenant, opts.fault);
+      } catch (err) {
+        console.error(err instanceof Error ? err.message : String(err));
+        console.error(`Available on this product: ${availableFaults(profile).join(', ') || '(none)'}`);
+        process.exitCode = 2;
+        return;
+      }
+      if (armed.via === 'endpoint') await armed.arm();
+      console.log(
+        `Armed fault "${opts.fault}" on ${tenant.label} ` +
+          `(${armed.via === 'surface' ? 'this browser session only' : tenant.baseUrl})\n`,
+      );
     }
 
     const runId = randomUUID().slice(0, 8);
-    const recorder = new RunRecorder(runId, 'replay');
+    const recorder = new RunRecorder(runId, 'replay', AD_HOC_RUNS);
 
     console.log(
       `Replaying ${capability.metadata.name}@${capability.metadata.version} against ${tenant.label} ` +
-        `(CoreBank v${tenant.productVersion})\n`,
+        `(${profile.product} v${tenant.productVersion})` +
+        `${opts.identity ? ` as ${opts.identity}` : ''}\n`,
     );
 
     let attached: Awaited<ReturnType<typeof import('../escalation/operator/console-client.js').connectToOperatorConsole>> | undefined;
@@ -207,12 +305,14 @@ program
       const result = await replay({
         capability,
         params: opts.input,
-        tenantId: opts.tenant,
+        tenantId,
         profile,
         policy,
         recorder,
         headful: Boolean(opts.headful),
         authorizeIrreversible: Boolean(opts.authorizeIrreversible),
+        ...(opts.identity ? { identity: String(opts.identity) } : {}),
+        ...(armed?.via === 'surface' ? { fault: armed.fault } : {}),
         ...(attached ? { sink: attached.sink } : {}),
       });
 
@@ -242,7 +342,10 @@ program
       }
       throw err;
     } finally {
-      if (opts.fault) await armFault(tenant.baseUrl, 'none').catch(() => {});
+      // Only the endpoint strategy leaves anything behind to clean up. A
+      // session-scoped fault dies with the browser context, which is most of
+      // the reason to prefer it.
+      if (armed?.via === 'endpoint') await armed.disarm();
       if (attached) await attached.close().catch(() => {});
     }
   });
@@ -255,15 +358,20 @@ program
   .argument('<action>', 'list | describe | tools | invoke')
   .argument('[name]', 'capability name (for describe / invoke)')
   .option('-i, --input <key=value...>', 'argument for invoke (repeatable)', collectInputs, {})
-  .option('-t, --tenant <id>', 'tenant', 'base')
+  .option('-t, --tenant <id>', "tenant (default: the profile's first)")
+  .option('--identity <name>', 'operator identity to sign on as, where the product declares them')
   .option('--authorize-irreversible', 'authorise irreversible steps for this invocation', false)
   .option('--profile <path>', 'app profile', DEFAULT_PROFILE)
-  .option('--policy <path>', 'policy config', DEFAULT_POLICY)
+  .option('--policy <path>', 'policy config (defaults to the one the profile names)')
   .option('--capabilities <dir>', 'capability store directory', DEFAULT_CAPABILITIES)
   .action(async (action: string, name: string | undefined, opts) => {
     const { Catalog } = await import('../capability/catalog.js');
     const store = new CapabilityStore(resolvePath(opts.capabilities));
-    const catalog = new Catalog(store);
+    // Scoped to the product this invocation is pointed at. The store holds every
+    // product's artifacts; a catalog that advertised all of them would offer an
+    // agent tools that cannot run against the target in front of it.
+    const { profile, policy } = loadTarget(opts);
+    const catalog = new Catalog(store, profile.product);
 
     if (action === 'list') {
       const cards = catalog.list();
@@ -299,14 +407,13 @@ program
     }
 
     if (action === 'invoke') {
-      const profile = loadAppProfile(resolvePath(opts.profile));
-      const policy = Policy.fromFile(resolvePath(opts.policy));
       console.log(`Agent invokes: ${name}(${JSON.stringify(opts.input)})\n`);
       try {
         const result = await catalog.invoke(name, opts.input, {
-          tenantId: opts.tenant,
+          tenantId: tenantIdFor(profile, opts.tenant),
           profile,
           policy,
+          ...(opts.identity ? { identity: String(opts.identity) } : {}),
           authorizeIrreversible: Boolean(opts.authorizeIrreversible),
         });
         console.log(JSON.stringify(sliceForAgent(result), null, 2));
@@ -325,58 +432,51 @@ program
     throw new Error(`unknown catalog action "${action}". Use list | describe | tools | invoke.`);
   });
 
-/* -------------------------------------------------------------- utilities */
+/* ------------------------------------------------------------------ panel */
 
-/** What the calling agent actually receives — not the whole run envelope. */
-function sliceForAgent(r: ReplayResult): Record<string, unknown> {
-  const base = { status: r.status, capability: `${r.capability}@${r.capabilityVersion}`, tenant: r.tenant };
-  switch (r.status) {
-    case 'success':
-      return { ...base, outputs: r.outputs };
-    case 'business_outcome':
-      return { ...base, code: r.code, message: r.message };
-    case 'escalated':
-      return { ...base, resolution: r.resolution, reason: r.reason, interventionId: r.interventionId };
-    case 'failed':
-      return { ...base, error: r.error, evidence: r.evidenceDir };
-  }
-}
+program
+  .command('panel')
+  .description('Web control panel: browse the capability catalog, run a replay, watch it, read the evidence.')
+  .option('--port <n>', 'port to serve on', String(process.env.PANEL_PORT ?? 4200))
+  .option(
+    '--operator-port <n>',
+    'port for the operator console this panel starts in-process',
+    String(process.env.OPERATOR_PORT ?? 4100),
+  )
+  .option('--headful', 'show the browser window for runs started from the panel', false)
+  .option('--profile <path>', 'app profile', DEFAULT_PROFILE)
+  .option('--policy <path>', 'policy config (defaults to the one the profile names)')
+  .option('--capabilities <dir>', 'capability store directory', DEFAULT_CAPABILITIES)
+  .action(async (opts) => {
+    const { startControlPanel } = await import('../panel/server.js');
+    const { profile, policy } = loadTarget(opts);
+    const panel = await startControlPanel({
+      profile,
+      policy,
+      store: new CapabilityStore(resolvePath(opts.capabilities)),
+      port: Number(opts.port),
+      operatorPort: Number(opts.operatorPort),
+      headful: Boolean(opts.headful),
+    });
+    console.log(`Control panel    ${panel.url}`);
+    console.log(`Operator console ${panel.operatorUrl}`);
+    console.log(`Target           ${profile.tenants.map((t) => t.baseUrl).join(', ')}`);
+    // Only tell someone to start the target where this repo can actually start
+    // it. For a hosted product that instruction is just wrong.
+    const selfHosted = profile.tenants.every((t) => new URL(t.baseUrl).hostname === 'localhost');
+    console.log(
+      selfHosted
+        ? '\nStart the target application in another terminal with `npm run app`. Ctrl+C to stop.'
+        : '\nThe target is hosted, so nothing else needs starting. Ctrl+C to stop.',
+    );
+  });
+
+/* -------------------------------------------------------------- utilities */
 
 function collectInputs(value: string, previous: Record<string, string>): Record<string, string> {
   const eq = value.indexOf('=');
   if (eq === -1) throw new Error(`--input expects key=value, got "${value}"`);
   return { ...previous, [value.slice(0, eq)]: value.slice(eq + 1) };
-}
-
-/**
- * Which request each fault should fire on.
- *
- * Targeting the route is what makes each scenario say what it means. Left
- * untargeted, a session fault fires on whichever request arrives first — in
- * practice the sign-on bounce — which tests "sign-on is broken", not "the
- * session expired halfway through the flow".
- */
-const FAULT_ROUTES: Record<string, string> = {
-  slow: '/member/*',
-  app_error: '/member/*',
-  session: '/member/*',
-  interstitial: '/search',
-};
-
-/**
- * Arms a fault on the target app.
- *
- * Note this goes over plain HTTP from the CLI, not through the browser surface:
- * `/_admin/**` is on the policy DENY list precisely so the automation cannot
- * reach its own test hooks. The harness may arm faults; the agent may not.
- */
-async function armFault(baseUrl: string, mode: string): Promise<void> {
-  const res = await fetch(`${baseUrl}/_admin/fault`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ mode, times: 1, route: FAULT_ROUTES[mode] }),
-  });
-  if (!res.ok) throw new Error(`Could not arm fault "${mode}": ${res.status} ${await res.text()}`);
 }
 
 program.parseAsync(process.argv).catch((err) => {

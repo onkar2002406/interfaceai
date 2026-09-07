@@ -48,6 +48,7 @@ export interface ProviderConfig {
 /** How many times to ask again when the model answers in prose. */
 const TOOL_CALL_ATTEMPTS = 3;
 
+/** Discovery's nudge. Callers with a different tool set supply their own. */
 const NUDGE =
   'You did not call a tool. You must respond by calling exactly one of the available tools, naming elements by ' +
   'the id in square brackets. If the goal is already achieved, call finish. If you are stuck or the screen has ' +
@@ -71,6 +72,47 @@ class NoToolCallError extends Error {
 function looksLikeNoToolCall(err: unknown): boolean {
   const e = err as { status?: number; message?: string };
   return e.status === 400 && /did not call a tool|tool_choice/i.test(e.message ?? '');
+}
+
+/**
+ * Why a provider gave up, as a value rather than a string to be regexed.
+ *
+ * This exists so `FailoverProvider` can decide whether trying a *different*
+ * host is worth doing. Matching on message text would work until somebody
+ * reworded an error, and the failure mode would be silent: a run that should
+ * have fallen back would just die instead.
+ */
+export type ProviderFailureKind =
+  | 'auth'
+  | 'quota'
+  | 'model_missing'
+  | 'rate_limit'
+  | 'server'
+  | 'no_tool_call'
+  | 'bad_arguments'
+  | 'unknown';
+
+export class ProviderFailure extends Error {
+  constructor(
+    message: string,
+    readonly kind: ProviderFailureKind,
+    readonly provider: string,
+  ) {
+    super(message);
+    this.name = 'ProviderFailure';
+  }
+
+  /**
+   * Would a different host plausibly succeed at the identical request?
+   *
+   * Everything except `bad_arguments`, which means the model returned JSON we
+   * could not parse against our own tool schema. That is our bug, not the
+   * host's, and the next provider would fail the same way — failing over would
+   * just spend a second quota to reach the same error.
+   */
+  get failoverWorthwhile(): boolean {
+    return this.kind !== 'bad_arguments';
+  }
 }
 
 export class OpenAiCompatibleProvider implements LlmProvider {
@@ -145,9 +187,22 @@ export class OpenAiCompatibleProvider implements LlmProvider {
     // the same screen succeeds on a retry. Aborting a whole discovery run over
     // one flaky turn would be the wrong trade, so nudge and ask again, and only
     // give up if the model keeps refusing.
+    // On the final attempt, stop asking the host to choose. `tool_choice:
+    // "required"` is the thing some hosts 400 on when the model wants to answer
+    // in prose; naming one function removes the decision and usually gets a
+    // call back. Only used when the caller nominated a tool that cannot
+    // fabricate a result — see `forceToolOnLastAttempt`.
+    const forced = req.forceToolOnLastAttempt;
+    const forcedIsReal = forced !== undefined && req.tools.some((t) => t.name === forced);
+
     for (let attempt = 1; attempt <= TOOL_CALL_ATTEMPTS; attempt++) {
       const attemptMessages =
-        attempt === 1 ? messages : [...messages, { role: 'user' as const, content: NUDGE }];
+        attempt === 1 ? messages : [...messages, { role: 'user' as const, content: req.nudge ?? NUDGE }];
+      const lastAttempt = attempt === TOOL_CALL_ATTEMPTS;
+      const toolChoice: OpenAI.Chat.ChatCompletionToolChoiceOption =
+        lastAttempt && forcedIsReal
+          ? { type: 'function', function: { name: forced! } }
+          : 'required';
 
       let res: OpenAI.Chat.ChatCompletion;
       try {
@@ -155,11 +210,19 @@ export class OpenAiCompatibleProvider implements LlmProvider {
           model: this.model,
           messages: attemptMessages,
           tools,
-          tool_choice: 'required',
+          tool_choice: toolChoice,
           temperature: 0,
         });
       } catch (err) {
         if (err instanceof NoToolCallError && attempt < TOOL_CALL_ATTEMPTS) continue;
+        if (err instanceof NoToolCallError) {
+          throw new ProviderFailure(
+            `${this.config.label} (${this.model}) answered in prose instead of calling a tool ` +
+              `after ${TOOL_CALL_ATTEMPTS} attempts: ${err.message}`,
+            'no_tool_call',
+            this.config.id,
+          );
+        }
         throw err;
       }
 
@@ -171,9 +234,11 @@ export class OpenAiCompatibleProvider implements LlmProvider {
       const call = choice?.message.tool_calls?.[0];
       if (!call || call.type !== 'function') {
         if (attempt < TOOL_CALL_ATTEMPTS) continue;
-        throw new Error(
-          `${this.config.label} returned prose instead of a tool call after ${TOOL_CALL_ATTEMPTS} attempts: ` +
-            `${choice?.message.content ?? '(empty response)'}`,
+        throw new ProviderFailure(
+          `${this.config.label} (${this.model}) returned prose instead of a tool call after ` +
+            `${TOOL_CALL_ATTEMPTS} attempts: ${choice?.message.content ?? '(empty response)'}`,
+          'no_tool_call',
+          this.config.id,
         );
       }
 
@@ -182,7 +247,11 @@ export class OpenAiCompatibleProvider implements LlmProvider {
         args = JSON.parse(call.function.arguments || '{}') as Record<string, unknown>;
       } catch {
         if (attempt < TOOL_CALL_ATTEMPTS) continue;
-        throw new Error(`${this.config.label} returned unparseable tool arguments: ${call.function.arguments}`);
+        throw new ProviderFailure(
+          `${this.config.label} returned unparseable tool arguments: ${call.function.arguments}`,
+          'bad_arguments',
+          this.config.id,
+        );
       }
 
       return {
@@ -220,33 +289,41 @@ export class OpenAiCompatibleProvider implements LlmProvider {
         }
 
         if (e.status === 401 || e.status === 403) {
-          throw new Error(
+          throw new ProviderFailure(
             `${this.config.label} rejected the API key (${e.status}). Check ${this.config.apiKeyEnv} in .env — ` +
               `it may be mistyped, revoked, or belong to a different account. Keys are managed at ` +
               `${this.config.consoleUrl}.`,
+            'auth',
+            this.config.id,
           );
         }
 
         if (e.code === 'insufficient_quota') {
-          throw new Error(
+          throw new ProviderFailure(
             `The ${this.config.label} key is valid but the account has no available quota ` +
               `(429 insufficient_quota). This is a billing state, not a rate limit, so retrying will not help: ` +
               `add credit at ${this.config.consoleUrl}. To exercise the pipeline meanwhile, run discovery with ` +
               '`--provider scripted`.',
+            'quota',
+            this.config.id,
           );
         }
 
         if (e.status === 404) {
-          throw new Error(
+          throw new ProviderFailure(
             `The model "${this.model}" is not available on ${this.config.label} (404). Set ${this.config.modelEnv} ` +
               'in .env to a model this account can reach.',
+            'model_missing',
+            this.config.id,
           );
         }
 
         const transient = e.status === 429 || (e.status !== undefined && e.status >= 500);
         if (!transient || attempt >= MAX_ATTEMPTS) {
-          throw new Error(
+          throw new ProviderFailure(
             `${this.config.label} request failed (${e.status ?? 'no status'}): ${e.message ?? String(err)}`,
+            e.status === 429 ? 'rate_limit' : e.status !== undefined && e.status >= 500 ? 'server' : 'unknown',
+            this.config.id,
           );
         }
 

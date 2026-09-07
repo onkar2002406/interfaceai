@@ -1,0 +1,394 @@
+# Update a member's contact details
+#
+# Updates the e-mail, phone and mailing address on member {{memberId}} and saves the record. The mailing address REPLACES what is on file rather than appending to it, so a caller that does not have the full address should read the record first.
+#
+# Reviewed by a human before `approval: approved` is set. Approval is what
+# permits unattended replay of any step marked risk: irreversible.
+#
+# Values below are parameter REFERENCES ({{name}}), never captured data.
+
+apiVersion: capability.interface.ai/v1
+kind: Capability
+metadata:
+  id: cap_update_member_info
+  name: update_member_info
+  version: 1.0.0
+  title: Update a member's contact details
+  summary: Updates the e-mail, phone and mailing address on member {{memberId}} and saves the record.
+    The mailing address REPLACES what is on file rather than appending to it, so a caller that does
+    not have the full address should read the record first.
+  createdAt: 2026-09-05T13:39:59.521Z
+  app:
+    product: meridian-core
+    productVersion: 4.2.1
+    tenant: meridian
+    entryPoint: /
+  approval: draft
+  provenance:
+    discoveryRunId: 8581a8f7
+    model: groq:openai/gpt-oss-120b
+    surfaceKind: web
+    traceRef: evidence/runs/discovery-8581a8f7/trace.json
+    traceSha256: 64c14893c0abd5c715da40eedbd7ed5e62a56707e24da9ffeb02c40f4cbd8b67
+    handCompleted: "step s7a (Mailing Address) was authored by a person, not recorded: the discovery
+      goal did not mention this field, so the model never typed into it. The control is on
+      MERIDIAN's own screen. See scripts/add-form-fields.ts."
+spec:
+  inputs:
+    - name: memberId
+      type: string
+      description: Enter member number {{memberId}} into the Value textbox for member lookup.
+      required: true
+      pattern: ^[0-9]{1,9}$
+      sensitivity: pii
+    - name: email
+      type: string
+      description: Enter {{email}} into the E-mail textbox.
+      required: true
+      pattern: ^.{1,40}$
+      sensitivity: pii
+    - name: phone
+      type: string
+      description: Enter {{phone}} into the Phone textbox.
+      required: true
+      pattern: ^.{1,40}$
+      sensitivity: pii
+    - name: address
+      type: string
+      description: Replacement mailing address for the member record.
+      required: true
+      pattern: ^.{1,120}$
+      sensitivity: pii
+  outputs: []
+  preconditions:
+    authState: authenticated
+    describe: An operator session must already exist. Sign-on is the runtime's responsibility, not part
+      of this flow.
+  steps:
+    - id: s1
+      intent: Click the 'Member Inquiry / Selection' link to start member lookup
+      action:
+        type: click
+        target:
+          description: Click the 'Member Inquiry / Selection' link to start member lookup
+          role: link
+          name: Member Inquiry / Selection
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MAIN MENU
+          anchors:
+            - relation: nearHeading
+              text: MAIN MENU
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 324.875
+              y: 125
+              width: 151.21875
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members(?:[?#]|$) and "MEMBER INQUIRY / SELECTION" is on screen
+        all:
+          - kind: urlMatches
+            pattern: /members(?:[?#]|$)
+          - kind: textPresent
+            text: MEMBER INQUIRY / SELECTION
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s2
+      intent: Enter member number {{memberId}} into the Value textbox for member lookup
+      action:
+        type: type
+        target:
+          description: Enter member number {{memberId}} into the Value textbox for member lookup
+          role: textbox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: proximateLabel
+              text: Value
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 364.28125
+              y: 141
+              width: 212
+              height: 13
+            proximateLabels:
+              - Value
+        value: "{{memberId}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s3
+      intent: Click the Search button to find member {{memberId}}
+      action:
+        type: click
+        target:
+          description: Click the Search button to find member {{memberId}}
+          role: button
+          name: Search
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 600.890625
+              y: 141
+              width: 38.078125
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members(?:[?#]|$)
+        all:
+          - kind: urlMatches
+            pattern: /members(?:[?#]|$)
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s4
+      intent: Click the Select link for member {{memberId}} to open the member details page
+      action:
+        type: click
+        target:
+          description: Click the Select link for member {{memberId}} to open the member details page
+          role: link
+          name: Select
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 899.421875
+              y: 214
+              width: 33.71875
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members/[0-9]+(?:[?#]|$) and "MEMBER RECORD" is on screen
+        all:
+          - kind: urlMatches
+            pattern: /members/[0-9]+(?:[?#]|$)
+          - kind: textPresent
+            text: MEMBER RECORD
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s5
+      intent: Click the 'Update Member Information' link to open the edit form for email and phone
+      action:
+        type: click
+        target:
+          description: Click the 'Update Member Information' link to open the edit form for email and phone
+          role: link
+          name: Update Member Information
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER RECORD
+          anchors:
+            - relation: nearHeading
+              text: MEMBER RECORD
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 488.1875
+              y: 479
+              width: 156.734375
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members/[0-9]+/update(?:[?#]|$) and "UPDATE MEMBER INFORMATION" is on
+          screen
+        all:
+          - kind: urlMatches
+            pattern: /members/[0-9]+/update(?:[?#]|$)
+          - kind: textPresent
+            text: UPDATE MEMBER INFORMATION
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s6
+      intent: Enter {{email}} into the E-mail textbox
+      action:
+        type: type
+        target:
+          description: Enter {{email}} into the E-mail textbox
+          role: textbox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: UPDATE MEMBER INFORMATION
+          anchors:
+            - relation: proximateLabel
+              text: E-mail
+            - relation: nearHeading
+              text: UPDATE MEMBER INFORMATION
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 413.109375
+              y: 128
+              width: 268
+              height: 13
+            proximateLabels:
+              - E-mail
+        value: "{{email}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s7
+      intent: Enter {{phone}} into the Phone textbox
+      action:
+        type: type
+        target:
+          description: Enter {{phone}} into the Phone textbox
+          role: textbox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: UPDATE MEMBER INFORMATION
+          anchors:
+            - relation: proximateLabel
+              text: Phone
+            - relation: nearHeading
+              text: UPDATE MEMBER INFORMATION
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 413.109375
+              y: 151
+              width: 156
+              height: 13
+            proximateLabels:
+              - Phone
+        value: "{{phone}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s7a
+      intent: Enter {{address}} into the Mailing Address textbox
+      action:
+        type: type
+        target:
+          description: the Mailing Address textbox on the UPDATE MEMBER INFORMATION screen
+          role: textbox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: UPDATE MEMBER INFORMATION
+          anchors:
+            - relation: proximateLabel
+              text: Mailing Address
+            - relation: nearHeading
+              text: UPDATE MEMBER INFORMATION
+          hints:
+            domHint: input
+            proximateLabels:
+              - Mailing Address
+        value: "{{address}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s8
+      intent: Click the Save Changes button to commit the updated email and phone values
+      action:
+        type: click
+        target:
+          description: Click the Save Changes button to commit the updated email and phone values
+          role: button
+          name: Save Changes
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: UPDATE MEMBER INFORMATION
+          anchors:
+            - relation: nearHeading
+              text: UPDATE MEMBER INFORMATION
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 420.109375
+              y: 211
+              width: 78.234375
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: '"MEMBER INFORMATION UPDATED" is on screen'
+        all:
+          - kind: textPresent
+            text: MEMBER INFORMATION UPDATED
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+  successCheckpoint:
+    describe: the flow reached the screen that answers the goal, with every declared value visible on it
+    all:
+      - kind: textPresent
+        text: MEMBER INFORMATION UPDATED
+    any: []
+    timeoutMs: 10000
+    pollMs: 250
+  outcomes:
+    business:
+      - code: MEMBER_NOT_FOUND
+        meaning: No member record matches the supplied identifier.
+        outputsAvailable: false
+      - code: SUPERVISOR_OVERRIDE_REQUIRED
+        meaning: >
+          The signed-on operator is not entitled to perform this restricted function. A supervisor
+          must carry it out.
+        outputsAvailable: false
+      - code: VALIDATION_ERROR
+        meaning: The application rejected the submitted transaction.
+        outputsAvailable: false
+  escalation:
+    onUnrecovered: escalate
+    onAmbiguous: escalate
+    onIrreversible: require_approval
+overrides: {}

@@ -1,0 +1,13 @@
+{
+  "status": "escalated",
+  "capability": "funds_transfer@1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "runId": "escalated-irreversible-transfer",
+  "evidence": "evidence/meridian/replay-escalated-irreversible-transfer",
+  "durationMs": 8421,
+  "resolution": "unattended",
+  "reason": "irreversible step requires an approved artifact and explicit invocation authorisation (FUNDS_TRANSFER)",
+  "atStep": "s10",
+  "interventionId": "int_efdf4677"
+}

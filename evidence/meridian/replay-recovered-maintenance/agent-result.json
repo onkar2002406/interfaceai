@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "capability": "get_balance@1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "runId": "recovered-maintenance",
+  "evidence": "evidence/meridian/replay-recovered-maintenance",
+  "durationMs": 4387,
+  "outputs": {
+    "shareBalance": 123,
+    "shareStatus": "OPEN"
+  }
+}

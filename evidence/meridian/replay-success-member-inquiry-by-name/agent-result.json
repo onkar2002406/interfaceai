@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "capability": "member_inquiry@1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "runId": "success-member-inquiry-by-name",
+  "evidence": "evidence/meridian/replay-success-member-inquiry-by-name",
+  "durationMs": 3039,
+  "outputs": {
+    "memberNumber": "101555",
+    "memberFullName": "Hopper, Grace"
+  }
+}

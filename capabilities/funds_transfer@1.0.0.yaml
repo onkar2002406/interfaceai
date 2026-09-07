@@ -1,0 +1,562 @@
+# Post a funds transfer between two shares on a member record
+#
+# Moves {{amount}} from share {{fromShare}} to share {{toShare}} on member {{memberId}} with the memo {{memo}}, reviewing the transfer and then POSTING it. The posting step is irreversible and requires explicit authorisation; without it the run stops for a human at the confirmation screen having committed nothing.
+#
+# Reviewed by a human before `approval: approved` is set. Approval is what
+# permits unattended replay of any step marked risk: irreversible.
+#
+# Values below are parameter REFERENCES ({{name}}), never captured data.
+
+apiVersion: capability.interface.ai/v1
+kind: Capability
+metadata:
+  id: cap_funds_transfer
+  name: funds_transfer
+  version: 1.0.0
+  title: Post a funds transfer between two shares on a member record
+  summary: Moves {{amount}} from share {{fromShare}} to share {{toShare}} on member {{memberId}} with
+    the memo {{memo}}, reviewing the transfer and then POSTING it. The posting step is irreversible
+    and requires explicit authorisation; without it the run stops for a human at the confirmation
+    screen having committed nothing.
+  createdAt: 2026-09-05T13:43:33.223Z
+  app:
+    product: meridian-core
+    productVersion: 4.2.1
+    tenant: meridian
+    entryPoint: /
+  approval: draft
+  provenance:
+    discoveryRunId: 119cf3e8
+    model: groq:openai/gpt-oss-120b
+    surfaceKind: web
+    traceRef: evidence/runs/discovery-119cf3e8/trace.json
+    traceSha256: ff4b273a649ce5db56f8e3264901984dc46a4be45b22ab84fabff9957343cc5b
+    handCompleted: "step s10 (Post Transfer) was authored by a person, not recorded: policy refuses
+      irreversible actions during discovery, so the agent recorded up to the review screen and
+      stopped. See scripts/complete-posting-steps.ts. step s8a (Memo) was authored by a person, not
+      recorded: the discovery goal did not mention this field, so the model never typed into it. The
+      control is on MERIDIAN's own screen. See scripts/add-form-fields.ts."
+spec:
+  inputs:
+    - name: memberId
+      type: string
+      description: Enter member number {{memberId}} into the Value textbox for member search.
+      required: true
+      pattern: ^[0-9]{1,9}$
+      sensitivity: pii
+    - name: fromShare
+      type: string
+      description: Select {{fromShare}} in the From Share dropdown.
+      required: true
+      pattern: ^.{1,40}$
+      sensitivity: pii
+    - name: toShare
+      type: string
+      description: Select {{toShare}} in the To Share dropdown.
+      required: true
+      pattern: ^.{1,40}$
+      sensitivity: pii
+    - name: amount
+      type: string
+      description: Enter transfer amount {{amount}} into the Amount textbox.
+      required: true
+      pattern: ^[0-9]+(\.[0-9]{1,2})?$
+      sensitivity: pii
+    - name: memo
+      type: string
+      description: Memo recorded against the transfer, 40 characters or fewer.
+      required: true
+      pattern: ^.{1,40}$
+      sensitivity: pii
+  outputs:
+    - name: fromShare
+      type: string
+      description: From share
+      sensitivity: pii
+      from:
+        afterStep: s9
+        target:
+          description: the fromShare value on the final screen
+          role: StaticText
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: CONFIRM FUNDS TRANSFER
+          anchors:
+            - relation: proximateLabel
+              text: From
+            - relation: nearHeading
+              text: CONFIRM FUNDS TRANSFER
+          hints:
+            boundsAtRecord:
+              x: 352.265625
+              y: 134
+              width: 150.90625
+              height: 13
+            proximateLabels:
+              - From
+        transform: trim
+    - name: toShare
+      type: string
+      description: To share
+      sensitivity: pii
+      from:
+        afterStep: s9
+        target:
+          description: the toShare value on the final screen
+          role: StaticText
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: CONFIRM FUNDS TRANSFER
+          anchors:
+            - relation: proximateLabel
+              text: To
+            - relation: nearHeading
+              text: CONFIRM FUNDS TRANSFER
+          hints:
+            boundsAtRecord:
+              x: 352.265625
+              y: 153
+              width: 144
+              height: 13
+            proximateLabels:
+              - To
+        transform: trim
+    - name: transferAmount
+      type: money
+      description: Transfer amount
+      sensitivity: pii
+      from:
+        afterStep: s9
+        target:
+          description: the transferAmount value on the final screen
+          role: StaticText
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: CONFIRM FUNDS TRANSFER
+          anchors:
+            - relation: proximateLabel
+              text: Amount
+            - relation: nearHeading
+              text: CONFIRM FUNDS TRANSFER
+          hints:
+            boundsAtRecord:
+              x: 352.265625
+              y: 172
+              width: 36
+              height: 13
+            proximateLabels:
+              - Amount
+        transform: money
+  preconditions:
+    authState: authenticated
+    describe: An operator session must already exist. Sign-on is the runtime's responsibility, not part
+      of this flow.
+  steps:
+    - id: s1
+      intent: Click the 'Member Inquiry / Selection' link to start member lookup
+      action:
+        type: click
+        target:
+          description: Click the 'Member Inquiry / Selection' link to start member lookup
+          role: link
+          name: Member Inquiry / Selection
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MAIN MENU
+          anchors:
+            - relation: nearHeading
+              text: MAIN MENU
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 324.875
+              y: 125
+              width: 151.21875
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members(?:[?#]|$) and "MEMBER INQUIRY / SELECTION" is on screen
+        all:
+          - kind: urlMatches
+            pattern: /members(?:[?#]|$)
+          - kind: textPresent
+            text: MEMBER INQUIRY / SELECTION
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s2
+      intent: Enter member number {{memberId}} into the Value textbox for member search
+      action:
+        type: type
+        target:
+          description: Enter member number {{memberId}} into the Value textbox for member search
+          role: textbox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: proximateLabel
+              text: Value
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 364.28125
+              y: 141
+              width: 212
+              height: 13
+            proximateLabels:
+              - Value
+        value: "{{memberId}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s3
+      intent: Click the Search button to find member {{memberId}}
+      action:
+        type: click
+        target:
+          description: Click the Search button to find member {{memberId}}
+          role: button
+          name: Search
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 600.890625
+              y: 141
+              width: 38.078125
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members(?:[?#]|$)
+        all:
+          - kind: urlMatches
+            pattern: /members(?:[?#]|$)
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s4
+      intent: Click the 'Select' link for member {{memberId}} to open member details
+      action:
+        type: click
+        target:
+          description: Click the 'Select' link for member {{memberId}} to open member details
+          role: link
+          name: Select
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 899.421875
+              y: 214
+              width: 33.71875
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members/[0-9]+(?:[?#]|$) and "MEMBER RECORD" is on screen
+        all:
+          - kind: urlMatches
+            pattern: /members/[0-9]+(?:[?#]|$)
+          - kind: textPresent
+            text: MEMBER RECORD
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s5
+      intent: Click the 'Funds Transfer' link to start a new transfer for member {{memberId}}
+      action:
+        type: click
+        target:
+          description: Click the 'Funds Transfer' link to start a new transfer for member {{memberId}}
+          role: link
+          name: Funds Transfer
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER RECORD
+          anchors:
+            - relation: nearHeading
+              text: MEMBER RECORD
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 275
+              y: 479
+              width: 81.328125
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members/[0-9]+/transfer(?:[?#]|$) and "FUNDS TRANSFER" is on screen
+        all:
+          - kind: urlMatches
+            pattern: /members/[0-9]+/transfer(?:[?#]|$)
+          - kind: textPresent
+            text: FUNDS TRANSFER
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s6
+      intent: Select {{fromShare}} in the From Share dropdown
+      action:
+        type: select
+        target:
+          description: Select {{fromShare}} in the From Share dropdown
+          role: combobox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: FUNDS TRANSFER
+          anchors:
+            - relation: proximateLabel
+              text: From Share
+            - relation: nearHeading
+              text: FUNDS TRANSFER
+          hints:
+            domHint: select
+            boundsAtRecord:
+              x: 386.375
+              y: 128
+              width: 308
+              height: 15
+            proximateLabels:
+              - From Share
+        value: "{{fromShare}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s7
+      intent: Select {{toShare}} in the To Share dropdown
+      action:
+        type: select
+        target:
+          description: Select {{toShare}} in the To Share dropdown
+          role: combobox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: FUNDS TRANSFER
+          anchors:
+            - relation: proximateLabel
+              text: To Share
+            - relation: nearHeading
+              text: FUNDS TRANSFER
+          hints:
+            domHint: select
+            boundsAtRecord:
+              x: 386.375
+              y: 153
+              width: 308
+              height: 15
+            proximateLabels:
+              - To Share
+        value: "{{toShare}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s8
+      intent: Enter transfer amount {{amount}} into the Amount textbox
+      action:
+        type: type
+        target:
+          description: Enter transfer amount {{amount}} into the Amount textbox
+          role: textbox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: FUNDS TRANSFER
+          anchors:
+            - relation: proximateLabel
+              text: $
+            - relation: nearHeading
+              text: FUNDS TRANSFER
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 393.375
+              y: 178
+              width: 114
+              height: 13
+            proximateLabels:
+              - $
+              - Amount
+        value: "{{amount}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s8a
+      intent: Enter {{memo}} into the Memo textbox
+      action:
+        type: type
+        target:
+          description: the Memo textbox on the FUNDS TRANSFER screen
+          role: textbox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: FUNDS TRANSFER
+          anchors:
+            - relation: proximateLabel
+              text: Memo
+            - relation: nearHeading
+              text: FUNDS TRANSFER
+          hints:
+            domHint: input
+            proximateLabels:
+              - Memo
+        value: "{{memo}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s9
+      intent: Click the Continue button to go to the transfer confirmation screen
+      action:
+        type: click
+        target:
+          description: Click the Continue button to go to the transfer confirmation screen
+          role: button
+          name: Continue
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: FUNDS TRANSFER
+          anchors:
+            - relation: nearHeading
+              text: FUNDS TRANSFER
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 393.375
+              y: 238
+              width: 49.15625
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members/[0-9]+/transfer/review(?:[?#]|$) and "CONFIRM FUNDS TRANSFER"
+          is on screen
+        all:
+          - kind: urlMatches
+            pattern: /members/[0-9]+/transfer/review(?:[?#]|$)
+          - kind: textPresent
+            text: CONFIRM FUNDS TRANSFER
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s10
+      intent: Click Post Transfer to commit the transfer shown on the confirmation screen
+      action:
+        type: click
+        target:
+          description: the Post Transfer control on the CONFIRM FUNDS TRANSFER screen
+          role: button
+          name: Post Transfer
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: CONFIRM FUNDS TRANSFER
+          anchors:
+            - relation: nearHeading
+              text: CONFIRM FUNDS TRANSFER
+          hints:
+            proximateLabels: []
+      guard:
+        risk: irreversible
+        note: Moves money between two shares. MERIDIAN states on the review screen that this posts
+          immediately and cannot be reversed from that screen. Requires explicit authorisation, or
+          the run stops for a human here.
+      checkpoint:
+        describe: the transfer was posted and the application confirmed it
+        all:
+          - kind: urlMatches
+            pattern: /members/[^/]+/transfer/post
+        any:
+          - kind: textPresent
+            text: TRANSFER POSTED
+          - kind: textPresent
+            text: Confirmation
+        timeoutMs: 15000
+        pollMs: 250
+      conditions: []
+      optional: false
+  successCheckpoint:
+    describe: the funds transfer was posted and the application confirmed it
+    all:
+      - kind: urlMatches
+        pattern: /members/[^/]+/transfer/post
+    any:
+      - kind: textPresent
+        text: TRANSFER POSTED
+      - kind: textPresent
+        text: Confirmation
+    timeoutMs: 15000
+    pollMs: 250
+  outcomes:
+    business:
+      - code: MEMBER_NOT_FOUND
+        meaning: No member record matches the supplied identifier.
+        outputsAvailable: false
+      - code: SUPERVISOR_OVERRIDE_REQUIRED
+        meaning: >
+          The signed-on operator is not entitled to perform this restricted function. A supervisor
+          must carry it out.
+        outputsAvailable: false
+      - code: VALIDATION_ERROR
+        meaning: The application rejected the submitted transaction.
+        outputsAvailable: false
+  escalation:
+    onUnrecovered: escalate
+    onAmbiguous: escalate
+    onIrreversible: require_approval
+overrides: {}

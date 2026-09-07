@@ -1,0 +1,300 @@
+# Read a share's balance and status
+#
+# Opens a member's record and reads the balance and status of one of their
+# shares, identified by its share id.
+#
+# Reviewed by a human before `approval: approved` is set. Approval is what
+# permits unattended replay of any step marked risk: irreversible.
+#
+# Values below are parameter REFERENCES ({{name}}), never captured data.
+
+apiVersion: capability.interface.ai/v1
+kind: Capability
+metadata:
+  id: cap_get_balance
+  name: get_balance
+  version: 1.0.0
+  title: Read a share's balance and status
+  summary: >
+    Opens a member's record and reads the balance and status of one of their shares,
+    identified by its share id.
+  createdAt: 2026-09-04T11:03:22.095Z
+  app:
+    product: meridian-core
+    productVersion: 4.2.1
+    tenant: meridian
+    entryPoint: /
+  approval: draft
+  provenance:
+    discoveryRunId: 48259a23
+    model: groq:openai/gpt-oss-120b
+    surfaceKind: web
+    traceRef: evidence/runs/discovery-48259a23/trace.json
+    traceSha256: 66380b08a65f43a167d7bdff700fc3e4c5d16c0ef706cc4e3d8135e12bd05896
+spec:
+  inputs:
+    - name: memberId
+      type: string
+      description: The member number whose record to open, as shown on the member record screen.
+      required: true
+      pattern: ^[0-9]{1,9}$
+      sensitivity: pii
+      example: 10xx01
+    - name: shareId
+      type: string
+      description: >
+        The share to read, as shown in the Share ID column of that member's shares table
+        (for example 103001-MMKT-4).
+      required: true
+      pattern: ^.{1,40}$
+      sensitivity: pii
+      example: 10xxxxxxxxx-5
+  outputs:
+    - name: shareBalance
+      type: money
+      description: Balance of share {{shareId}}
+      sensitivity: pii
+      from:
+        afterStep: s4
+        target:
+          description: the shareBalance value on the final screen
+          role: cell
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER RECORD
+          anchors:
+            - relation: underColumn
+              text: Balance
+            - relation: inRowWith
+              text: "{{shareId}}"
+            - relation: nearHeading
+              text: MEMBER RECORD
+          hints: {}
+        transform: money
+    - name: shareStatus
+      type: string
+      description: Status of share {{shareId}}
+      sensitivity: pii
+      from:
+        afterStep: s4
+        target:
+          description: the shareStatus value on the final screen
+          role: cell
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER RECORD
+          anchors:
+            - relation: underColumn
+              text: Status
+            - relation: inRowWith
+              text: "{{shareId}}"
+            - relation: nearHeading
+              text: MEMBER RECORD
+          hints: {}
+        transform: trim
+  preconditions:
+    authState: authenticated
+    describe: An operator session must already exist. Sign-on is the runtime's responsibility, not part
+      of this flow.
+  steps:
+    - id: s1
+      intent: Click the Member Inquiry link to start searching for a member record
+      action:
+        type: click
+        target:
+          description: Click the Member Inquiry link to start searching for a member record
+          role: link
+          name: Member Inquiry
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+          anchors: []
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 353.03125
+              y: 42
+              width: 88.125
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members(?:[?#]|$) and "MEMBER INQUIRY / SELECTION" is on screen
+        all:
+          - kind: urlMatches
+            pattern: /members(?:[?#]|$)
+          - kind: textPresent
+            text: MEMBER INQUIRY / SELECTION
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s2
+      intent: Enter member number {{memberId}} into the Value field to search for the member record
+      action:
+        type: type
+        target:
+          description: Enter member number {{memberId}} into the Value field to search for the member record
+          role: textbox
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: proximateLabel
+              text: Value
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 364.28125
+              y: 141
+              width: 212
+              height: 13
+            proximateLabels:
+              - Value
+        value: "{{memberId}}"
+      guard:
+        risk: mutating
+      conditions: []
+      optional: false
+    - id: s3
+      intent: Click the Search button to retrieve the member record for member number {{memberId}}
+      action:
+        type: click
+        target:
+          description: Click the Search button to retrieve the member record for member number {{memberId}}
+          role: button
+          name: Search
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: input
+            boundsAtRecord:
+              x: 600.890625
+              y: 141
+              width: 38.078125
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members(?:[?#]|$)
+        all:
+          - kind: urlMatches
+            pattern: /members(?:[?#]|$)
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+    - id: s4
+      intent: Click the Select link for member {{memberId}} to open the member record
+      action:
+        type: click
+        target:
+          description: Click the Select link for member {{memberId}} to open the member record
+          role: link
+          name: Select
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER INQUIRY / SELECTION
+          anchors:
+            - relation: nearHeading
+              text: MEMBER INQUIRY / SELECTION
+          hints:
+            domHint: a
+            boundsAtRecord:
+              x: 899.421875
+              y: 214
+              width: 33.71875
+              height: 13
+      guard:
+        risk: safe
+      checkpoint:
+        describe: the route matches /members/[0-9]+(?:[?#]|$) and "MEMBER RECORD" is on screen
+        all:
+          - kind: urlMatches
+            pattern: /members/[0-9]+(?:[?#]|$)
+          - kind: textPresent
+            text: MEMBER RECORD
+        any: []
+        timeoutMs: 12000
+        pollMs: 250
+      conditions: []
+      optional: false
+  successCheckpoint:
+    describe: the flow reached the screen that answers the goal, with every declared value visible on it
+    all:
+      - kind: textPresent
+        text: MEMBER RECORD
+      - kind: elementPresent
+        target:
+          description: the shareBalance value on the final screen
+          role: cell
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER RECORD
+          anchors:
+            - relation: underColumn
+              text: Balance
+            - relation: inRowWith
+              text: "{{shareId}}"
+            - relation: nearHeading
+              text: MEMBER RECORD
+          hints: {}
+      - kind: elementPresent
+        target:
+          description: the shareStatus value on the final screen
+          role: cell
+          nameMatch: normalized
+          scope:
+            framePath:
+              - main
+            heading: MEMBER RECORD
+          anchors:
+            - relation: underColumn
+              text: Status
+            - relation: inRowWith
+              text: "{{shareId}}"
+            - relation: nearHeading
+              text: MEMBER RECORD
+          hints: {}
+    any: []
+    timeoutMs: 10000
+    pollMs: 250
+  outcomes:
+    business:
+      - code: MEMBER_NOT_FOUND
+        meaning: No member record matches the supplied identifier.
+        outputsAvailable: false
+      - code: SUPERVISOR_OVERRIDE_REQUIRED
+        meaning: >
+          The signed-on operator is not entitled to perform this restricted function. A supervisor
+          must carry it out.
+        outputsAvailable: false
+      - code: VALIDATION_ERROR
+        meaning: The application rejected the submitted transaction.
+        outputsAvailable: false
+  escalation:
+    onUnrecovered: escalate
+    onAmbiguous: escalate
+    onIrreversible: require_approval
+overrides: {}

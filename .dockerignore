@@ -1,0 +1,17 @@
+# Build context excludes — keep the image small and reproducible.
+node_modules
+dist
+src/panel/ui-dist
+.git
+.playwright
+test-results
+playwright-report
+evidence/runs
+evidence/_scratch
+*.pdf
+.env
+.env.*
+!.env.example
+npm-debug.log*
+.DS_Store
+Thumbs.db

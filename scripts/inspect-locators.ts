@@ -14,6 +14,7 @@ import { perceive } from '../src/surface/web/accessibility-tree.js';
 import { resolve, scoreCandidate } from '../src/surface/element-resolver.js';
 import { CapabilityStore } from '../src/capability/store.js';
 import { describeDescriptor } from '../src/surface/element-descriptor.js';
+import { tenantForOrigin } from '../apps/corebank/server.js';
 
 const store = new CapabilityStore('capabilities');
 const cap = store.load('lookup_member_savings_balance');
@@ -24,9 +25,10 @@ const cdp = await page.context().newCDPSession(page);
 await cdp.send('DOM.enable');
 await cdp.send('Accessibility.enable');
 
+const tenant = tenantForOrigin('http://localhost:4000');
 await page.goto('http://localhost:4000/login', { waitUntil: 'domcontentloaded' });
-await page.locator('#ctl00_txtOperator').fill('svc.demo');
-await page.locator('#ctl00_txtPwd').fill('demo1234');
+await page.locator('#ctl00_txtOperator').fill(tenant.operator);
+await page.locator('#ctl00_txtPwd').fill(tenant.password);
 await page.locator('input[type=submit]').click();
 await page.waitForLoadState('networkidle');
 

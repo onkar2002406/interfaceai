@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "capability": "get_balance@1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "runId": "recovered-session-timeout",
+  "evidence": "evidence/meridian/replay-recovered-session-timeout",
+  "durationMs": 4661,
+  "outputs": {
+    "shareBalance": 123,
+    "shareStatus": "OPEN"
+  }
+}

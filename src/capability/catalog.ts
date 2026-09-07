@@ -33,12 +33,16 @@ import { RunRecorder } from '../observability/run-recorder.js';
 import { replay, validateInputs, CapabilityInputError } from '../replay/executor.js';
 import type { ReplayResult } from '../replay/replay-result.js';
 import type { EscalationSink } from '../escalation/intervention-broker.js';
+import type { SurfaceFault } from '../surface/web/playwright-surface.js';
 
 export interface JsonSchema {
   type: 'object';
   properties: Record<string, Record<string, unknown>>;
   required: string[];
   additionalProperties: false;
+  /** JSON Schema permits further keywords; this keeps the type assignable where
+   *  a plain schema object is expected, such as a tool definition. */
+  [keyword: string]: unknown;
 }
 
 export interface CapabilityCard {
@@ -125,10 +129,15 @@ export function toolDefinitionsOf(capabilities: Capability[]): Array<{
     const card = cardOf(c);
     const outcomes = card.businessOutcomes.map((b) => b.code).join(', ');
     const returns = c.spec.outputs.map((o) => `${o.name} (${o.type})`).join(', ') || 'no values';
+    // A hand-authored artifact gives the title a headline and the summary the
+    // detail. A compiled one derives both from the model's single sentence, so
+    // they are identical — printing it twice reads as a stutter in the one text
+    // an agent uses to choose a tool.
+    const prose = sameSentence(card.title, card.summary) ? `${card.title}.` : `${card.title}. ${card.summary}`;
     return {
       name: card.name,
       description:
-        `${card.title}. ${card.summary} ` +
+        `${prose} ` +
         `Returns: ${returns}. ` +
         (outcomes ? `May instead report one of these business outcomes, which are answers and not errors: ${outcomes}. ` : '') +
         (card.hasIrreversibleStep
@@ -139,31 +148,86 @@ export function toolDefinitionsOf(capabilities: Capability[]): Array<{
   });
 }
 
+/** Compares two sentences ignoring case and a trailing full stop. */
+function sameSentence(a: string, b: string): boolean {
+  const norm = (s: string): string => s.trim().replace(/\.$/, '').toLowerCase();
+  return norm(a) === norm(b);
+}
+
 /* ------------------------------------------------------------- catalog */
 
 export interface InvokeContext {
   tenantId: string;
   profile: AppProfile;
   policy: Policy;
+  /**
+   * Which operator identity to run as. Chosen by the caller, never by the
+   * capability — the artifact declares that it needs an authenticated session,
+   * not whose.
+   */
+  identity?: string;
   evidenceDir?: string;
   sink?: EscalationSink;
   authorizeIrreversible?: boolean;
   headful?: boolean;
+  /** Harness-armed runtime fault, for demonstrating the error paths. */
+  fault?: SurfaceFault;
 }
 
 export class Catalog {
-  constructor(private readonly store: CapabilityStore) {}
+  /**
+   * @param product When given, the catalog advertises only capabilities
+   *   recorded against that product.
+   *
+   *   The store is a flat directory shared by every product, which is right for
+   *   review — artifacts land as pull requests and a reviewer wants them
+   *   together. It is wrong for a *catalog*: a capability recorded against one
+   *   vendor's console cannot replay against another's, so offering the whole
+   *   directory to an agent invites it to pick one that is guaranteed to fail,
+   *   and to fail confusingly, three page loads in. Scoping here means an agent
+   *   is only ever shown tools that can actually run against the target the
+   *   process is pointed at.
+   */
+  constructor(
+    private readonly store: CapabilityStore,
+    private readonly product?: string,
+  ) {}
+
+  private available(): Capability[] {
+    const all = this.store.listLatest();
+    return this.product ? all.filter((c) => c.metadata.app.product === this.product) : all;
+  }
 
   list(): CapabilityCard[] {
-    return this.store.listLatest().map(cardOf);
+    return this.available().map(cardOf);
   }
 
   describe(name: string): CapabilityCard {
-    return cardOf(this.store.load(name));
+    return cardOf(this.loadForThisProduct(name));
   }
 
   tools(): ReturnType<typeof toolDefinitionsOf> {
-    return toolDefinitionsOf(this.store.listLatest());
+    return toolDefinitionsOf(this.available());
+  }
+
+  /**
+   * Loads a capability, refusing one belonging to a different product.
+   *
+   * Refused rather than silently attempted: replaying another product's
+   * recording is not a near miss that might work, and the failure it produces —
+   * a locator that matches nothing, several page loads in — says nothing about
+   * the real cause.
+   */
+  private loadForThisProduct(name: string): Capability {
+    const capability = this.store.load(name);
+    const recorded = capability.metadata.app.product;
+    if (this.product && recorded !== this.product) {
+      throw new Error(
+        `"${name}" was recorded against "${recorded}", but this process is pointed at ` +
+          `"${this.product}". Start it with that product's profile to invoke it.`,
+      );
+    }
+    return capability;
   }
 
   /**
@@ -171,7 +235,7 @@ export class Catalog {
    * makes in production.
    */
   async invoke(name: string, args: Record<string, unknown>, ctx: InvokeContext): Promise<ReplayResult> {
-    const capability = this.store.load(name);
+    const capability = this.loadForThisProduct(name);
 
     // Fail fast, before anything expensive or side-effecting happens.
     validateInputs(capability, args);
@@ -190,6 +254,8 @@ export class Catalog {
       profile: ctx.profile,
       policy: ctx.policy,
       recorder,
+      ...(ctx.identity ? { identity: ctx.identity } : {}),
+      ...(ctx.fault ? { fault: ctx.fault } : {}),
       ...(ctx.sink ? { sink: ctx.sink } : {}),
       ...(ctx.authorizeIrreversible !== undefined ? { authorizeIrreversible: ctx.authorizeIrreversible } : {}),
       ...(ctx.headful !== undefined ? { headful: ctx.headful } : {}),

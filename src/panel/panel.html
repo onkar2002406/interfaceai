@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Automation Control Panel</title>
+<style>
+  :root { color-scheme: light dark;
+          --bg:#f6f7f9; --fg:#14171a; --card:#fff; --line:#d8dce0; --sub:#eef0f3;
+          --accent:#0b5c4a; --warn:#a1341f; --info:#1f4fa1; --muted:#5c6670; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14171a; --fg:#e8eaed; --card:#1e2226; --line:#333a40; --sub:#23282d;
+            --accent:#3fa088; --warn:#e0745c; --info:#7aa5e8; --muted:#98a2ac; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font:13px/1.55 ui-sans-serif,system-ui,"Segoe UI",sans-serif; background:var(--bg); color:var(--fg); }
+  code, pre, .mono { font-family: ui-monospace,"Cascadia Code",Consolas,monospace; }
+
+  header { padding:9px 16px; border-bottom:1px solid var(--line); background:var(--card);
+           display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  header h1 { font-size:14px; margin:0; letter-spacing:.2px; }
+  header .sub { color:var(--muted); font-size:12px; }
+  header .spacer { flex:1; }
+  nav { display:flex; gap:2px; }
+  nav button { font:inherit; padding:4px 12px; border:1px solid var(--line); background:var(--card);
+               color:var(--fg); cursor:pointer; border-radius:4px; }
+  nav button.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+  main { display:grid; grid-template-columns: 340px 1fr; gap:0; height:calc(100vh - 44px); }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; height:auto; } }
+  #left { border-right:1px solid var(--line); overflow:auto; padding:12px; background:var(--sub); }
+  #right { overflow:auto; padding:14px 16px; }
+  .panel { display:none; }
+  .panel.on { display:block; }
+
+  .card { background:var(--card); border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin-bottom:10px; }
+  .card.sel { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+  .card h3 { margin:0 0 3px; font-size:13px; }
+  .card .why { color:var(--muted); font-size:12px; margin:4px 0 0; }
+  .clickable { cursor:pointer; }
+
+  .tag { display:inline-block; padding:1px 7px; border-radius:10px; font-size:11px;
+         border:1px solid var(--line); color:var(--muted); background:var(--sub); }
+  .tag.risk { background:rgba(161,52,31,.12); border-color:var(--warn); color:var(--warn); }
+  .tag.safe { background:rgba(11,92,74,.12); border-color:var(--accent); color:var(--accent); }
+  .tag.draft { background:rgba(31,79,161,.12); border-color:var(--info); color:var(--info); }
+
+  h2 { font-size:13px; margin:0 0 8px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); }
+  h3.sec { font-size:13px; margin:16px 0 6px; }
+
+  label { display:block; font-size:12px; color:var(--muted); margin:8px 0 3px; }
+  input[type=text], select { font:inherit; padding:5px 8px; border:1px solid var(--line); border-radius:4px;
+                             background:var(--card); color:var(--fg); width:100%; max-width:340px; }
+  input[type=checkbox] { vertical-align:-1px; }
+  textarea { font:inherit; padding:7px 9px; border:1px solid var(--line); border-radius:4px;
+             background:var(--card); color:var(--fg); width:100%; max-width:720px; resize:vertical; }
+  textarea#goal { min-height:62px; font-size:14px; line-height:1.5; }
+  .params { max-width:720px; }
+  .param { display:flex; gap:8px; align-items:center; margin:5px 0; }
+  .param input { max-width:none; flex:1; }
+  .param input.pname { flex:0 0 190px; }
+  button.mini { font:inherit; font-size:12px; padding:3px 9px; border-radius:4px;
+                border:1px solid var(--line); background:var(--card); color:var(--fg); cursor:pointer; }
+  button.mini:hover { border-color:var(--accent); }
+  .banner { border-radius:6px; padding:10px 13px; margin:10px 0; border:1px solid #b8860b;
+            border-left:4px solid #b8860b; background:rgba(184,134,11,.10); }
+  .banner h3 { margin:0 0 4px; font-size:13px; }
+  button.go { font:inherit; padding:6px 15px; border-radius:4px; border:1px solid var(--accent);
+              background:var(--accent); color:#fff; cursor:pointer; }
+  button.go:disabled { opacity:.5; cursor:not-allowed; }
+  .row { display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; }
+  .hint { color:var(--muted); font-size:11px; margin-top:3px; }
+
+  table.kv { border-collapse:collapse; width:100%; max-width:860px; font-size:12px; }
+  table.kv td, table.kv th { border:1px solid var(--line); padding:4px 8px; text-align:left; vertical-align:top; }
+  table.kv th { background:var(--sub); font-weight:600; }
+  /* Rule tables: keep the human-readable column wide enough to read. */
+  table.kv.rules td:nth-child(1) { width:15%; white-space:nowrap; }
+  table.kv.rules td:nth-child(2) { width:42%; }
+  .scrollx { overflow-x:auto; max-width:100%; }
+
+  pre { margin:6px 0 0; padding:9px; background:var(--sub); border:1px solid var(--line); border-radius:4px;
+        overflow:auto; font-size:11.5px; white-space:pre-wrap; word-break:break-word; }
+
+  /* The live event log, for both loops. Bounded and scrolling on purpose: a
+     discovery run emits a few hundred lines, and an unbounded log pushes the
+     thing you are actually waiting for — the verdict — off the screen. */
+  #steps, #dsteps { font-size:11.5px; max-height:280px; overflow:auto; border:1px solid var(--line);
+           border-radius:4px; background:var(--sub); padding:8px; }
+  #steps div, #dsteps div { padding:1px 0; }
+  #steps .k, #dsteps .k { color:var(--info); }
+
+  .verdict { border-radius:6px; padding:11px 13px; margin:10px 0; border:1px solid var(--line); background:var(--card); }
+  .verdict.success  { border-left:4px solid var(--accent); }
+  .verdict.business { border-left:4px solid var(--info); }
+  .verdict.escalated{ border-left:4px solid #b8860b; }
+  .verdict.failed   { border-left:4px solid var(--warn); }
+  .verdict h3 { margin:0 0 5px; font-size:13px; }
+
+  a { color:var(--info); }
+  .empty { color:var(--muted); padding:14px 2px; }
+
+  /* ---- chat ---- */
+  .chatlog { border:1px solid var(--line); border-radius:5px; background:var(--card);
+             padding:10px; margin:10px 0; min-height:150px; max-height:46vh; overflow:auto; }
+  .chatlog:empty::before { content:"No messages yet."; color:var(--muted); }
+  .msg { margin:0 0 12px; }
+  .msg .who { font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); }
+  .msg.user .bubble { border-left:3px solid var(--info); }
+  .msg.bot  .bubble { border-left:3px solid var(--accent); }
+  .msg .bubble { padding:3px 0 3px 9px; white-space:pre-wrap; }
+  .act { margin:7px 0 0 9px; border:1px solid var(--line); border-radius:4px; background:var(--sub); }
+  .act > summary { cursor:pointer; padding:5px 8px; font-size:11px; }
+  .act pre { margin:0; border:0; border-top:1px solid var(--line); border-radius:0; max-height:260px; }
+  .pill { display:inline-block; padding:0 6px; border-radius:9px; font-size:10px; font-weight:600;
+          letter-spacing:.3px; border:1px solid currentColor; }
+  .pill.success          { color:var(--accent); }
+  .pill.business_outcome { color:var(--info); }
+  .pill.escalated        { color:#a8791f; }
+  .pill.failed,
+  .pill.invalid_arguments{ color:var(--warn); }
+  ul.tight { margin:5px 0; padding-left:18px; }
+  ul.tight li { margin:2px 0; }
+  img.shot { max-width:100%; border:1px solid var(--line); border-radius:4px; margin-top:8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Automation Control Panel</h1>
+  <span class="sub" id="productLine">loading…</span>
+  <span class="spacer"></span>
+  <nav>
+    <button data-tab="chat" class="on">Chat</button>
+    <button data-tab="discover">Discover</button>
+    <button data-tab="run">Replay</button>
+    <button data-tab="evidence">Evidence</button>
+    <button data-tab="policy">Guardrails</button>
+    <button data-tab="tools">Agent view</button>
+  </nav>
+  <a id="operatorLink" href="#" target="_blank" rel="noopener">Operator console ↗</a>
+  <span id="pending"></span>
+  <span id="health"></span>
+</header>
+
+<main>
+  <section id="left">
+    <h2>Capabilities</h2>
+    <div id="catalog" class="empty">loading…</div>
+  </section>
+
+  <section id="right">
+
+    <!-- ----------------------------------------------------------- CHAT -->
+    <div class="panel on" id="panel-chat">
+      <h2>Ask for something</h2>
+      <p class="hint">A thin conversational front door over the same capability API an agent calls. It
+         picks a capability, invokes it, and reports what came back — the plain-language answer and the
+         structured result side by side. It <b>cannot</b> authorise an irreversible action: that lives in
+         a request header the chatbot does not compose, so a transfer runs up to
+         <span class="mono">Post Transfer</span> and then stops for a human. Every run it starts shows up
+         in Evidence like any other.</p>
+
+      <div class="row">
+        <div>
+          <label for="cidentity">Sign on as</label>
+          <select id="cidentity"></select>
+          <div class="hint" id="cidentityHint"></div>
+        </div>
+        <div>
+          <label for="ctenant">Institution</label>
+          <select id="ctenant"></select>
+        </div>
+      </div>
+
+      <div id="chatLog" class="chatlog"></div>
+
+      <label for="chatInput">Message</label>
+      <textarea id="chatInput" rows="2" spellcheck="false"
+        placeholder="e.g. what is the balance of share 103001-MMKT-5 for member 103001?"></textarea>
+      <p>
+        <button class="go" id="chatSend">Send</button>
+        <button class="mini" id="chatReset">Clear conversation</button>
+        <span class="hint" id="chatHint"></span>
+      </p>
+      <div id="chatSuggest" class="hint"></div>
+    </div>
+
+    <!-- ------------------------------------------------------- DISCOVER -->
+    <div class="panel" id="panel-discover">
+      <h2>Teach it a new flow</h2>
+      <p class="hint">Describe the task the way you would to a new colleague. A model drives the real
+         application until it is done, and the successful run is compiled into a replayable capability.
+         Wrap anything that changes per invocation in <span class="mono">{{braces}}</span> — that is what
+         becomes a typed input rather than a value baked into the recording.</p>
+
+      <label for="goal">Goal, in plain language</label>
+      <textarea id="goal" spellcheck="false">look up member {{memberId}} and read their current savings balance</textarea>
+      <div class="hint" id="goalHint"></div>
+
+      <h3 class="sec">Values for this recording</h3>
+      <div class="params" id="params"></div>
+      <p><button class="mini" id="addParam">+ add a value</button>
+         <span class="hint">The model is given the real value; the artifact keeps the reference.</span></p>
+
+      <div class="row">
+        <div>
+          <label for="dtenant">Institution</label>
+          <select id="dtenant"></select>
+          <div class="hint" id="dtenantHint"></div>
+        </div>
+        <div>
+          <label for="maxSteps">Step budget</label>
+          <input type="text" id="maxSteps" value="20" style="max-width:90px">
+          <div class="hint">Model turns before it gives up.</div>
+        </div>
+      </div>
+
+      <p><button class="go" id="discover">Discover</button>
+         <span class="hint" id="discoverHint"></span></p>
+
+      <div id="dlive" hidden>
+        <h3 class="sec">Run <span class="mono" id="dRunId"></span></h3>
+        <div id="dsteps"></div>
+        <div id="dverdict"></div>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------------ RUN -->
+    <div class="panel" id="panel-run">
+      <div id="contract" class="empty">Select a capability on the left.</div>
+
+      <div id="runner" hidden>
+        <h3 class="sec">Invoke</h3>
+        <div class="row">
+          <div>
+            <label for="tenant">Institution</label>
+            <select id="tenant"></select>
+            <div class="hint" id="tenantHint"></div>
+          </div>
+          <div>
+            <label for="fault">Inject a runtime condition</label>
+            <select id="fault"></select>
+            <div class="hint">Armed by the harness, out of the agent's reach — the fault console is on
+               the policy deny list.</div>
+          </div>
+        </div>
+
+        <div class="row" id="identityRow" hidden>
+          <div>
+            <label for="identity">Sign on as</label>
+            <select id="identity"></select>
+            <div class="hint" id="identityHint"></div>
+          </div>
+          <div></div>
+        </div>
+
+        <div id="inputs"></div>
+
+        <div id="authorizeWrap" hidden>
+          <label style="color:var(--warn)">
+            <input type="checkbox" id="authorize">
+            Authorise the irreversible step for this invocation
+          </label>
+          <div class="hint">Unchecked, the run stops at that step and raises an intervention for a human.</div>
+        </div>
+
+        <p><button class="go" id="run">Replay</button>
+           <span class="hint" id="runHint">No model is involved — this is the production path.</span></p>
+
+        <div id="live" hidden>
+          <h3 class="sec">Run <span class="mono" id="runId"></span></h3>
+          <div id="escalationBanner"></div>
+          <div id="steps"></div>
+          <div id="verdict"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------- EVIDENCE -->
+    <div class="panel" id="panel-evidence">
+      <h2>Evidence</h2>
+      <div id="evidenceList" class="empty">loading…</div>
+      <div id="evidenceDetail"></div>
+    </div>
+
+    <!-- --------------------------------------------------------- POLICY -->
+    <div class="panel" id="panel-policy">
+      <h2>Guardrails</h2>
+      <p class="hint">Read live from <span class="mono">config/policy.json</span> — the same object the
+         engine enforces, not a second copy that could drift out of agreement with it.</p>
+      <div id="policyBody" class="empty">loading…</div>
+    </div>
+
+    <!-- ---------------------------------------------------------- TOOLS -->
+    <div class="panel" id="panel-tools">
+      <h2>What a calling agent sees</h2>
+      <p class="hint">The same capabilities as function-calling definitions, generated from the artifacts
+         themselves — not a hand-written second description that could disagree with them. Note that the
+         business outcomes are spelled out in the description: an agent that knows
+         <span class="mono">MEMBER_NOT_FOUND</span> is a possible answer does not retry it three times as
+         though it were a failure.</p>
+      <div id="toolsBody" class="empty">loading…</div>
+    </div>
+
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let CATALOG = null;
+let SELECTED = null;
+let STREAM = null;
+let DSTREAM = null;
+
+/* ------------------------------------------------------------- tabs */
+function showTab(name) {
+  document.querySelectorAll('nav button').forEach((x) => x.classList.toggle('on', x.dataset.tab === name));
+  document.querySelectorAll('.panel').forEach((p) => p.classList.toggle('on', p.id === `panel-${name}`));
+  if (name === 'chat') $('chatInput').focus();
+  if (name === 'evidence') loadEvidence();
+  if (name === 'policy') loadPolicy();
+  if (name === 'tools') loadTools();
+}
+document.querySelectorAll('nav button').forEach((b) => {
+  b.onclick = () => showTab(b.dataset.tab);
+});
+
+/* ---------------------------------------------------------- catalog */
+async function loadCatalog() {
+  const r = await fetch('/api/catalog').then((x) => x.json());
+  CATALOG = r;
+  $('productLine').textContent = `${r.product} · ${r.tenants.length} installs · ${r.capabilities.length} capabilities`;
+  $('operatorLink').href = r.operatorUrl;
+
+  const options = r.tenants
+    .map((t) => `<option value="${t.id}">${esc(t.label)} — v${esc(t.productVersion)}</option>`)
+    .join('');
+  for (const id of ['tenant', 'dtenant', 'ctenant']) $(id).innerHTML = options;
+  $('tenant').onchange = showTenantHint;
+  $('dtenant').onchange = showTenantHint;
+
+  // Operator identities. Only rendered when the product declares them — on a
+  // product where every operator is equivalent, an identity picker would be a
+  // control that does nothing.
+  const identities = r.identities || [];
+  $('identityRow').hidden = identities.length === 0;
+  if (identities.length) {
+    const opts = identities.map((i) => `<option value="${i.id}">${esc(i.id)}</option>`).join('');
+    $('identity').innerHTML = opts;
+    $('cidentity').innerHTML = opts;
+    $('identity').onchange = showIdentityHint;
+    $('cidentity').onchange = showIdentityHint;
+    showIdentityHint();
+  } else {
+    $('cidentity').innerHTML = '<option value="">(product default)</option>';
+    $('cidentityHint').textContent = 'This product declares no separate operator identities.';
+  }
+
+  // The faults this product can actually produce, read from its profile rather
+  // than hard-coded here — a dropdown offering a fault the target cannot make
+  // is a demo that fails in front of people.
+  $('fault').innerHTML =
+    '<option value="">none — normal run</option>' +
+    (r.faults || []).map((f) => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
+
+  showTenantHint();
+  showProvider();
+  showChatReadiness();
+
+  if (r.error) {
+    $('catalog').innerHTML = `<div class="card"><b>Could not read the store</b><div class="why">${esc(r.error)}</div></div>`;
+    return;
+  }
+  if (!r.capabilities.length) {
+    $('catalog').innerHTML =
+      `<div class="empty">Nothing recorded yet. Describe a goal on the <b>Discover</b> tab and the first
+       capability will appear here.</div>`;
+    $('contract').innerHTML = '<div class="empty">No capabilities yet — record one on the Discover tab.</div>';
+    return;
+  }
+  $('catalog').innerHTML = r.capabilities.map((c, i) => `
+    <div class="card clickable" data-i="${i}">
+      <h3>${esc(c.name)}</h3>
+      <div>
+        <span class="tag">v${esc(c.version)}</span>
+        ${c.hasIrreversibleStep ? '<span class="tag risk">irreversible step</span>' : '<span class="tag safe">read-only</span>'}
+        ${c.approval === 'approved' ? '<span class="tag safe">approved</span>' : '<span class="tag draft">draft</span>'}
+      </div>
+      <p class="why">${esc(c.title)}</p>
+    </div>`).join('');
+
+  document.querySelectorAll('#catalog .card').forEach((el) => {
+    el.onclick = () => select(Number(el.dataset.i));
+  });
+  // Open on something a caller would actually invoke: an approved capability if
+  // one exists, rather than whichever draft happens to sort first.
+  const firstApproved = r.capabilities.findIndex((c) => c.approval === 'approved');
+  select(firstApproved === -1 ? 0 : firstApproved);
+}
+
+function showTenantHint() {
+  for (const [sel, hint] of [['tenant', 'tenantHint'], ['dtenant', 'dtenantHint']]) {
+    const t = CATALOG.tenants.find((x) => x.id === $(sel).value);
+    if (!t) continue;
+    const extras = t.extraConditions.length ? ` · adds: ${t.extraConditions.join(', ')}` : '';
+    $(hint).textContent = `${t.baseUrl} · signs on via ${t.credentialEnv.user}${extras}`;
+  }
+}
+
+/**
+ * Which environment variables this identity signs on with — names, never values.
+ * Shown because "who was signed on" is what makes a SUPERVISOR_OVERRIDE_REQUIRED
+ * result interpretable rather than mysterious.
+ */
+function showIdentityHint() {
+  for (const [sel, hint] of [['identity', 'identityHint'], ['cidentity', 'cidentityHint']]) {
+    const i = (CATALOG.identities || []).find((x) => x.id === $(sel).value);
+    if (!i) continue;
+    $(hint).textContent = `signs on via ${i.credentialEnv.user} (value never leaves .env)`;
+  }
+}
+
+/**
+ * Say which model is about to drive the browser, before anyone presses Discover.
+ * With no key configured the run would still work — it falls back to a scripted
+ * fixture — but silently, and a fixture presented as a live model is the single
+ * most misleading thing this panel could do.
+ */
+function showProvider() {
+  const p = CATALOG.provider || {};
+  if (p.live) {
+    $('discoverHint').innerHTML = `A model drives a real browser: <span class="mono">${esc(p.name)}</span>.`;
+  } else {
+    $('discoverHint').innerHTML =
+      `<b>No model key configured.</b> This will use the <span class="mono">scripted</span> fixture —
+       real browser, real perception, real compiler, but a canned decision-maker that only knows the
+       screens it was taught. Set <span class="mono">GROQ_API_KEY</span> for live discovery.`;
+  }
+}
+
+function select(i) {
+  SELECTED = CATALOG.capabilities[i];
+  document.querySelectorAll('#catalog .card').forEach((el) => el.classList.toggle('sel', Number(el.dataset.i) === i));
+  renderContract();
+  renderInputs();
+  $('runner').hidden = false;
+  $('live').hidden = true;
+  $('authorizeWrap').hidden = !SELECTED.hasIrreversibleStep;
+  $('authorize').checked = false;
+}
+
+/** The capability contract: what a calling agent is promised. */
+function renderContract() {
+  const c = SELECTED;
+  const rows = (obj) => Object.entries(obj.properties).map(([k, v]) =>
+    `<tr><td class="mono">${esc(k)}</td><td class="mono">${esc(v.type)}</td>
+         <td>${esc(v.description || '')}${v.pattern ? `<br><span class="hint mono">pattern ${esc(v.pattern)}</span>` : ''}</td></tr>`
+  ).join('') || '<tr><td colspan="3" class="hint">none</td></tr>';
+
+  $('contract').innerHTML = `
+    <h2>Contract</h2>
+    <div class="card">
+      <h3>${esc(c.name)}@${esc(c.version)}</h3>
+      <p class="why">${esc(c.summary)}</p>
+    </div>
+    <h3 class="sec">Inputs — supplied per invocation</h3>
+    <table class="kv"><tr><th>name</th><th>type</th><th>meaning</th></tr>${rows(c.inputSchema)}</table>
+    <h3 class="sec">Outputs — returned to the caller</h3>
+    <table class="kv"><tr><th>name</th><th>type</th><th>meaning</th></tr>${rows(c.outputSchema)}</table>
+    <h3 class="sec">Business outcomes — answers, not errors</h3>
+    ${c.businessOutcomes.length
+      ? `<table class="kv"><tr><th>code</th><th>means</th></tr>` +
+        c.businessOutcomes.map((b) => `<tr><td class="mono">${esc(b.code)}</td><td>${esc(b.meaning)}</td></tr>`).join('') +
+        `</table>`
+      : '<p class="hint">None declared.</p>'}`;
+}
+
+/** Form fields generated from the input schema, so the UI cannot drift from the contract. */
+function renderInputs() {
+  const s = SELECTED.inputSchema;
+  const names = Object.keys(s.properties);
+  if (!names.length) { $('inputs').innerHTML = '<p class="hint">This capability takes no inputs.</p>'; return; }
+  $('inputs').innerHTML = names.map((n) => {
+    const p = s.properties[n];
+    const ex = p.examples ? p.examples[0] : '';
+    return `<label for="in-${esc(n)}">${esc(n)}${s.required.includes(n) ? ' *' : ''}
+              <span class="hint">${esc(p.description || '')}</span></label>
+            <input type="text" id="in-${esc(n)}" value="${esc(ex)}" placeholder="${esc(p.pattern || '')}">`;
+  }).join('');
+}
+
+/* --------------------------------------------------------- discover */
+
+/** One key/value row. The name is prefilled from a {{reference}} in the goal. */
+function paramRow(name = '', value = '') {
+  const div = document.createElement('div');
+  div.className = 'param';
+  div.innerHTML = `<input type="text" class="pname mono" placeholder="memberId" value="${esc(name)}">
+                   <input type="text" class="pvalue" placeholder="10001" value="${esc(value)}">
+                   <button class="mini remove" title="remove">×</button>`;
+  div.querySelector('.remove').onclick = () => div.remove();
+  return div;
+}
+
+function currentParams() {
+  const out = {};
+  for (const row of document.querySelectorAll('#params .param')) {
+    const k = row.querySelector('.pname').value.trim();
+    if (k) out[k] = row.querySelector('.pvalue').value;
+  }
+  return out;
+}
+
+/**
+ * Keeps the value rows in step with the {{references}} in the goal.
+ *
+ * Adds a row for a reference that has none and never removes one the user typed:
+ * deleting a row because a word was momentarily mid-edit would throw away
+ * something they had already filled in.
+ */
+function syncParamsToGoal() {
+  const goal = $('goal').value;
+  const refs = [...goal.matchAll(/\{\{([^}]+)\}\}/g)].map((m) => m[1].trim());
+  const have = new Set(Object.keys(currentParams()));
+  for (const r of refs) {
+    if (!have.has(r)) {
+      $('params').appendChild(paramRow(r, r === 'memberId' ? '10001' : ''));
+      have.add(r);
+    }
+  }
+  $('goalHint').textContent = refs.length
+    ? `Typed inputs: ${refs.join(', ')} — the artifact stores the reference, never the value.`
+    : 'No {{references}} — this will compile to a capability that takes no inputs.';
+}
+
+$('goal').oninput = syncParamsToGoal;
+$('addParam').onclick = () => $('params').appendChild(paramRow());
+
+$('discover').onclick = async () => {
+  $('discover').disabled = true;
+  $('dsteps').innerHTML = '';
+  $('dverdict').innerHTML = '';
+  $('dlive').hidden = false;
+  $('dlive').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const res = await fetch('/api/discover', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      goal: $('goal').value,
+      tenant: $('dtenant').value,
+      params: currentParams(),
+      maxSteps: Number($('maxSteps').value) || 20,
+    }),
+  });
+  const body = await res.json();
+
+  if (!res.ok) {
+    $('discover').disabled = false;
+    $('dRunId').textContent = '';
+    $('dverdict').innerHTML = `<div class="verdict failed"><h3>Rejected before starting</h3>
+      <p>${esc(body.error || 'invalid request')}</p>
+      ${body.problems ? `<ul class="tight">${body.problems.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}</div>`;
+    return;
+  }
+
+  $('dRunId').textContent = `${body.runId} · ${body.provider}`;
+  if (DSTREAM) DSTREAM.close();
+  DSTREAM = new EventSource(`/api/runs/${body.runId}/stream`);
+  DSTREAM.addEventListener('step', (e) => appendStep(JSON.parse(e.data), 'dsteps'));
+  DSTREAM.addEventListener('done', (e) => {
+    renderDiscovery(JSON.parse(e.data), body.evidenceDir);
+    DSTREAM.close();
+    DSTREAM = null;
+    $('discover').disabled = false;
+  });
+  DSTREAM.onerror = () => { DSTREAM && DSTREAM.close(); DSTREAM = null; $('discover').disabled = false; };
+};
+
+/** What discovery produced: an artifact to review, or an honest account of why not. */
+function renderDiscovery(d, evidenceDir) {
+  const rel = String(evidenceDir || '').replace(/^evidence\//, '');
+  const ev = `<p class="hint">Evidence: <span class="mono">${esc(evidenceDir || '')}</span>
+              — <a href="#" onclick="openEvidence('${esc(rel)}');return false;">open</a></p>`;
+
+  if (d.crash) {
+    $('dverdict').innerHTML = `<div class="verdict failed"><h3>Discovery crashed</h3>
+      <pre>${esc(d.crash)}</pre>${ev}</div>`;
+    return;
+  }
+  if (!d.discovered) {
+    const o = d.outcome || {};
+    $('dverdict').innerHTML = `<div class="verdict business"><h3>No capability compiled</h3>
+      <p><span class="mono">${esc(o.kind || 'stopped')}</span> — ${esc(o.why || 'the goal was not reached')}</p>
+      <p class="hint">Nothing is saved from a run that did not succeed. An artifact is a promise that a
+         flow works, and this run is not evidence that it does.</p>${ev}</div>`;
+    return;
+  }
+
+  const c = d.discovered.card;
+  const outs = Object.keys(c.outputSchema.properties);
+  $('dverdict').innerHTML = `<div class="verdict success">
+    <h3>Compiled — <span class="mono">${esc(c.name)}@${esc(c.version)}</span></h3>
+    <p>${esc(d.discovered.steps)} steps, ${esc(d.discovered.modelCalls)} model calls.
+       Written to <span class="mono">${esc(d.discovered.path)}</span>.</p>
+    <p>Inputs: <span class="mono">${esc(Object.keys(c.inputSchema.properties).join(', ') || 'none')}</span>
+       · Outputs: <span class="mono">${esc(outs.join(', ') || 'none')}</span></p>
+    <p><span class="tag draft" id="approvalTag">draft</span>
+       <span class="hint" id="approvalHint">Compilation never approves. A person reads the artifact and decides.</span></p>
+    <p><button class="go" id="approveBtn">Approve</button>
+       <button class="mini" id="replayBtn">Replay it now</button></p>
+    ${ev}</div>`;
+
+  $('approveBtn').onclick = async () => {
+    const r = await fetch(`/api/capabilities/${encodeURIComponent(c.name)}/approve`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ approved: true }),
+    });
+    const b = await r.json();
+    if (!r.ok) { alert(b.error || 'could not approve'); return; }
+    await loadCatalog();
+    $('approvalTag').className = 'tag safe';
+    $('approvalTag').textContent = 'approved';
+    $('approvalHint').textContent =
+      'Approved. Unattended replay of an irreversible step still needs a second gate — explicit authorisation on the invocation.';
+    $('approveBtn').remove();
+  };
+  $('replayBtn').onclick = async () => {
+    await loadCatalog();
+    selectByName(c.name);
+    showTab('run');
+  };
+}
+
+function selectByName(name) {
+  const i = CATALOG.capabilities.findIndex((x) => x.name === name);
+  if (i !== -1) select(i);
+}
+
+/* -------------------------------------------------------------- run */
+$('run').onclick = async () => {
+  const params = {};
+  for (const n of Object.keys(SELECTED.inputSchema.properties)) params[n] = $(`in-${n}`).value;
+
+  $('run').disabled = true;
+  $('steps').innerHTML = '';
+  $('verdict').innerHTML = '';
+  $('escalationBanner').innerHTML = '';
+  $('live').hidden = false;
+  $('live').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const res = await fetch('/api/replay', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      capability: SELECTED.name,
+      tenant: $('tenant').value,
+      identity: $('identityRow').hidden ? undefined : $('identity').value,
+      params,
+      authorizeIrreversible: $('authorize').checked,
+      fault: $('fault').value || undefined,
+    }),
+  });
+  const body = await res.json();
+
+  if (!res.ok) {
+    $('run').disabled = false;
+    $('runId').textContent = '';
+    $('verdict').innerHTML = `<div class="verdict failed"><h3>Rejected before starting</h3>
+      <p>${esc(body.error || 'invalid request')}</p>
+      ${body.problems ? `<ul class="tight">${body.problems.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}
+      <p class="hint">Arguments are validated against the contract before a browser is launched.</p></div>`;
+    return;
+  }
+
+  $('runId').textContent = body.runId;
+  if (STREAM) STREAM.close();
+  STREAM = new EventSource(`/api/runs/${body.runId}/stream`);
+  STREAM.addEventListener('step', (e) => {
+    const ev = JSON.parse(e.data);
+    appendStep(ev);
+    watchForEscalation(ev);
+  });
+  STREAM.addEventListener('done', (e) => {
+    const d = JSON.parse(e.data);
+    renderVerdict(d.result, d.crash, body.evidenceDir);
+    STREAM.close();
+    STREAM = null;
+    $('run').disabled = false;
+  });
+  STREAM.onerror = () => { STREAM && STREAM.close(); STREAM = null; $('run').disabled = false; };
+};
+
+function appendStep(ev, target = 'steps') {
+  const bits = Object.entries(ev.detail || {})
+    .filter(([, v]) => v !== null && v !== undefined && v !== '')
+    .map(([k, v]) => `${k}=${typeof v === 'string' ? v : JSON.stringify(v)}`)
+    .join(' ');
+  const div = document.createElement('div');
+  div.innerHTML = `<span class="mono">[${String(ev.seq).padStart(3, '0')}]</span>
+                   <span class="k mono">${esc(ev.kind)}</span> <span class="mono">${esc(bits)}</span>`;
+  $(target).appendChild(div);
+  $(target).scrollTop = $(target).scrollHeight;
+}
+
+/**
+ * An escalated run blocks until a person acts, so the verdict is precisely the
+ * thing that has not arrived. Watch the event stream for the moment a human is
+ * needed and hand over the console link then, rather than after the fact.
+ */
+function watchForEscalation(ev) {
+  if (ev.kind !== 'escalation_raised') return;
+  const d = ev.detail || {};
+  $('escalationBanner').innerHTML = `<div class="banner">
+    <h3>Waiting for a human — step <span class="mono">${esc(d.step || '')}</span></h3>
+    <p>${esc(d.reason || '')}</p>
+    <p>The browser session is parked and still open.
+       <a href="${esc(CATALOG.operatorUrl)}" target="_blank" rel="noopener"><b>Open the operator console ↗</b></a>
+       to watch it live, take control, and hand it back.</p>
+    <p class="hint">Viewing needs no claim. Acting does — an un-claimed click is refused.
+       ${d.resumeContract ? `Handing back does not resume blindly: the executor re-checks that
+       <i>${esc(d.resumeContract)}</i> before it acts again.` : ''}</p>
+  </div>`;
+  // A parked run is waiting on a person, and the contract table above is long
+  // enough to push this off-screen. Bring the thing that needs acting on to them.
+  $('escalationBanner').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/** The four arms of the result contract, rendered as four distinct things. */
+function renderVerdict(r, crash, evidenceDir) {
+  // Evidence links are relative to the evidence root; panel runs sit under runs/.
+  const rel = String(evidenceDir || '').replace(/^evidence\//, '');
+  const ev = `<p class="hint">Evidence: <span class="mono">${esc(evidenceDir || '')}</span>
+              — <a href="#" onclick="openEvidence('${esc(rel)}');return false;">open</a></p>`;
+  if (crash || !r) {
+    $('verdict').innerHTML = `<div class="verdict failed"><h3>Run crashed</h3>
+      <pre>${esc(crash || 'no result returned')}</pre>${ev}</div>`;
+    return;
+  }
+  if (r.status === 'success') {
+    $('verdict').innerHTML = `<div class="verdict success"><h3>Success</h3>
+      <p>Outputs returned to the caller:</p><pre>${esc(JSON.stringify(r.outputs, null, 2))}</pre>
+      ${r.driftSignals && r.driftSignals.length ? `<p class="hint">${r.driftSignals.length} drift signal(s) — this install may need an override.</p>` : ''}
+      ${ev}</div>`;
+  } else if (r.status === 'business_outcome') {
+    $('verdict').innerHTML = `<div class="verdict business"><h3>Business outcome — <span class="mono">${esc(r.code)}</span></h3>
+      <p>${esc(r.message)}</p>
+      <p class="hint">A legitimate answer, not a failure. The caller was told and nothing was retried.</p>${ev}</div>`;
+  } else if (r.status === 'escalated') {
+    $('verdict').innerHTML = `<div class="verdict escalated"><h3>Escalated to a human</h3>
+      <p>${esc(r.reason || '')}</p>
+      <p>Resolution: <span class="mono">${esc(r.resolution || 'pending')}</span></p>
+      <p><a href="${esc(CATALOG.operatorUrl)}" target="_blank" rel="noopener">Open the operator console ↗</a>
+         — take control of the same live session.</p>${ev}</div>`;
+  } else {
+    const e = r.error || {};
+    $('verdict').innerHTML = `<div class="verdict failed"><h3>Failed — <span class="mono">${esc(e.class || 'error')}</span></h3>
+      <table class="kv">
+        <tr><th>step</th><td class="mono">${esc(e.stepId || '—')}</td></tr>
+        <tr><th>intent</th><td>${esc(e.stepIntent || '—')}</td></tr>
+        <tr><th>expected</th><td>${esc(e.expected || '—')}</td></tr>
+        <tr><th>observed</th><td>${esc(e.observed || '—')}</td></tr>
+      </table>${ev}</div>`;
+  }
+}
+
+/* --------------------------------------------------------- evidence */
+async function loadEvidence() {
+  const r = await fetch('/api/evidence').then((x) => x.json());
+  if (!r.runs.length) { $('evidenceList').innerHTML = '<div class="empty">No evidence yet.</div>'; return; }
+  const statusTag = (s) => ({ success: 'safe', failed: 'risk' }[s] ?? '');
+  const card = (e) => `
+    <div class="card clickable" data-dir="${esc(e.dir)}">
+      <h3>${esc(e.dir)}</h3>
+      <div><span class="tag ${statusTag(e.status)}">${esc(String(e.status))}</span>
+        ${e.code ? `<span class="tag">${esc(e.code)}</span>` : ''}
+        ${e.tenant ? `<span class="tag">${esc(e.tenant)}</span>` : ''}
+        ${e.durationMs ? `<span class="tag">${esc(e.durationMs)} ms</span>` : ''}</div>
+      ${e.capability ? `<p class="why mono">${esc(e.capability)}</p>` : ''}
+    </div>`;
+  const curated = r.runs.filter((e) => e.curated);
+  const adhoc = r.runs.filter((e) => !e.curated);
+  $('evidenceList').innerHTML =
+    `<h3 class="sec">Curated — committed, regenerated by <span class="mono">npm run evidence</span></h3>` +
+    (curated.length ? curated.map(card).join('') : '<p class="hint">none</p>') +
+    `<h3 class="sec">From this panel — real runs, not committed</h3>` +
+    (adhoc.length ? adhoc.map(card).join('') : '<p class="hint">none yet</p>');
+  document.querySelectorAll('#evidenceList .card').forEach((el) => {
+    el.onclick = () => openEvidence(el.dataset.dir);
+  });
+}
+
+const fileUrl = (dir, file) => `/api/evidence-file?path=${encodeURIComponent(`${dir}/${file}`)}`;
+
+async function openEvidence(dir) {
+  if (!dir) return;
+  document.querySelector('nav button[data-tab=evidence]').click();
+  const md = await fetch(fileUrl(dir, 'summary.md')).then((r) => (r.ok ? r.text() : null));
+  const list = await fetch('/api/evidence').then((r) => r.json());
+  const meta = list.runs.find((x) => x.dir === dir) || {};
+  const shots = (meta.files || []).filter((f) => f.endsWith('.png'));
+  const shotHtml = shots.map((s) =>
+    `<div><span class="hint mono">${esc(s)}</span>
+       <img class="shot" src="${esc(fileUrl(dir, s))}" alt="${esc(s)}"></div>`).join('');
+  const summaryHtml = md ? `<pre>${esc(md)}</pre>` : '<p class="hint">No summary.md in this directory.</p>';
+  $('evidenceDetail').innerHTML = `
+    <h3 class="sec">${esc(dir)}</h3>
+    ${summaryHtml}
+    ${shotHtml}
+    <p class="hint">Full log: <a href="${esc(fileUrl(dir, 'events.jsonl'))}" target="_blank">events.jsonl</a>
+       · <a href="${esc(fileUrl(dir, 'result.json'))}" target="_blank">result.json</a></p>`;
+  $('evidenceDetail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ----------------------------------------------------------- policy */
+async function loadPolicy() {
+  const p = await fetch('/api/policy').then((x) => x.json());
+  const rule = (r) => `<tr><td class="mono">${esc(r.code)}</td><td>${esc(r.description)}</td>
+                        <td class="mono">${esc(JSON.stringify(r.when))}</td></tr>`;
+  $('policyBody').innerHTML = `
+    <h3 class="sec">Allowed origins</h3>
+    <ul class="tight mono">${p.origins.map((o) => `<li>${esc(o)}</li>`).join('')}</ul>
+    <h3 class="sec">Routes</h3>
+    <p class="hint">allow</p><ul class="tight mono">${p.routes.allow.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
+    <p class="hint">deny — the automation cannot reach its own test hooks</p>
+    <ul class="tight mono">${p.routes.deny.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
+    <h3 class="sec">Permitted action types</h3>
+    <p class="mono">${p.actions.map(esc).join(', ')}</p>
+    <h3 class="sec">Irreversible — blocked unless a caller explicitly authorises</h3>
+    <div class="scrollx"><table class="kv rules"><tr><th>code</th><th>description</th><th>matches</th></tr>
+      ${p.risk.irreversible.map(rule).join('')}</table></div>
+    <h3 class="sec">Mutating — allowed, recorded</h3>
+    <div class="scrollx"><table class="kv rules"><tr><th>code</th><th>description</th><th>matches</th></tr>
+      ${p.risk.mutating.map(rule).join('')}</table></div>
+    <h3 class="sec">Limits</h3>
+    <table class="kv">${Object.entries(p.limits).map(([k, v]) =>
+      `<tr><th>${esc(k)}</th><td class="mono">${esc(v)}</td></tr>`).join('')}</table>`;
+}
+
+/**
+ * The panel does not start the target application, so say plainly when it is
+ * not there. Every run would otherwise fail as a navigation error a few seconds
+ * in, which describes the symptom and hides the cause.
+ */
+async function checkHealth() {
+  const r = await fetch('/api/health').then((x) => x.json()).catch(() => null);
+  if (!r) return;
+  if (r.allUp) { $('health').innerHTML = ''; return; }
+  const down = r.tenants.filter((t) => !t.up).map((t) => t.baseUrl).join(', ');
+  // Only suggest starting it where this process could actually start it.
+  const remedy = r.selfHosted
+    ? ` — start it with <span class="mono">npm run app</span>`
+    : ' — this target is hosted elsewhere; check the network';
+  $('health').innerHTML =
+    `<span class="tag risk">target app unreachable</span>
+     <span class="hint">${esc(down)}${remedy}</span>`;
+}
+
+/**
+ * Sessions parked for a human that this page did not watch being parked —
+ * a run started before the tab was opened, or a reload while one waits.
+ */
+async function checkPending() {
+  const r = await fetch('/api/interventions').then((x) => x.json()).catch(() => null);
+  if (!r || !r.open.length) { $('pending').innerHTML = ''; return; }
+  $('pending').innerHTML =
+    `<span class="tag risk">${r.open.length} waiting for a human</span>
+     <a href="${esc(r.operatorUrl)}" target="_blank" rel="noopener">take control ↗</a>`;
+}
+
+/* ------------------------------------------------------------ tools */
+async function loadTools() {
+  const r = await fetch('/api/tools').then((x) => x.json());
+  if (!r.tools.length) { $('toolsBody').innerHTML = '<div class="empty">No capabilities yet.</div>'; return; }
+  $('toolsBody').innerHTML = r.tools.map((t) => `
+    <div class="card">
+      <h3 class="mono">${esc(t.name)}</h3>
+      <p class="why">${esc(t.description)}</p>
+      <pre>${esc(JSON.stringify(t.parameters, null, 2))}</pre>
+    </div>`).join('');
+}
+
+/* ------------------------------------------------------------------ chat */
+
+/**
+ * The conversation, held on the client.
+ *
+ * The server is stateless about chat on purpose: the transcript travels with
+ * each request. It keeps the demo restartable — reloading the page starts a
+ * clean conversation without touching the server — and it means the chatbot
+ * holds no session state that could drift from what the capabilities actually
+ * did. The durable record of a chat-driven run is its evidence directory, the
+ * same as every other run.
+ */
+let CHAT = [];
+
+function showChatReadiness() {
+  const p = CATALOG.provider || {};
+  $('chatHint').textContent = p.live
+    ? `Driven by ${p.name}. Runs are real — nothing here is simulated.`
+    : 'No model key configured, so the chatbot is unavailable. Set GROQ_API_KEY in .env.';
+  $('chatSend').disabled = !p.live;
+
+  // Suggestions built from what is actually recorded, so they cannot invite
+  // someone to ask for a capability that does not exist.
+  const names = (CATALOG.capabilities || []).map((c) => c.name);
+  if (names.length) {
+    $('chatSuggest').innerHTML =
+      'Available to it right now: ' + names.map((n) => `<span class="mono">${esc(n)}</span>`).join(', ') + '.';
+  }
+}
+
+function renderChat() {
+  $('chatLog').innerHTML = CHAT.map((m) => {
+    if (m.role === 'user') {
+      return `<div class="msg user"><div class="who">you</div><div class="bubble">${esc(m.content)}</div></div>`;
+    }
+    // Each capability invocation is shown collapsed beside the reply: the plain
+    // sentence for a person, the structured result underneath for a reviewer.
+    // Showing only the prose would hide whether the answer was actually earned.
+    const acts = (m.actions || []).map((a) => {
+      const status = (a.result && a.result.status) || 'unknown';
+      const run = a.runId ? ` · run ${esc(a.runId)}` : '';
+      return `<details class="act">
+          <summary><span class="pill ${esc(status)}">${esc(status)}</span>
+            <span class="mono">${esc(a.capability)}</span>${run}</summary>
+          <pre>${esc(JSON.stringify(a.result, null, 2))}</pre>
+        </details>`;
+    }).join('');
+    return `<div class="msg bot"><div class="who">system</div>
+        <div class="bubble">${esc(m.content)}</div>${acts}</div>`;
+  }).join('');
+  $('chatLog').scrollTop = $('chatLog').scrollHeight;
+}
+
+async function sendChat() {
+  const text = $('chatInput').value.trim();
+  if (!text) return;
+  $('chatInput').value = '';
+  CHAT.push({ role: 'user', content: text });
+  CHAT.push({ role: 'assistant', content: 'working…', pending: true });
+  renderChat();
+  $('chatSend').disabled = true;
+
+  try {
+    const body = {
+      // Only the real turns — the pending placeholder is a UI artefact.
+      messages: CHAT.filter((m) => !m.pending).map((m) => ({ role: m.role, content: m.content })),
+      tenant: $('ctenant').value,
+    };
+    if ($('cidentity').value) body.identity = $('cidentity').value;
+
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    // Not every failure comes back as JSON. A 404 from Express is an HTML error
+    // page, and parsing it blindly surfaces `Unexpected token '<'` — a message
+    // about a parser, from which nobody can work out what actually went wrong.
+    // In practice the cause is almost always a server older than this page: the
+    // panel serves panel.html from disk on every request, so the browser can be
+    // running a tab that the process behind it has never heard of.
+    const raw = await res.text();
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      CHAT.pop();
+      CHAT.push({
+        role: 'assistant',
+        content:
+          res.status === 404
+            ? 'This panel process does not have the /api/chat route — it was started from an older ' +
+              'build than the page you are looking at. Restart it (Ctrl+C, then `npm run meridian`) ' +
+              'and reload.'
+            : `The server replied with ${res.status} and something that was not JSON.`,
+      });
+      return;
+    }
+
+    CHAT.pop();
+    if (!res.ok) {
+      CHAT.push({ role: 'assistant', content: data.error || `request failed (${res.status})`, actions: data.actions });
+    } else {
+      CHAT.push({ role: 'assistant', content: data.reply, actions: data.actions });
+    }
+  } catch (err) {
+    CHAT.pop();
+    CHAT.push({ role: 'assistant', content: String(err) });
+  } finally {
+    $('chatSend').disabled = false;
+    renderChat();
+    // A chat-driven run is a run: refresh the list so it is watchable like any other.
+    loadEvidence().catch(() => {});
+  }
+}
+
+$('chatSend').onclick = sendChat;
+$('chatReset').onclick = () => { CHAT = []; renderChat(); };
+$('chatInput').addEventListener('keydown', (e) => {
+  // Enter sends; Shift+Enter is a newline. Demo ergonomics.
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+});
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+loadCatalog().then(syncParamsToGoal);
+checkPending();
+checkHealth();
+setInterval(checkPending, 5000);
+setInterval(checkHealth, 15000);
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{"at":"2026-09-06T21:03:00.867Z","seq":1,"kind":"replay_start","detail":{"capability":"place_account_hold@1.0.0","tenant":"meridian","identity":"teller","product":"meridian-core v4.2.1","baseUrl":"https://web-sample.interface-hiring.com","approval":"draft","irreversibleAuthorized":false,"params":{"memberId":"[pii:e9881aaa…3001]","shareId":"[pii:65280fa1…0001]","reason":"[pii:19cef698…RAUD]","notes":"[pii:a4532cc7…ture]"},"overrides":0}}
+{"at":"2026-09-06T21:03:01.151Z","seq":2,"kind":"navigate_entry","detail":{"url":"https://web-sample.interface-hiring.com/"}}
+{"at":"2026-09-06T21:03:01.447Z","seq":3,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:03:01.665Z","seq":4,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:03:01.955Z","seq":5,"kind":"surface_action","detail":{"action":"type","target":"Operator ID","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:03:02.176Z","seq":6,"kind":"surface_action","detail":{"action":"type","target":"Password","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:03:02.390Z","seq":7,"kind":"surface_action","detail":{"action":"click","target":"Sign On","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:03:02.568Z","seq":8,"kind":"surface_action","detail":{"action":"navigate","risk":"safe"}}
+{"at":"2026-09-06T21:03:02.568Z","seq":9,"kind":"auth_precondition","detail":{"ok":true,"identity":"teller","note":"signed on and returned to the entry point"}}
+{"at":"2026-09-06T21:03:02.569Z","seq":10,"kind":"step_start","detail":{"step":"s1","index":1,"of":10,"intent":"Click the 'Member Inquiry / Selection' link to start member search","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:03:02.681Z","seq":11,"kind":"surface_action","detail":{"action":"click","target":"Member Inquiry / Selection","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:03:02.725Z","seq":12,"kind":"step_ok","detail":{"step":"s1","durationMs":156,"score":1,"via":"name:normalized","checkpoint":"the route matches /members(?:[?#]|$) and \"MEMBER INQUIRY / SELECTION\" is on screen"}}
+{"at":"2026-09-06T21:03:02.725Z","seq":13,"kind":"step_start","detail":{"step":"s2","index":2,"of":10,"intent":"Type the member number {{memberId}} into the Value textbox to search for the member","action":"type","risk":"mutating","value":"{{memberId}}"}}
+{"at":"2026-09-06T21:03:02.868Z","seq":14,"kind":"surface_action","detail":{"action":"type","target":"Value","risk":"mutating","score":1,"strategy":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:03:02.916Z","seq":15,"kind":"step_ok","detail":{"step":"s2","durationMs":191,"score":1,"via":"anchor:proximateLabel"}}
+{"at":"2026-09-06T21:03:02.917Z","seq":16,"kind":"step_start","detail":{"step":"s3","index":3,"of":10,"intent":"Click the Search button to find the member with number {{memberId}}","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:03:03.050Z","seq":17,"kind":"surface_action","detail":{"action":"click","target":"Search","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:03:03.105Z","seq":18,"kind":"step_ok","detail":{"step":"s3","durationMs":188,"score":1,"via":"name:normalized","checkpoint":"the route matches /members(?:[?#]|$)"}}
+{"at":"2026-09-06T21:03:03.106Z","seq":19,"kind":"step_start","detail":{"step":"s4","index":4,"of":10,"intent":"Click the 'Select' link for the matching member row to open the member details","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:03:03.231Z","seq":20,"kind":"surface_action","detail":{"action":"click","target":"Select","risk":"safe","score":1,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:03:03.360Z","seq":21,"kind":"step_ok","detail":{"step":"s4","durationMs":255,"score":1,"via":"name:normalized","checkpoint":"the route matches /members/[0-9]+(?:[?#]|$) and \"MEMBER RECORD\" is on screen"}}
+{"at":"2026-09-06T21:03:03.361Z","seq":22,"kind":"step_start","detail":{"step":"s5","index":5,"of":10,"intent":"Click the 'Place Account Hold' link to start the hold process","action":"click","risk":"safe"}}
+{"at":"2026-09-06T21:03:03.615Z","seq":23,"kind":"surface_action","detail":{"action":"click","target":"Place Account Hold","risk":"safe","score":0.997,"strategy":"name:normalized"}}
+{"at":"2026-09-06T21:03:04.062Z","seq":24,"kind":"business_outcome","detail":{"code":"SUPERVISOR_OVERRIDE_REQUIRED","condition":"supervisor_required","step":"s5","declared":true,"message":"The signed-on operator is not entitled to perform this restricted function. A supervisor must carry it out.\n"}}

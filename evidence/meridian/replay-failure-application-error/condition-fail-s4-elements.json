@@ -1,0 +1,253 @@
+{
+  "url": "https://web-sample.interface-hiring.com/members/103001",
+  "title": "Application Error - Meridian Core",
+  "frames": [
+    "main"
+  ],
+  "elements": [
+    {
+      "role": "StaticText",
+      "name": "MERIDIAN CORE",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Member Services Platform v4.2.1",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Main Menu",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "·",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Member Inquiry",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "·",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "System Settings",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "·",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Sign Off",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "OPR TELLER1 | BR MAIN-001 | 09/06/2026 21:02:51 | SID AC665BB4",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "F3",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "=Sign Off",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "F5",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "=Main Menu",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "F7",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "=Member Inquiry",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "F12",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "=Cancel",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Cornerstone Financial Systems™",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Main Menu",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Member Inquiry",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "System Settings",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Sign Off",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "APPLICATION ERROR",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "An unexpected error occurred while processing your request.",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Reference:",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "ERR-2622278E",
+      "proximateLabels": [
+        "Reference"
+      ],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Please contact the Help Desk if the problem persists.",
+      "proximateLabels": [
+        "Reference"
+      ],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "link",
+      "name": "Return to previous screen",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    },
+    {
+      "role": "StaticText",
+      "name": "Return to previous screen",
+      "proximateLabels": [],
+      "framePath": [
+        "main"
+      ]
+    }
+  ]
+}

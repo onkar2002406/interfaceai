@@ -1,0 +1,111 @@
+{
+  "status": "success",
+  "outputs": {
+    "memberNumber": "101555",
+    "memberFullName": "Hopper, Grace"
+  },
+  "runId": "success-member-inquiry-by-name",
+  "capability": "member_inquiry",
+  "capabilityVersion": "1.0.0",
+  "tenant": "meridian",
+  "identity": "teller",
+  "product": "meridian-core",
+  "startedAt": "2026-09-06T21:03:05.481Z",
+  "durationMs": 3039,
+  "steps": [
+    {
+      "stepId": "s1",
+      "intent": "Click the Member Inquiry link to open the member inquiry search screen",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:07.062Z",
+      "durationMs": 274,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Member Inquiry"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members(?:[?#]|$) and \"MEMBER INQUIRY / SELECTION\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s2",
+      "intent": "Select 'Last Name' in the Search by dropdown to enable searching by last name",
+      "actionType": "select",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:07.337Z",
+      "durationMs": 152,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s3",
+      "intent": "Enter last name '{{lastName}}' into the Value textbox for member search",
+      "actionType": "type",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:07.490Z",
+      "durationMs": 274,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "anchor:proximateLabel",
+        "drift": false,
+        "matched": ""
+      }
+    },
+    {
+      "stepId": "s4",
+      "intent": "Click the Search button to perform the member lookup by last name",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:07.765Z",
+      "durationMs": 353,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Search"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members(?:[?#]|$)",
+        "ok": true,
+        "failed": []
+      }
+    },
+    {
+      "stepId": "s5",
+      "intent": "Click the Select link for the {{lastName}} record to open the member detail screen",
+      "actionType": "click",
+      "status": "ok",
+      "startedAt": "2026-09-06T21:03:08.119Z",
+      "durationMs": 281,
+      "recoveries": [],
+      "resolution": {
+        "score": 1,
+        "strategy": "name:normalized",
+        "drift": false,
+        "matched": "Select"
+      },
+      "checkpoint": {
+        "describe": "the route matches /members/[0-9]+(?:[?#]|$) and \"MEMBER RECORD\" is on screen",
+        "ok": true,
+        "failed": []
+      }
+    }
+  ],
+  "driftSignals": [],
+  "appliedOverrides": [],
+  "evidenceDir": "evidence/meridian/replay-success-member-inquiry-by-name",
+  "blockedNavigations": []
+}
