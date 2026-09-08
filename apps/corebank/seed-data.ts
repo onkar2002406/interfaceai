@@ -156,3 +156,90 @@ export const OPENED_SUBACCOUNTS: Array<{
   initialDeposit: number;
   openedAt: string;
 }> = [];
+
+/** Pristine copy of the seeded records, taken before anything can mutate them. */
+const SEED_SNAPSHOT: Member[] = structuredClone(MEMBERS);
+
+/**
+ * Restores the seeded records and clears the opened-account log.
+ *
+ * Opening a sub-account genuinely mutates a member record, which makes the
+ * fixture stateful: an opened account survives until the process ends, so a
+ * test or a demo that opens one changes what the next one sees. That is correct
+ * for an irreversible action and wrong for a fixture, so the harness gets a way
+ * to put the app back — `/_admin/reset`, which is already on the policy DENY
+ * list precisely so the automation cannot reach its own test hooks.
+ *
+ * The three tenant instances share this array, so a reset through any one of
+ * them resets all three. Same simplification as `updateMember` above.
+ */
+export function resetData(): void {
+  MEMBERS.splice(0, MEMBERS.length, ...structuredClone(SEED_SNAPSHOT));
+  OPENED_SUBACCOUNTS.length = 0;
+}
+
+const ACCOUNT_TYPES: ReadonlyArray<Account['type']> = ['Savings', 'Checking', 'Certificate'];
+
+/**
+ * Narrows a submitted account type. The commit POST is form data like any
+ * other, so the three products the form offers are re-checked here rather than
+ * trusted because the previous screen rendered a <select>.
+ */
+export function asAccountType(value: string): Account['type'] | undefined {
+  return ACCOUNT_TYPES.find((t) => t === value);
+}
+
+/**
+ * The member's existing OPEN account of a given type, if they hold one.
+ *
+ * The institution permits one open account per product, so this is what the
+ * sub-account screens check before opening another. Only `Open` counts: a
+ * dormant or closed account of the same type is history rather than a conflict,
+ * and refusing to reopen one would be a rule no institution actually has.
+ */
+export function openAccountOfType(m: Member, type: Account['type']): Account | undefined {
+  return m.accounts.find((a) => a.type === type && a.status === 'Open');
+}
+
+/**
+ * Opens a new share account on a member record.
+ *
+ * The single mutation point for account data, for the same reason `updateMember`
+ * above is the single mutation point for contact details: the account has to
+ * land on `m.accounts`, because that is the array the member detail screen
+ * renders. Recording an opened account somewhere the website cannot read it
+ * would make a successful replay unfalsifiable — the run would report success,
+ * the confirmation page would say so, and the member record would be unchanged.
+ *
+ * `OPENED_SUBACCOUNTS` still gets a row. It holds the opening deposit and the
+ * timestamp, which the member record has no column for, and it is what
+ * `/_admin/status` counts.
+ *
+ * Mutates the seeded array in place, so an opened account lasts until the
+ * process restarts — and, unlike a contact-detail edit, cannot be typed back.
+ * That is the point of classifying this step `irreversible`.
+ */
+export function openSubAccount(
+  id: string,
+  input: { type: Account['type']; deposit: number },
+): Account | undefined {
+  const m = findMember(id);
+  if (!m) return undefined;
+
+  const account: Account = {
+    number: `48209${String(90000 + OPENED_SUBACCOUNTS.length + 1)}`,
+    type: input.type,
+    balance: input.deposit,
+    status: 'Open',
+    openedOn: new Date().toISOString().slice(0, 10),
+  };
+  m.accounts.push(account);
+  OPENED_SUBACCOUNTS.push({
+    memberId: m.id,
+    number: account.number,
+    type: account.type,
+    initialDeposit: input.deposit,
+    openedAt: new Date().toISOString(),
+  });
+  return account;
+}

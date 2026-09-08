@@ -72,6 +72,15 @@ async function run(
 
 beforeAll(async () => {
   await ensureApp();
+
+  // Start from the seeded fixture. The safety cases open real accounts, and an
+  // opened account is an irreversible change that outlives the run — so against
+  // a long-lived instance (the Docker stack, or an app left running between
+  // suites) the second execution of this file would find member records the
+  // first one had already changed, and the duplicate-product rule would refuse
+  // what the previous run had opened.
+  await fetch('http://localhost:4000/_admin/reset', { method: 'POST' }).catch(() => undefined);
+
   // One credential pair per install: the cross-tenant cases sign on to their own
   // institution, so a single shared pair would no longer authenticate.
   for (const t of Object.values(TENANTS)) {
@@ -249,6 +258,31 @@ describe('safety', () => {
       );
       expect(r.status).toBe('business_outcome');
       if (r.status === 'business_outcome') expect(r.code).toBe('VALIDATION_ERROR');
+    },
+    CASE_TIMEOUT,
+  );
+
+  it(
+    'refuses a duplicate product as its own outcome, without reaching the irreversible step',
+    async () => {
+      // Nothing here is malformed: 10002 simply already holds an open Savings
+      // account, and the institution permits one per product. Authorised, so
+      // the only thing that can stop it is the business rule.
+      const r = await run(
+        openSubAccount,
+        { memberId: '10002', accountType: 'Savings', initialDeposit: '100.00', nickname: 'Rainy Day' },
+        'base',
+        true,
+      );
+      expect(r.status).toBe('business_outcome');
+      if (r.status !== 'business_outcome') return;
+      // Distinct from VALIDATION_ERROR: "correct your input and retry" is the
+      // wrong advice for a request that was never going to be accepted.
+      expect(r.code).toBe('DUPLICATE_ACCOUNT_TYPE');
+      expect(openSubAccount.spec.outcomes.business.map((b) => b.code)).toContain('DUPLICATE_ACCOUNT_TYPE');
+      // Refused at the review screen, so s9 was never attempted and nothing
+      // was committed — the part that matters for an irreversible flow.
+      expect(r.steps.some((s) => s.stepId === 's9')).toBe(false);
     },
     CASE_TIMEOUT,
   );

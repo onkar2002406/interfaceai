@@ -464,11 +464,14 @@ program
     // Only tell someone to start the target where this repo can actually start
     // it. For a hosted product that instruction is just wrong.
     const selfHosted = profile.tenants.every((t) => new URL(t.baseUrl).hostname === 'localhost');
-    console.log(
-      selfHosted
-        ? '\nStart the target application in another terminal with `npm run app`. Ctrl+C to stop.'
-        : '\nThe target is hosted, so nothing else needs starting. Ctrl+C to stop.',
-    );
+    const targetAlreadyStarted = process.env.TARGET_ALREADY_STARTED === '1';
+    let shutdownNote = '\nThe target is hosted, so nothing else needs starting. Ctrl+C to stop.';
+    if (targetAlreadyStarted) {
+      shutdownNote = '\nThe target application is already running in this container. Ctrl+C to stop.';
+    } else if (selfHosted) {
+      shutdownNote = '\nStart the target application in another terminal with `npm run app`. Ctrl+C to stop.';
+    }
+    console.log(shutdownNote);
   });
 
 /* -------------------------------------------------------------- utilities */

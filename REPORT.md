@@ -418,6 +418,65 @@ That split is the honest version: most variation is absorbed by the locator
 model, genuine relabels need a patch, and the drift signal tells you which is
 which — without re-recording.
 
+**How MERIDIAN was added after CoreBank.** It was not added as a fourth
+CoreBank tenant. It became a second product adapter: one app profile
+([`config/apps/meridian-core.yaml`](config/apps/meridian-core.yaml)), one policy
+file ([`config/policy.meridian.json`](config/policy.meridian.json)), and a set of
+capability artifacts whose `metadata.app.product` is `meridian-core`. The core
+seams stayed the same: `Surface` still observes and acts, `Policy` still owns
+containment/risk, `Catalog` still projects YAML into tool definitions, and
+`replay()` still consumes a `Capability`. The CLI/panel switch is the profile
+path; from there the profile selects the policy, auth descriptors, runtime
+conditions, chat audience/openers, identities and tenant base URL.
+
+The distinction matters because **product** and **tenant** are different axes.
+CoreBank's `base`, `firstvalley` and `harborcu` are institutions running one
+vendor product. They share the CoreBank profile and capability set; per-tenant
+differences are base URL, labels, table order, credentials, product version and
+tenant-added conditions. MERIDIAN is a different vendor product: different
+routes, POST/redirect behaviour, hidden transaction tokens, vocabulary
+(`shares`, not sub-accounts), product-wide condition taxonomy and irreversible
+controls. Within MERIDIAN, `teller` and `supervisor` are named **identities**,
+not tenants — the same hosted install returns different business outcomes based
+on the operator signed on.
+
+**How the CoreBank dummy banks are built.** There is one Express application
+factory, `createCoreBankApp(tenantId)`, and
+[`apps/corebank/start-servers.ts`](apps/corebank/start-servers.ts) starts it
+three times on ports 4000-4002. The illusion of three banks comes from
+[`apps/corebank/tenants.ts`](apps/corebank/tenants.ts): institution name,
+version, accent colour, staff directory, labels, column order and the privacy
+interstitial flag. [`apps/corebank/pages.ts`](apps/corebank/pages.ts) renders
+those knobs into intentionally hostile legacy HTML — frameset, tables, generated
+ids, missing labels — and [`apps/corebank/server.ts`](apps/corebank/server.ts)
+keeps the route shape identical across tenants. That makes variation something
+the replay system has to survive rather than three unrelated apps.
+
+The three tenants were chosen to exercise three levels of drift:
+
+| Tenant | Version | Difference from the baseline | What it proves |
+|---|---|---|---|
+| `base` | 8.2 | Baseline labels, baseline table order, no extra screen. | A clean recording target. |
+| `firstvalley` | 8.2 | Same code and table order, but the tenant relabels the search path: `Find Member`, `Member Number`, `Go`, `Share Accounts`. | Genuine relabels belong in `overrides:` as small, reviewable patches. |
+| `harborcu` | 9.0 | Different build, reordered accounts table, `New Sub-Account` wording, mandatory privacy acknowledgement. | Header/row locators and tenant-level conditions absorb drift without forking the artifact. |
+
+Each tenant also has its own dummy staff directory (`svc.demo`, `svc.fvcu`,
+`svc.harbor`) and its own URL/port, because credentials are scoped to an
+institution. The member ledger is shared in memory, which is the useful
+simplification for this prototype: the variation under test is the screen, not
+separate core-accounting backends.
+
+**How the dummy data is built.** [`apps/corebank/seed-data.ts`](apps/corebank/seed-data.ts)
+exports synthetic `MEMBERS` with realistic-looking account numbers, SSNs,
+contact details, account status, balances and one restricted member. The
+mutation functions write back to the same in-memory objects the pages render:
+`updateMember()` changes contact fields; `openSubAccount()` appends a real
+account to the member and records the event in `OPENED_SUBACCOUNTS`; `resetData()`
+restores a structured-cloned snapshot for tests and evidence capture. It is
+stateful enough to prove that replay changed the page a human would read, but
+small enough to reset; `/_admin/reset` and the fault hooks are policy-denied so
+the automation cannot clean up or sabotage its own scenario.
+
 **Drift detection at scale.** You do not diff screenshots; you watch how your
 locators are winning. A tenant whose capabilities increasingly resolve via
 fallback strategies has upgraded, and it surfaces before anything fails.
@@ -455,6 +514,38 @@ needs no token, deliberately: an operator should understand a stuck run before
 deciding to take it on. Input requires the claimed token and is refused without
 it; [`scripts/demo-human-handoff.ts`](scripts/demo-human-handoff.ts) asserts that
 refusal as part of the demonstration.
+
+Code path, end to end:
+
+1. `replay()` reaches a point it cannot safely pass — usually `Surface.act()`
+   returns `POLICY_DENIED` with `escalatable: true`, a locator is ambiguous, a
+   target is missing, or a checkpoint/condition exhausts recovery. The executor
+   calls its local `escalateStep()` helper.
+2. `escalateStep()` first calls `captureFailureEvidence('escalation-<step>')`.
+   That asks `PlaywrightSurface.observe({ screenshot: true })` for a settled AX
+   inventory plus a screenshot. The surface's `screenshotWithPiiMasked()` resolves
+   nodes whose text/value looks like PII, temporarily blacks them out in the live
+   page via CDP, takes `page.screenshot()`, restores the styles, and hands the
+   PNG to `RunRecorder.screenshot()`. The same helper writes
+   `<label>-elements.json`, the resolver's view of the screen.
+3. `escalateStep()` builds an `InterventionRequest`: capability name/version,
+   step id and prose intent, reason class, redacted params, observed text,
+   optional screenshot path, and a **resume contract** — normally the step's own
+   checkpoint. It logs `escalation_raised` into `events.jsonl`.
+4. `InterventionBroker.raise()` calls `ControlAuthority.requestIntervention()`
+   before putting the request in the queue. That rotates automation's token away
+   and moves the state to `PENDING_HUMAN`, eliminating the overlap window where
+   both parties could act.
+5. `operator/intervention-api.ts` exposes the queue over HTTP and the live page
+   over WebSocket. `attachSessionBridge()` calls `surface.startScreencast()`,
+   which uses `Page.startScreencast` and acknowledges each frame. Input messages
+   call `broker.operatorToken(id)` and then `surface.dispatchHumanInput()`, which
+   forwards raw CDP `Input.dispatchMouseEvent` / `Input.dispatchKeyEvent` only if
+   the claimed human token is still current.
+6. On hand-back, the broker resolves the parked promise. The executor logs
+   `escalation_resolved`, calls `resumeAutomation()`, observes the page again,
+   and evaluates the resume checkpoint. Only if it holds does automation receive
+   a fresh token and continue.
 
 Human actions are recorded as evidence. Typed *characters* are not — an operator
 filling in member details would otherwise write regulated data into the log one
