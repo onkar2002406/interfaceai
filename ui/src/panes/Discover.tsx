@@ -37,11 +37,11 @@ export function Discover({ catalog, tenant, onRunsChanged, onCatalogChanged }: D
   const [goal, setGoal] = useState('');
   const [targetUrl, setTargetUrl] = useState('');
   const [params, setParams] = useState<Param[]>([]);
-  const [maxSteps, setMaxSteps] = useState('20');
   const [name, setName] = useState('');
   const [runId, setRunId] = useState<string | null>(null);
   const [problems, setProblems] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [stopping, setStopping] = useState(false);
   const [approving, setApproving] = useState(false);
 
   const stream = useRunStream(runId);
@@ -76,7 +76,6 @@ export function Discover({ catalog, tenant, onRunsChanged, onCatalogChanged }: D
         goal,
         tenant,
         params: Object.fromEntries(params.filter((p) => p.name).map((p) => [p.name, p.value])),
-        maxSteps: Number(maxSteps) || 20,
       };
       if (targetUrl.trim()) body.targetUrl = targetUrl.trim();
       if (name.trim()) body.name = name.trim();
@@ -92,6 +91,24 @@ export function Discover({ catalog, tenant, onRunsChanged, onCatalogChanged }: D
       );
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function stop(): Promise<void> {
+    if (!runId) return;
+    setStopping(true);
+    setProblems([]);
+    try {
+      await api.stopRun(runId, 'stopped from the Discover tab');
+      onRunsChanged();
+    } catch (err) {
+      setProblems(
+        err instanceof ApiError && err.problems?.length
+          ? err.problems
+          : [err instanceof Error ? err.message : String(err)],
+      );
+    } finally {
+      setStopping(false);
     }
   }
 
@@ -178,10 +195,6 @@ export function Discover({ catalog, tenant, onRunsChanged, onCatalogChanged }: D
       )}
 
       <div className="row">
-        <div style={{ flex: '0 0 8rem' }}>
-          <label htmlFor="maxSteps">Step budget</label>
-          <input id="maxSteps" type="text" value={maxSteps} onChange={(e) => setMaxSteps(e.target.value)} />
-        </div>
         <div style={{ flex: 1 }}>
           <label htmlFor="capName">
             Name override <span className="hint">optional</span>
@@ -194,7 +207,15 @@ export function Discover({ catalog, tenant, onRunsChanged, onCatalogChanged }: D
         <button className="go" onClick={() => void run()} disabled={busy || !goal.trim()}>
           Discover
         </button>
-        <span className="hint">Irreversible actions are refused during discovery, at any confidence.</span>
+        {runId && !stream.done && (
+          <button className="mini" onClick={() => void stop()} disabled={stopping}>
+            {stopping ? 'Stopping...' : 'Stop'}
+          </button>
+        )}
+        <span className="hint">
+          No step budget is set from this tab. Use Stop if the agent is looping. Irreversible
+          actions are refused during discovery, at any confidence.
+        </span>
       </div>
 
       {problems.length > 0 && (

@@ -30,6 +30,11 @@ test with on both targets, a flowchart of each kind of run, exactly what to type
 into each panel and what to expect back, what the Discover tab is for, the
 guardrails in plain words, and why each loop limit is the number it is.
 
+**[GUARDRAILS-SCHEMAS-MODELS.md](GUARDRAILS-SCHEMAS-MODELS.md)** is the focused
+interview note for the safety architecture: every guardrail, the capability
+artifact schema, the MongoDB run-store schema, and which models are used where —
+with the "why this approach" rationale for each choice.
+
 REPORT.md's later sections answer the deployment questions specifically —
 [§8](REPORT.md) on which stretch goals are built, where each one's code lives and
 which click on the panel shows it working, and [§9](REPORT.md) on hosting,
@@ -302,7 +307,8 @@ cp .env.example .env      # a model key is still optional
 docker compose up --build
 ```
 
-That brings up **MongoDB, both targets' worth of services, and both panels**:
+That brings up **MongoDB, a MongoDB browser UI, both targets' worth of services,
+and both panels**:
 
 | | |
 |---|---|
@@ -311,13 +317,14 @@ That brings up **MongoDB, both targets' worth of services, and both panels**:
 | `localhost:4000-4002` | the three CoreBank institutions |
 | `localhost:4100` / `:4101` | the two standalone operator consoles |
 | `localhost:27017` | MongoDB |
+| `localhost:8081` | Mongo Express UI for browsing MongoDB collections |
 
 Three files do it:
 
 | File | What it is |
 |---|---|
 | [`Dockerfile`](Dockerfile) | Built on `mcr.microsoft.com/playwright:v1.62.1-jammy`, so the Chromium the surface driver needs is present and version-locked to the `playwright` in `package.json`. It installs dependencies, pre-builds the React panel, then runs `npm run typecheck && npm test` — **a red tree cannot produce an image**, and the e2e suite has ports 4000-4002 to itself at that moment, which it would not have in a running container. |
-| [`docker-compose.yml`](docker-compose.yml) | `mongo` plus two app services built from that one image. |
+| [`docker-compose.yml`](docker-compose.yml) | `mongo`, `mongo-express`, and two app services built from that one image. |
 | [`docker/start.sh`](docker/start.sh) | The entrypoint. `corebank` mode starts the three tenant instances, waits for the reference install to answer, then brings up the panel and its operator console. `meridian` mode starts the panel alone — that target is hosted, so there is nothing local to run. |
 
 Either half on its own, with MongoDB pulled in by `depends_on`:
@@ -325,7 +332,7 @@ Either half on its own, with MongoDB pulled in by `depends_on`:
 ```bash
 docker compose up --build corebank    # CoreBank instances + panel + console
 docker compose up --build meridian    # MERIDIAN panel + console
-docker compose up -d mongo            # the run store by itself
+docker compose up -d mongo mongo-express  # the run store and browser UI
 ```
 
 **MongoDB is optional and the system says which it got.** Unset, the run

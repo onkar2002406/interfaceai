@@ -17,11 +17,10 @@ import { Discover } from './panes/Discover';
 import { Replay } from './panes/Replay';
 import { Evidence } from './panes/Evidence';
 import { Guardrails } from './panes/Guardrails';
-import { AgentView } from './panes/AgentView';
 import { Runs } from './panes/Runs';
 import { EscalationModal } from './components/EscalationModal';
 
-type TabId = 'chat' | 'replay' | 'discover' | 'runs' | 'evidence' | 'guardrails' | 'agent';
+type TabId = 'chat' | 'replay' | 'discover' | 'runs' | 'evidence' | 'guardrails';
 
 const TABS: Array<{ id: TabId; label: string }> = [
   { id: 'chat', label: 'Chat' },
@@ -30,7 +29,6 @@ const TABS: Array<{ id: TabId; label: string }> = [
   { id: 'runs', label: 'Run history' },
   { id: 'evidence', label: 'Evidence' },
   { id: 'guardrails', label: 'Guardrails' },
-  { id: 'agent', label: 'Agent view' },
 ];
 
 export function App(): JSX.Element {
@@ -147,7 +145,6 @@ export function App(): JSX.Element {
         <a href={catalog.operatorUrl} target="_blank" rel="noopener noreferrer">
           Operator console ↗
         </a>
-        <a href="/legacy">Legacy panel</a>
       </header>
 
       <div className="layout">
@@ -279,7 +276,6 @@ export function App(): JSX.Element {
           {tab === 'runs' && <Runs runs={runs} onOpenEvidence={openEvidence} />}
           {tab === 'evidence' && <Evidence openDir={evidenceDir} onOpened={() => setEvidenceDir(null)} />}
           {tab === 'guardrails' && <Guardrails />}
-          {tab === 'agent' && <AgentView operatorUrl={catalog.operatorUrl} />}
         </main>
       </div>
 

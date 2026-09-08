@@ -92,11 +92,11 @@ colleague could follow — it becomes the human-readable description of this ste
  * nodes, and burying the six buttons among them measurably degrades the model's
  * choices as well as costing tokens.
  */
-export function renderObservation(obs: Observation, goal: string, stepsTaken: number, maxSteps: number): string {
+export function renderObservation(obs: Observation, goal: string, stepsTaken: number, maxSteps?: number): string {
   const lines: string[] = [];
 
   lines.push(`GOAL: ${goal}`);
-  lines.push(`STEP: ${stepsTaken + 1} of at most ${maxSteps}`);
+  lines.push(maxSteps === undefined ? `STEP: ${stepsTaken + 1}` : `STEP: ${stepsTaken + 1} of at most ${maxSteps}`);
   lines.push('');
   lines.push(`LOCATION: ${obs.signals.url}`);
   if (obs.signals.frameUrls.length > 1) {

@@ -206,13 +206,16 @@ export class OpenAiCompatibleProvider implements LlmProvider {
 
       let res: OpenAI.Chat.ChatCompletion;
       try {
-        res = await this.completeWithRetry({
-          model: this.model,
-          messages: attemptMessages,
-          tools,
-          tool_choice: toolChoice,
-          temperature: 0,
-        });
+        res = await this.completeWithRetry(
+          {
+            model: this.model,
+            messages: attemptMessages,
+            tools,
+            tool_choice: toolChoice,
+            temperature: 0,
+          },
+          req.signal,
+        );
       } catch (err) {
         if (err instanceof NoToolCallError && attempt < TOOL_CALL_ATTEMPTS) continue;
         if (err instanceof NoToolCallError) {
@@ -273,13 +276,16 @@ export class OpenAiCompatibleProvider implements LlmProvider {
    */
   private async completeWithRetry(
     body: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming,
+    signal?: AbortSignal,
   ): Promise<OpenAI.Chat.ChatCompletion> {
     const MAX_ATTEMPTS = 4;
 
     for (let attempt = 1; ; attempt++) {
       try {
-        return await this.client.chat.completions.create(body);
+        return await this.client.chat.completions.create(body, signal ? { signal } : undefined);
       } catch (err) {
+        if (signal?.aborted || (err as { name?: string }).name === 'AbortError') throw err;
+
         const e = err as { status?: number; code?: string; message?: string };
 
         // Surface this as its own type so `decide` can nudge and retry rather
@@ -330,7 +336,7 @@ export class OpenAiCompatibleProvider implements LlmProvider {
         // Exponential backoff with jitter: 1s, 2s, 4s. Free tiers rate-limit
         // aggressively, and a discovery run is a burst of calls.
         const waitMs = 2 ** (attempt - 1) * 1000 + Math.random() * 250;
-        await new Promise((r) => setTimeout(r, waitMs));
+        await sleep(waitMs, signal);
       }
     }
   }
@@ -338,4 +344,23 @@ export class OpenAiCompatibleProvider implements LlmProvider {
   usage(): { promptTokens: number; completionTokens: number; calls: number } {
     return { promptTokens: this.promptTokens, completionTokens: this.completionTokens, calls: this.calls };
   }
+}
+
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  if (signal?.aborted) return Promise.reject(new Error(abortReason(signal)));
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        reject(new Error(abortReason(signal)));
+      },
+      { once: true },
+    );
+  });
+}
+
+function abortReason(signal: AbortSignal): string {
+  return typeof signal.reason === 'string' ? signal.reason : 'operation was stopped';
 }

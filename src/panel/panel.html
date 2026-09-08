@@ -136,7 +136,6 @@
     <button data-tab="run">Replay</button>
     <button data-tab="evidence">Evidence</button>
     <button data-tab="policy">Guardrails</button>
-    <button data-tab="tools">Agent view</button>
   </nav>
   <a id="operatorLink" href="#" target="_blank" rel="noopener">Operator console ↗</a>
   <span id="pending"></span>
@@ -209,14 +208,10 @@
           <select id="dtenant"></select>
           <div class="hint" id="dtenantHint"></div>
         </div>
-        <div>
-          <label for="maxSteps">Step budget</label>
-          <input type="text" id="maxSteps" value="20" style="max-width:90px">
-          <div class="hint">Model turns before it gives up.</div>
-        </div>
       </div>
 
       <p><button class="go" id="discover">Discover</button>
+         <button class="mini" id="stopDiscover" hidden>Stop</button>
          <span class="hint" id="discoverHint"></span></p>
 
       <div id="dlive" hidden>
@@ -312,6 +307,7 @@ let CATALOG = null;
 let SELECTED = null;
 let STREAM = null;
 let DSTREAM = null;
+let DISCOVERY_RUN_ID = null;
 
 /* ------------------------------------------------------------- tabs */
 function showTab(name) {
@@ -551,7 +547,6 @@ $('discover').onclick = async () => {
       goal: $('goal').value,
       tenant: $('dtenant').value,
       params: currentParams(),
-      maxSteps: Number($('maxSteps').value) || 20,
     }),
   });
   const body = await res.json();
@@ -565,6 +560,8 @@ $('discover').onclick = async () => {
     return;
   }
 
+  DISCOVERY_RUN_ID = body.runId;
+  $('stopDiscover').hidden = false;
   $('dRunId').textContent = `${body.runId} · ${body.provider}`;
   if (DSTREAM) DSTREAM.close();
   DSTREAM = new EventSource(`/api/runs/${body.runId}/stream`);
@@ -573,9 +570,28 @@ $('discover').onclick = async () => {
     renderDiscovery(JSON.parse(e.data), body.evidenceDir);
     DSTREAM.close();
     DSTREAM = null;
+    DISCOVERY_RUN_ID = null;
+    $('stopDiscover').hidden = true;
     $('discover').disabled = false;
   });
-  DSTREAM.onerror = () => { DSTREAM && DSTREAM.close(); DSTREAM = null; $('discover').disabled = false; };
+  DSTREAM.onerror = () => {
+    DSTREAM && DSTREAM.close();
+    DSTREAM = null;
+    DISCOVERY_RUN_ID = null;
+    $('stopDiscover').hidden = true;
+    $('discover').disabled = false;
+  };
+};
+
+$('stopDiscover').onclick = async () => {
+  if (!DISCOVERY_RUN_ID) return;
+  $('stopDiscover').disabled = true;
+  await fetch(`/api/runs/${DISCOVERY_RUN_ID}/stop`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ reason: 'stopped from the Discover tab' }),
+  }).catch(() => undefined);
+  $('stopDiscover').disabled = false;
 };
 
 /** What discovery produced: an artifact to review, or an honest account of why not. */

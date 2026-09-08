@@ -13,6 +13,7 @@
 #   4300               MERIDIAN control panel        -> http://localhost:4300
 #   4101               MERIDIAN operator console
 #   27017              MongoDB
+#   8081               Mongo Express UI             -> http://localhost:8081
 #
 # Credentials come from .env (copy .env.example -> .env first). A model key is
 # only needed for the Chat front door and `discover`; replay and the panel work
@@ -31,6 +32,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  mongo-express:
+    image: mongo-express:1.0.2-20
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: "mongodb://mongo:27017/"
+      ME_CONFIG_BASICAUTH: "false"
+    depends_on:
+      mongo:
+        condition: service_healthy
 
   corebank:
     build: .

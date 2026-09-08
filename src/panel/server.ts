@@ -44,6 +44,7 @@ import { renderDiscoverySummary, renderReplaySummary } from '../cli/run-reports.
 import { connectToOperatorConsole, type AttachedConsole } from '../escalation/operator/console-client.js';
 import { attachSessionBridge, mountInterventionApi } from '../escalation/operator/intervention-api.js';
 import { resolveEntryUrl } from '../discovery/entry-url.js';
+import type { PlaywrightSurface } from '../surface/web/playwright-surface.js';
 import {
   createProvider,
   defaultProviderName,
@@ -115,6 +116,8 @@ export interface PanelRun {
   crash?: string;
   evidenceDir: string;
   subscribers: Set<Response>;
+  /** Optional live cancellation hook for long-running runs. */
+  cancel?: (reason?: string) => void;
   /**
    * In-process watchers, as distinct from HTTP subscribers.
    *
@@ -729,6 +732,25 @@ export async function startControlPanel(opts: ControlPanelOptions = {}): Promise
     req.on('close', () => run.subscribers.delete(res));
   });
 
+  app.post('/api/runs/:id/stop', (req: Request, res: Response) => {
+    const run = runs.get(String(req.params.id));
+    if (!run) {
+      res.status(404).json({ error: 'no such run' });
+      return;
+    }
+    if (run.state !== 'running') {
+      res.status(409).json({ error: 'run is already finished' });
+      return;
+    }
+    if (!run.cancel) {
+      res.status(409).json({ error: 'this run cannot be stopped from the panel' });
+      return;
+    }
+    const reason = String((req.body as { reason?: string } | undefined)?.reason ?? 'stopped by operator');
+    run.cancel(reason);
+    res.json({ ok: true });
+  });
+
   /**
    * Launches a replay and registers it as a watchable run.
    *
@@ -949,6 +971,7 @@ export async function startControlPanel(opts: ControlPanelOptions = {}): Promise
   } {
     const tenant = tenantOf(profile, args.tenantId);
     const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+    const abort = new AbortController();
     const recorder = new RunRecorder(id, 'discovery', join('evidence', PANEL_RUNS_SUBDIR), {
       consoleEcho: false,
       onEvent: (e) => {
@@ -976,6 +999,13 @@ export async function startControlPanel(opts: ControlPanelOptions = {}): Promise
       subscribers: new Set(),
       listeners: new Set(),
     };
+    let surface: PlaywrightSurface | undefined;
+    run.cancel = (reason = 'stopped by operator') => {
+      if (abort.signal.aborted) return;
+      abort.abort(reason);
+      recorder.event('discovery_stop_requested', { reason });
+      void surface?.close().catch(() => undefined);
+    };
     runs.set(id, run);
     persistRun(run);
 
@@ -986,7 +1016,6 @@ export async function startControlPanel(opts: ControlPanelOptions = {}): Promise
       const { PlaywrightSurface } = await import('../surface/web/playwright-surface.js');
 
       const authority = new ControlAuthority(id);
-      let surface;
       try {
         surface = await PlaywrightSurface.launch({
           policy,
@@ -1012,6 +1041,7 @@ export async function startControlPanel(opts: ControlPanelOptions = {}): Promise
           allowedActions: policy.config.actions,
           irreversibleControls: policy.irreversibleControlNames(),
           sink: attached.sink,
+          signal: abort.signal,
           ...(args.maxSteps ? { maxSteps: args.maxSteps } : {}),
         });
 

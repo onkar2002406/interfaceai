@@ -221,9 +221,10 @@ export const api = {
     tenant?: string;
     params?: Record<string, string>;
     targetUrl?: string;
-    maxSteps?: number;
     name?: string;
   }) => postJson<{ runId: string; evidenceDir: string; provider: string; targetUrl: string }>('/api/discover', body),
+
+  stopRun: (id: string, reason: string) => postJson<{ ok: true }>(`/api/runs/${id}/stop`, { reason }),
 
   /* ------------------------------------------------------- interventions */
 

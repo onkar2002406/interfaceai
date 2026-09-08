@@ -123,6 +123,7 @@ export interface DiscoveryOptions {
   irreversibleControls?: string[];
   maxSteps?: number;
   timeoutMs?: number;
+  signal?: AbortSignal;
   sink?: EscalationSink;
 }
 
@@ -134,7 +135,7 @@ export async function discover(opts: DiscoveryOptions): Promise<DiscoveryTrace> 
     surface,
     authority,
     recorder,
-    maxSteps = 20,
+    maxSteps,
     timeoutMs = 180_000,
   } = opts;
 
@@ -162,7 +163,7 @@ export async function discover(opts: DiscoveryOptions): Promise<DiscoveryTrace> 
     // Recorded so a run report says plainly whether the model could see the
     // screenshots, rather than leaving a reader to infer it.
     vision: provider.supportsVision ? 'screenshot sent to model' : 'text inventory only',
-    maxSteps,
+    maxSteps: maxSteps ?? 'unbounded',
   });
 
   const finish = (outcome: DiscoveryTrace['outcome']): DiscoveryTrace => ({
@@ -181,6 +182,12 @@ export async function discover(opts: DiscoveryOptions): Promise<DiscoveryTrace> 
     outcome,
     usage: provider.usage(),
   });
+
+  if (opts.signal?.aborted) {
+    const why = abortReason(opts.signal);
+    recorder.event('discovery_stopped', { why });
+    return finish({ kind: 'stopped', why });
+  }
 
   await surface.act({ type: 'navigate', url: opts.entryUrl }, authority.automationToken());
 
@@ -206,10 +213,20 @@ export async function discover(opts: DiscoveryOptions): Promise<DiscoveryTrace> 
 
   let consecutiveBadIds = 0;
 
-  for (let stepIndex = 0; stepIndex < maxSteps; stepIndex++) {
+  for (let stepIndex = 0; ; stepIndex++) {
+    if (opts.signal?.aborted) {
+      const why = abortReason(opts.signal);
+      recorder.event('discovery_stopped', { why });
+      return finish({ kind: 'stopped', why });
+    }
+
     if (Date.now() > deadline) {
       recorder.event('discovery_stopped', { why: 'timeout' });
       return finish({ kind: 'stopped', why: `wall-clock timeout after ${timeoutMs}ms` });
+    }
+    if (maxSteps !== undefined && stepIndex >= maxSteps) {
+      recorder.event('discovery_stopped', { why: 'max steps' });
+      return finish({ kind: 'stopped', why: `reached the maximum of ${maxSteps} steps without finishing` });
     }
 
     // The screenshot is always captured — it is run evidence, and a human
@@ -229,14 +246,26 @@ export async function discover(opts: DiscoveryOptions): Promise<DiscoveryTrace> 
       turn = await provider.decide({
         system,
         userText,
+        signal: opts.signal,
         ...(obs.screenshot && provider.supportsVision ? { screenshot: obs.screenshot } : {}),
         history,
         tools,
       });
     } catch (err) {
+      if (opts.signal?.aborted) {
+        const why = abortReason(opts.signal);
+        recorder.event('discovery_stopped', { why });
+        return finish({ kind: 'stopped', why });
+      }
       const why = err instanceof Error ? err.message : String(err);
       recorder.event('model_error', { why });
       return finish({ kind: 'stopped', why: `model call failed: ${why}` });
+    }
+
+    if (opts.signal?.aborted) {
+      const why = abortReason(opts.signal);
+      recorder.event('discovery_stopped', { why });
+      return finish({ kind: 'stopped', why });
     }
 
     recorder.event('model_decision', {
@@ -377,8 +406,10 @@ export async function discover(opts: DiscoveryOptions): Promise<DiscoveryTrace> 
     history.push({ turn, result: `OK. Now at ${step.after.url}. ${step.after.textSample.slice(0, 220)}` });
   }
 
-  recorder.event('discovery_stopped', { why: 'max steps' });
-  return finish({ kind: 'stopped', why: `reached the maximum of ${maxSteps} steps without finishing` });
+}
+
+function abortReason(signal: AbortSignal): string {
+  return typeof signal.reason === 'string' ? signal.reason : 'discovery stopped by operator';
 }
 
 /* ------------------------------------------------------------------ helpers */
