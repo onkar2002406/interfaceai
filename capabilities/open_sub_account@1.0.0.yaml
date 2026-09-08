@@ -254,6 +254,14 @@ spec:
           longer than 20 characters. Nothing was created; correct the inputs and
           invoke again.
         outputsAvailable: false
+      - code: DUPLICATE_ACCOUNT_TYPE
+        meaning: >
+          The member already holds an open account of the requested type, and
+          the institution permits one of each. Refused at the review screen, so
+          the irreversible step was never reached and nothing was created.
+          Retrying with the same accountType will always fail; choose another.
+        outputsAvailable: false
+
       - code: MEMBER_NOT_FOUND
         meaning: No member matches the supplied identifier. Nothing was created.
         outputsAvailable: false

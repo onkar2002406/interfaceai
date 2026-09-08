@@ -19,12 +19,19 @@ description: >
 # does not exist turns a demonstration of the system into a demonstration of a
 # model guessing an identifier.
 #
-# Four openers, one per arm of the result contract:
+# Five openers, covering each arm of the result contract:
 #   1. success           — member 10001 has an open Savings share
 #   2. business outcome  — 99999 is nobody: MEMBER_NOT_FOUND
 #   3. business outcome  — 10007 is `restricted: true`: PERMISSION_DENIED
 #   4. escalated         — opening a sub-account ends in an irreversible step,
-#                          which chat cannot authorise, so it stops for a human
+#                          which chat cannot authorise, so it stops for a human.
+#                          CHECKING, because 10002 already holds an open Savings
+#                          and the institution permits one account per product —
+#                          asking for Savings here would demonstrate the
+#                          duplicate refusal instead of the escalation.
+#   5. business outcome  — 10002 DOES hold an open Savings: DUPLICATE_ACCOUNT_TYPE,
+#                          refused at the review screen, before the irreversible
+#                          step is ever presented
 # ---------------------------------------------------------------------------
 chat:
   audience: >
@@ -38,7 +45,8 @@ chat:
     - What is the savings balance for member 10001?
     - Look up member 99999
     - What is the savings balance for member 10007?
-    - Open a Savings sub-account for member 10002 with a $100.00 initial deposit, nicknamed Vacation Fund
+    - Open a Checking sub-account for member 10002 with a $100.00 initial deposit, nicknamed Vacation Fund
+    - Open a Savings sub-account for member 10002 with a $100.00 initial deposit, nicknamed Rainy Day
 
 # ---------------------------------------------------------------------------
 # Product-wide runtime conditions.
@@ -91,6 +99,23 @@ conditions:
       kind: business
       code: VALIDATION_ERROR
       message: The application rejected the submitted values.
+
+  - id: duplicate_account_type
+    description: >
+      The member already holds an open account of the requested product, and the
+      institution permits one of each. Distinct from validation_error on purpose:
+      nothing the caller submitted is malformed, so "fix your input and retry" is
+      the wrong advice — the answer is "choose a different product, or this member
+      already has what you were asked to create". The app gives it its own wording
+      rather than the shared "Please correct the following" banner so the two stay
+      separable here.
+    when:
+      kind: textPresent
+      text: already exists for this member
+    then:
+      kind: business
+      code: DUPLICATE_ACCOUNT_TYPE
+      message: The member already holds an open account of this type.
 
   # ---- recoverable conditions: bounded, then re-verified ------------------
   - id: session_expired

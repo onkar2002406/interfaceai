@@ -36,7 +36,7 @@ case "$MODE" in
     done
 
     echo "==> starting CoreBank control panel (${PANEL_PORT:-4200}) + operator console (${OPERATOR_PORT:-4100})"
-    $CLI panel --port "${PANEL_PORT:-4200}" --operator-port "${OPERATOR_PORT:-4100}" &
+    TARGET_ALREADY_STARTED=1 $CLI panel --port "${PANEL_PORT:-4200}" --operator-port "${OPERATOR_PORT:-4100}" &
     pids+=($!)
     ;;
 

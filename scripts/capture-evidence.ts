@@ -331,7 +331,11 @@ try {
   await replayCase({
     slug: 'escalation-irreversible-unattended',
     capability: subAccount,
-    params: { memberId: '10001', accountType: 'Savings', initialDeposit: '100.00', nickname: 'Holiday Fund' },
+    // Certificate, not Savings: 10001 already holds an open Savings account and
+    // the institution permits one per product, so a Savings request would be
+    // refused at the review screen and never reach the irreversible step this
+    // case exists to demonstrate.
+    params: { memberId: '10001', accountType: 'Certificate', initialDeposit: '100.00', nickname: 'Holiday Fund' },
     note: 'An irreversible step with no authorisation. Parks and escalates; nothing was committed.',
   });
   await replayCase({
@@ -347,6 +351,18 @@ try {
     params: { memberId: '10002', accountType: 'Savings', initialDeposit: '5.00', nickname: 'TooSmall' },
     authorizeIrreversible: true,
     note: 'An opening deposit below the institution minimum. VALIDATION_ERROR — nothing was created.',
+  });
+  await replayCase({
+    slug: 'business-outcome-duplicate-account',
+    capability: subAccount,
+    // A well-formed request the institution will never accept: 10002 already
+    // holds an open Savings account. Distinct from the case above, where the
+    // input was malformed — here nothing is wrong with what was asked, so
+    // "correct it and retry" would be the wrong advice and a different code
+    // says so. Refused at the review screen, before the irreversible step.
+    params: { memberId: '10002', accountType: 'Savings', initialDeposit: '100.00', nickname: 'Rainy Day' },
+    authorizeIrreversible: true,
+    note: 'The member already holds this product. DUPLICATE_ACCOUNT_TYPE — nothing was created.',
   });
 
   writeIndex();

@@ -14,7 +14,16 @@ import express, { type Express, type Request, type Response, type NextFunction }
 import { randomUUID } from 'node:crypto';
 import { getTenant, type TenantConfig } from './tenants.js';
 import { FaultController, FAULT_MODES, type FaultMode } from './fault-injection.js';
-import { findMember, updateMember, OPENED_SUBACCOUNTS, type Member } from './seed-data.js';
+import {
+  asAccountType,
+  findMember,
+  openAccountOfType,
+  openSubAccount,
+  resetData,
+  updateMember,
+  OPENED_SUBACCOUNTS,
+  type Member,
+} from './seed-data.js';
 import * as V from './pages.js';
 
 const MIN_OPENING_DEPOSIT = 25;
@@ -233,22 +242,63 @@ export function createCoreBankApp(tenantId: string): CoreBankApp {
       res.send(V.subAccountFormPage(tenant, m, errors, { type, deposit, nickname }));
       return;
     }
+
+    // The one-open-account-per-product rule, enforced here rather than only on
+    // commit so the flow stops BEFORE the review screen — a caller should never
+    // be shown an irreversible confirmation for something the institution was
+    // always going to refuse. Checked after the field validations above so a
+    // malformed form still reports what is malformed about it.
+    const narrowed = asAccountType(type);
+    const existing = narrowed ? openAccountOfType(m, narrowed) : undefined;
+    if (existing) {
+      res.send(V.subAccountDuplicatePage(tenant, m, type, existing));
+      return;
+    }
+
     res.send(V.subAccountReviewPage(tenant, m, { type, deposit, nickname }));
   });
 
-  /** The irreversible act. Everything up to here is safe to replay unattended. */
+  /**
+   * The irreversible act. Everything up to here is safe to replay unattended.
+   *
+   * Writes through `openSubAccount()`, which puts the new account on the member
+   * record itself — so it appears in the accounts table on the member detail
+   * screen, exactly as a contact-detail edit does. There is deliberately no
+   * write path that the website cannot read back: an "opened" account only the
+   * confirmation page knows about would let a replay report success against a
+   * record that never changed.
+   */
   app.post('/member/:id/subaccount/commit', requireSession, (req, res) => {
     const m = loadMember(req, res);
     if (!m) return;
-    const acctNo = `48209${String(90000 + OPENED_SUBACCOUNTS.length + 1)}`;
-    OPENED_SUBACCOUNTS.push({
-      memberId: m.id,
-      number: acctNo,
-      type: String(req.body.type ?? ''),
-      initialDeposit: Number(req.body.deposit ?? 0),
-      openedAt: new Date().toISOString(),
-    });
-    res.send(V.subAccountDonePage(tenant, m, acctNo));
+
+    // The review screen posts back hidden fields, so these arrive as ordinary
+    // form data and are re-checked rather than trusted. A malformed commit is a
+    // validation refusal in the same words every other form uses, which is what
+    // the product-wide `validation_error` condition classifies.
+    const type = asAccountType(String(req.body.type ?? ''));
+    const deposit = Number(req.body.deposit ?? NaN);
+    if (!type || !Number.isFinite(deposit) || deposit < MIN_OPENING_DEPOSIT) {
+      res.send(V.subAccountFormPage(tenant, m, ['The submitted application was incomplete. Please re-enter it.']));
+      return;
+    }
+
+    // Re-checked at the commit boundary too. The review screen already refused
+    // this case, but the commit is a bare form POST: the last gate before a
+    // record is created cannot assume the previous screen was the one that
+    // produced it.
+    const existing = openAccountOfType(m, type);
+    if (existing) {
+      res.send(V.subAccountDuplicatePage(tenant, m, type, existing));
+      return;
+    }
+
+    const account = openSubAccount(m.id, { type, deposit });
+    if (!account) {
+      res.send(V.notFoundPage(tenant, m.id));
+      return;
+    }
+    res.send(V.subAccountDonePage(tenant, m, account.number));
   });
 
   /* -------------------------------------------------- update member details
@@ -313,6 +363,10 @@ export function createCoreBankApp(tenantId: string): CoreBankApp {
   app.post('/_admin/reset', (_req, res) => {
     faults.reset();
     sessions.clear();
+    // Also puts the member records back. Without this a reset only cleared the
+    // things that were never the problem: an opened sub-account is a real,
+    // irreversible change to a member record and outlives every session.
+    resetData();
     res.json({ ok: true, tenant: tenant.id });
   });
 

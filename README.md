@@ -68,6 +68,29 @@ A profile names its own policy file, so that one flag also switches the
 containment boundary — origins, route allowlist and risk rules travel with the
 product rather than being a second thing to remember.
 
+**How MERIDIAN was integrated after CoreBank.** Nothing in the replay engine was
+forked. MERIDIAN was added as a second *product profile* plus a second policy
+file: [`config/apps/meridian-core.yaml`](config/apps/meridian-core.yaml) names
+its auth fields, condition taxonomy, chat audience, fault strategy, identities
+and hosted tenant; [`config/policy.meridian.json`](config/policy.meridian.json)
+names its allowed origin/routes and irreversible controls. Its capabilities are
+ordinary YAML artifacts in [`capabilities/`](capabilities/) whose
+`metadata.app.product` is `meridian-core`, and the catalog/panel are scoped by
+the active profile so a CoreBank capability is not offered against MERIDIAN or
+vice versa. The Docker side is the same split: the `meridian` service starts a
+panel and operator console, but no local target app because the target is
+hosted.
+
+That is different from CoreBank's **tenants**. CoreBank's `base`,
+`firstvalley` and `harborcu` are three institutions running the same vendor
+product, under one profile, with different base URLs, labels, table order,
+product version, credentials and tenant-only conditions. The same CoreBank
+artifact replays across them, with JSON-Pointer `overrides:` only where a tenant
+really differs. MERIDIAN is not another CoreBank tenant: it is a different
+product with different vocabulary, routes, auth, policy and capability set.
+Inside MERIDIAN, `teller` and `supervisor` are **identities**, not tenants — the
+same hosted institution answers differently depending on who signed on.
+
 It also switches what the **front door says**. A profile's `chat:` block carries
 the audience — who uses this console and the vocabulary they use — and the
 openers the chat pane offers before anyone types. So the CoreBank panel suggests
@@ -224,6 +247,31 @@ with the parked browser session live in it: watch it, take control, act on the
 same session, hand it back. The standalone **operator console** on
 `localhost:4100` is the same broker and the same session behind a different door.
 
+Code path for that handoff:
+
+1. Replay calls `Surface.act()` for every step. If policy refuses an
+   irreversible step, or a target/checkpoint cannot be recovered, the executor's
+   `escalateStep()` in [`src/replay/executor.ts`](src/replay/executor.ts)
+   creates an `InterventionRequest` with the capability, step intent, reason,
+   redacted params and the resume checkpoint.
+2. Before raising it, `captureFailureEvidence()` asks the surface for
+   `observe({ screenshot: true })`. The Playwright surface masks PII elements in
+   the page, takes the screenshot, restores the page, and `RunRecorder` writes
+   `escalation-<step>.png` plus an accessibility snapshot beside `events.jsonl`.
+3. `InterventionBroker.raise()` cedes control through
+   [`ControlAuthority`](src/escalation/control-authority.ts). Automation's token
+   is rotated away before the request is visible, so the executor cannot click
+   while a human is driving.
+4. The operator console and the chat modal both mount
+   [`operator/intervention-api.ts`](src/escalation/operator/intervention-api.ts):
+   HTTP routes list/claim/hand back interventions, and a WebSocket streams CDP
+   screencast frames from the same Chromium page.
+5. Watching needs no token. Mouse/keyboard input does: the console claims the
+   intervention, receives the current human token, and `dispatchHumanInput()`
+   forwards CDP input only while that token is valid. On hand-back, the executor
+   re-observes the page and verifies the resume checkpoint before automation gets
+   a fresh token.
+
 The original single-file panel is still served at **`/legacy`**. It needs no
 build step and no `node_modules`, so it works when the bundle does not.
 
@@ -366,6 +414,29 @@ at the next. A capability carries no credentials — it declares that it needs a
 session, and the runtime resolves *whose* from the tenant's `credentialEnv` names.
 Passwords live in `.env` and are printed nowhere in the application.
 
+**How the dummy banks are made.** [`apps/corebank/start-servers.ts`](apps/corebank/start-servers.ts)
+starts the same Express app three times, once per tenant id, on ports 4000, 4001
+and 4002. [`apps/corebank/tenants.ts`](apps/corebank/tenants.ts) is the tenant
+matrix: institution name, product version, accent colour, staff credentials,
+screen labels, accounts-table column order and whether a privacy interstitial
+appears. [`apps/corebank/pages.ts`](apps/corebank/pages.ts) renders those knobs
+into old-fashioned table/frame HTML. The routes in
+[`apps/corebank/server.ts`](apps/corebank/server.ts) are intentionally identical
+for all three; only the tenant config changes, which is why it exercises
+record-once/replay-many instead of becoming three separate apps.
+
+The three CoreBank tenants differ like this:
+
+| Tenant | Port | Version | UI/config differences | Why it exists |
+|---|---:|---|---|---|
+| `base` | 4000 | 8.2 | Reference labels: `Member Search`, `Member ID`, `Search`, `Accounts`, `Open Sub-Account`; standard account-table order `number → type → balance → status → openedOn`; no privacy interstitial. | The recording baseline and the simplest happy path. |
+| `firstvalley` | 4001 | 8.2 | Same product version and table order, but several labels are changed: `Member Search` → `Find Member`, `Member ID` → `Member Number`, `Search` → `Go`, `Accounts` → `Share Accounts`; no privacy interstitial. | Proves tenant-specific relabels are small JSON-Pointer overrides, not a new recording. |
+| `harborcu` | 4002 | 9.0 | Newer build, green branding, `Open Sub-Account` → `New Sub-Account`, account table reordered to `type → number → balance → status → openedOn`, and a mandatory privacy acknowledgement before member detail. | Proves robust locators and tenant conditions absorb bigger drift with zero capability forks. |
+
+All three have their own dummy operator/password pair and their own base URL, but
+they share the same in-memory member data. That is deliberate: the fixture is
+testing UI/product variation, not ledger isolation.
+
 The seeded members, from [`apps/corebank/seed-data.ts`](apps/corebank/seed-data.ts).
 All synthetic — account numbers are shaped like real ones so the redaction
 patterns get exercised, but they belong to nobody.
@@ -382,6 +453,15 @@ patterns get exercised, but they belong to nobody.
 Each member also carries an e-mail, phone and mailing address, which are the
 fields the `update_member_details` capability writes. The full table, and the
 same for MERIDIAN, is in [FLOWS.md §2](FLOWS.md#2-test-data-you-can-use).
+
+The data is deliberately in memory. `MEMBERS` is the seed array; `updateMember()`
+writes contact details back onto that array; `openSubAccount()` appends a new
+account to the member and records an audit-style row in `OPENED_SUBACCOUNTS`.
+Those mutations last until the process restarts or the harness-only
+`/_admin/reset` route calls `resetData()`. That admin route is on the policy deny
+list, so the automation cannot reset its own fixtures or arm its own faults.
+The three tenant instances share the same seed array by design: the target is a
+test fixture for UI variation, not three real core ledgers.
 
 Only a **savings** lookup is recorded as a capability. Asking the chat for a
 *checking* balance is therefore a genuine gap, not a bug — it will start a
@@ -453,7 +533,7 @@ product's condition taxonomy) and
 ## Testing
 
 ```bash
-npm test        # 164 tests; the e2e suite drives a real browser
+npm test        # 167 tests; the e2e suite drives a real browser
 npm run typecheck   # the engine and the React app
 ```
 

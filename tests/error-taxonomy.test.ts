@@ -8,8 +8,11 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { parse as parseYaml } from 'yaml';
 import { classify } from '../src/replay/replay-result.js';
 import { evaluateCheckpoint, evaluatePredicate } from '../src/replay/checkpoints.js';
+import { AppProfileSchema } from '../src/capability/application-profile.js';
 import type { Condition } from '../src/capability/schema.js';
 import type { Observation } from '../src/surface/types.js';
 
@@ -80,6 +83,35 @@ describe('classify', () => {
     const c = classify(ALL, obs('Unexpected System Error'));
     expect(c.kind).toBe('fail');
     if (c.kind === 'fail') expect(c.evidence.observed).toContain('Unexpected System Error');
+  });
+});
+
+describe('MERIDIAN supervisor gating', () => {
+  const meridian = AppProfileSchema.parse(parseYaml(readFileSync('config/apps/meridian-core.yaml', 'utf8')));
+
+  it('does not classify the hold-entry warning banner as an entitlement denial', () => {
+    const c = classify(
+      meridian.conditions,
+      obs(
+        'PLACE ACCOUNT HOLD RESTRICTED FUNCTION - SUPERVISOR OVERRIDE REQUIRED Share: 103001-MMKT-10 Reason Code: FRAUD Notes: Continue',
+        'https://web-sample.interface-hiring.com/members/103001/hold',
+      ),
+    );
+
+    expect(c.kind).toBe('none');
+  });
+
+  it('classifies the actual denial page as SUPERVISOR_OVERRIDE_REQUIRED', () => {
+    const c = classify(
+      meridian.conditions,
+      obs(
+        'SUPERVISOR OVERRIDE REQUIRED Operator profile teller1 is not authorized to perform this function. A supervisor must sign on to complete this request.',
+        'https://web-sample.interface-hiring.com/members/103001/hold/review',
+      ),
+    );
+
+    expect(c.kind).toBe('business');
+    if (c.kind === 'business') expect(c.code).toBe('SUPERVISOR_OVERRIDE_REQUIRED');
   });
 });
 

@@ -113,8 +113,14 @@ conditions:
   - id: supervisor_required
     description: >
       The signed-on operator lacks the entitlement for a restricted function.
-      A teller attempting Place Account Hold hits this naturally (HTTP 403); it
-      is also what `?inject=permission` produces.
+      A teller attempting Place Account Hold hits this naturally on the review
+      submit (HTTP 403); it is also what `?inject=permission` produces.
+
+      Do not key this on the heading alone. MERIDIAN's hold entry form displays
+      the warning banner "RESTRICTED FUNCTION - SUPERVISOR OVERRIDE REQUIRED"
+      to both tellers and supervisors before any entitlement decision has been
+      made. The denial page is the one that says the operator profile is not
+      authorised, and that is the business outcome.
 
       This is deliberately a BUSINESS outcome and not a failure. Nothing is
       broken: the application answered the question "may this operator do this?"
@@ -123,7 +129,7 @@ conditions:
       than handed an exception.
     when:
       kind: textPresent
-      text: SUPERVISOR OVERRIDE REQUIRED
+      text: is not authorized to perform this function
     then:
       kind: business
       code: SUPERVISOR_OVERRIDE_REQUIRED

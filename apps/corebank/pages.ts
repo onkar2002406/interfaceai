@@ -24,7 +24,7 @@
  */
 
 import type { TenantConfig } from './tenants.js';
-import { formatMoney, type Member } from './seed-data.js';
+import { formatMoney, type Account, type Member } from './seed-data.js';
 
 const esc = (s: unknown): string =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
@@ -309,6 +309,40 @@ ${
 </table>
 </form>
 <div class="note"><font size="2"><a href="/member/${esc(m.id)}">Back to Member Detail</a></font></div>`,
+  );
+}
+
+/**
+ * The duplicate-product refusal.
+ *
+ * Deliberately NOT worded with the "Please correct the following" banner the
+ * field validations use, and deliberately its own screen. Nothing the caller
+ * typed is wrong — the member simply already holds this product — so it is a
+ * different business outcome, and the product profile classifies it separately
+ * (`duplicate_account_type` -> DUPLICATE_ACCOUNT_TYPE). Sharing the validation
+ * banner would collapse two answers the caller needs to tell apart into one.
+ */
+export function subAccountDuplicatePage(
+  t: TenantConfig,
+  m: Member,
+  type: string,
+  existing: Account,
+): string {
+  return chrome(
+    t,
+    'Open Sub-Account',
+    `
+<div class="note"><font size="2"><b>${esc(t.labels.openSubAccountLink)}</b> &#8212; Member ${esc(m.id)}</font></div>
+<div class="err">
+  A ${esc(type)} account already exists for this member and cannot be opened again.
+  <p>This institution permits one open account of each type. Existing account
+     ${esc(existing.number)}, opened ${esc(existing.openedOn)}.</p>
+</div>
+<div class="note"><font size="2">
+  <a href="/member/${esc(m.id)}/subaccount">Choose a different account type</a>
+  &nbsp;|&nbsp;
+  <a href="/member/${esc(m.id)}">Back to Member Detail</a>
+</font></div>`,
   );
 }
 
