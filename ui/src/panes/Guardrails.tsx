@@ -151,10 +151,6 @@ export function Guardrails(): JSX.Element {
       <table className="kv">
         <tbody>
           <tr>
-            <th>max steps</th>
-            <td className="mono">{policy.limits.maxSteps}</td>
-          </tr>
-          <tr>
             <th>max runtime</th>
             <td className="mono">{policy.limits.maxRuntimeMs} ms</td>
           </tr>

@@ -30,6 +30,8 @@ export interface DecideRequest {
   system: string;
   /** Rendered observation: element inventory plus context. */
   userText: string;
+  /** Optional caller cancellation signal, used by panel Stop buttons. */
+  signal?: AbortSignal;
   /** PNG screenshot, if the provider and model support vision. */
   screenshot?: Buffer;
   /** Prior turns, so the model can see what it already tried. */
